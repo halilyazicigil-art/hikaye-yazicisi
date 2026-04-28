@@ -206,7 +206,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            text: content.join(' '),
+            text: content.join(' ').slice(0, 4500),
             model_id: 'eleven_multilingual_v2',
             voice_settings: { stability: 0.3, similarity_boost: 0.85 }
           })
