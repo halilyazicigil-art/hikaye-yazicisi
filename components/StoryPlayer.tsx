@@ -1,0 +1,95 @@
+'use client'
+
+import { useState, useRef } from 'react'
+import { Play, Pause, Volume2, Image as ImageIcon } from 'lucide-react'
+
+interface StoryPlayerProps {
+  title: string
+  content: string[]
+  imageUrl: string
+  audioUrl: string
+}
+
+export default function StoryPlayer({ title, content, imageUrl, audioUrl }: StoryPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentPage, setCurrentPage] = useState(0)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause()
+      } else {
+        audioRef.current.play()
+      }
+      setIsPlaying(!isPlaying)
+    }
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto bg-amber-50 rounded-[3rem] shadow-2xl overflow-hidden border-8 border-amber-100 flex flex-col md:flex-row">
+      {/* Visual Section */}
+      <div className="w-full md:w-1/2 relative bg-amber-200/50 min-h-[300px] flex items-center justify-center p-4">
+        {imageUrl ? (
+          <img 
+            src={imageUrl} 
+            alt="Masal Görseli" 
+            className="w-full h-full object-cover rounded-3xl shadow-inner"
+          />
+        ) : (
+          <div className="text-amber-400 flex flex-col items-center">
+            <ImageIcon size={64} className="mb-4 opacity-50" />
+            <p className="font-bold text-xl opacity-70">Görsel Yükleniyor...</p>
+          </div>
+        )}
+        
+        {/* Audio Player Controls overlaid on image */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 border-2 border-amber-100">
+          <audio ref={audioRef} src={audioUrl} onEnded={() => setIsPlaying(false)} />
+          <button 
+            onClick={togglePlay}
+            className="w-16 h-16 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+          >
+            {isPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
+          </button>
+          <div className="flex items-center text-amber-700 font-bold">
+            <Volume2 size={24} className="mr-2" />
+            <span className="text-lg">Sesli Dinle</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Text Section */}
+      <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-[#FFFdf8]">
+        <h1 className="text-4xl md:text-5xl font-black text-amber-900 mb-8 leading-tight font-['Comic_Sans_MS',_sans-serif]">
+          {title}
+        </h1>
+        
+        <div className="text-2xl md:text-3xl leading-relaxed text-slate-700 font-medium space-y-6">
+          <p>{content[currentPage] || "Bir varmış bir yokmuş..."}</p>
+        </div>
+
+        {/* Page Navigation */}
+        <div className="mt-12 flex justify-between items-center border-t-4 border-amber-100 pt-6">
+          <button 
+            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+            disabled={currentPage === 0}
+            className="px-6 py-3 bg-amber-100 text-amber-800 rounded-2xl font-bold text-xl disabled:opacity-50 hover:bg-amber-200 transition-colors"
+          >
+            Geri
+          </button>
+          <span className="text-amber-800 font-bold text-xl bg-amber-100 px-4 py-2 rounded-xl">
+            Sayfa {currentPage + 1}
+          </span>
+          <button 
+            onClick={() => setCurrentPage(Math.min(content.length - 1, currentPage + 1))}
+            disabled={currentPage === content.length - 1}
+            className="px-6 py-3 bg-amber-500 text-white rounded-2xl font-bold text-xl disabled:opacity-50 hover:bg-amber-600 transition-colors shadow-md hover:shadow-lg"
+          >
+            İleri
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
