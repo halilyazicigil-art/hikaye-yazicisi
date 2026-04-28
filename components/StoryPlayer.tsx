@@ -26,6 +26,17 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl }: Stor
     }
   }
 
+  const downloadText = () => {
+    const textContent = `${title}\n\n${content.join('\n\n')}`
+    const blob = new Blob([textContent], { type: 'text/plain' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `${title}.txt`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const togglePlay = () => {
     if (audioUrl) {
       if (audioRef.current) {
@@ -72,10 +83,21 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl }: Stor
           <button 
             onClick={downloadAudio}
             className="flex flex-col items-center gap-1 text-amber-700 hover:text-amber-900 transition-colors group"
-            title="Sesli Kitap Olarak İndir (Spotify/Podcast için)"
+            title="Sesli Kitap Olarak İndir (MP3)"
+          >
+            <Volume2 size={24} className="group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Ses</span>
+          </button>
+
+          <div className="h-10 w-px bg-amber-200 mx-1" />
+
+          <button 
+            onClick={downloadText}
+            className="flex flex-col items-center gap-1 text-amber-700 hover:text-amber-900 transition-colors group"
+            title="Masal Metnini İndir (TXT)"
           >
             <Download size={24} className="group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold uppercase tracking-wider">İndir</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Kitap</span>
           </button>
         </div>
       </div>
