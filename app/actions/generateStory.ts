@@ -7,10 +7,11 @@ interface StoryRequest {
   hero: string
   theme: string
   age: number
-  voiceOption?: string // 'Sessiz', 'AI', 'Kendi Sesim'
+  voiceOption?: string 
+  elevenVoiceId?: string
 }
 
-export async function generateStoryAction({ childName, hero, theme, age, voiceOption = 'AI' }: StoryRequest) {
+export async function generateStoryAction({ childName, hero, theme, age, voiceOption = 'AI', elevenVoiceId }: StoryRequest) {
   try {
     const supabase = await createClient()
 
@@ -209,7 +210,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     if (isRequestingVoice) {
       try {
         if (!process.env.ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY eksik")
-        const voiceId = 'EXAVITQu4vr4xnSDxMaL' 
+        const voiceId = elevenVoiceId || 'EXAVITQu4vr4xnSDxMaL' 
         const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
           method: 'POST',
           headers: {
