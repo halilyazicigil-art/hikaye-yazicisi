@@ -26,12 +26,65 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl }: Stor
     }
   }
 
-  const downloadText = () => {
-    const textContent = `${title}\n\n${content.join('\n\n')}`
-    const blob = new Blob([textContent], { type: 'text/plain' })
+  const downloadBook = () => {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+          body { 
+            font-family: 'Outfit', sans-serif; 
+            line-height: 1.8; 
+            color: #334155; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 50px;
+            background-color: #fffdf8;
+          }
+          h1 { 
+            text-align: center; 
+            color: #92400e; 
+            font-size: 48px; 
+            font-weight: 900;
+            margin-bottom: 50px;
+            border-bottom: 4px solid #fef3c7;
+            padding-bottom: 20px;
+          }
+          .story-content { 
+            font-size: 20px; 
+            white-space: pre-wrap;
+          }
+          .page-break {
+            height: 40px;
+            border-bottom: 2px dashed #fde68a;
+            margin: 40px 0;
+          }
+          .footer {
+            margin-top: 100px;
+            text-align: center;
+            font-size: 14px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${title}</h1>
+        <div class="story-content">
+          ${content.join('<div class="page-break"></div>')}
+        </div>
+        <div class="footer">MyStory ile Sevgiyle Hazırlandı</div>
+      </body>
+      </html>
+    `
+    const blob = new Blob([htmlContent], { type: 'text/html' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = `${title}.txt`
+    link.download = `${title}.html`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -92,9 +145,9 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl }: Stor
           <div className="h-10 w-px bg-amber-200 mx-1" />
 
           <button 
-            onClick={downloadText}
+            onClick={downloadBook}
             className="flex flex-col items-center gap-1 text-amber-700 hover:text-amber-900 transition-colors group"
-            title="Masal Metnini İndir (TXT)"
+            title="Masal Metnini İndir (HTML/Kitap)"
           >
             <Download size={24} className="group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-bold uppercase tracking-wider">Kitap</span>
