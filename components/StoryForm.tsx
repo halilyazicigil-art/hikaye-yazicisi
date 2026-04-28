@@ -65,6 +65,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       
       if (response.success) {
         window.location.href = `/story/${response.story.id}`
+      } else {
+        alert(response.error || 'Bilinmeyen bir hata oluştu.')
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Bir hata oluştu'
