@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Play, Pause, Volume2, Image as ImageIcon } from 'lucide-react'
+import { Play, Pause, Volume2, Image as ImageIcon, Download } from 'lucide-react'
 
 interface StoryPlayerProps {
   title: string
@@ -14,6 +14,18 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl }: Stor
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const downloadAudio = () => {
+    if (audioUrl) {
+      const link = document.createElement('a')
+      link.href = audioUrl
+      link.download = `${title}.mp3`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
+
   const togglePlay = () => {
     if (audioUrl) {
       if (audioRef.current) {
@@ -45,18 +57,26 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl }: Stor
         )}
         
         {/* Audio Player Controls overlaid on image */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 border-2 border-amber-100">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md px-6 py-4 rounded-full shadow-2xl flex items-center gap-4 border-2 border-amber-100">
           <audio ref={audioRef} src={audioUrl} onEnded={() => setIsPlaying(false)} />
           <button 
             onClick={togglePlay}
-            className="w-16 h-16 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+            className="w-14 h-14 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+            title="Oynat/Duraklat"
           >
-            {isPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
+            {isPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
           </button>
-          <div className="flex items-center text-amber-700 font-bold">
-            <Volume2 size={24} className="mr-2" />
-            <span className="text-lg">Sesli Dinle</span>
-          </div>
+          
+          <div className="h-10 w-px bg-amber-200 mx-2" />
+
+          <button 
+            onClick={downloadAudio}
+            className="flex flex-col items-center gap-1 text-amber-700 hover:text-amber-900 transition-colors group"
+            title="Sesli Kitap Olarak İndir (Spotify/Podcast için)"
+          >
+            <Download size={24} className="group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-bold uppercase tracking-wider">İndir</span>
+          </button>
         </div>
       </div>
 
