@@ -123,25 +123,60 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
   const content = lines.slice(1)
 
   // 6. Görsel Üretimi
-  const falResponse = await fetch('https://fal.run/fal-ai/flux/schnell', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Key ${process.env.FAL_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      prompt: `A highly detailed watercolor illustration for a children's book cover. Theme: ${theme}, featuring ${hero}. Dreamy, magical, soft pastel colors.`,
-      image_size: 'landscape_4_3',
-      num_inference_steps: 4
+  let imageUrl = ''
+  const isDev = process.env.APP_ENV === 'dev'
+
+  if (isDev) {
+    // DEV MODE: Hugging Face (Ücretsiz)
+    try {
+      // Önce promptu İngilizce'ye çevir (Gemini ile)
+      const translateResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Translate this to a short English image prompt for children's book: "${theme}, featuring ${hero}"` }] }],
+        }),
+      })
+      const transData = await translateResponse.json()
+      const enPrompt = transData.candidates[0].content.parts[0].text
+
+      const hfResponse = await fetch("https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5", {
+        headers: { Authorization: `Bearer ${process.env.HF_TOKEN}` },
+        method: "POST",
+        body: JSON.stringify({ inputs: enPrompt }),
+      })
+      
+      if (hfResponse.ok) {
+        const imageBlob = await hfResponse.blob()
+        const imageFileName = `story_image_${Date.now()}.png`
+        await supabase.storage.from('story_assets').upload(imageFileName, imageBlob, { contentType: 'image/png' })
+        const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
+        imageUrl = imgUrlData.publicUrl
+      }
+    } catch (e) {
+      console.error('HF Image Error:', e)
+    }
+  } else {
+    // PROD MODE: fal.ai (Ücretli)
+    const falResponse = await fetch('https://fal.run/fal-ai/flux/schnell', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Key ${process.env.FAL_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: `A highly detailed watercolor illustration for a children's book cover. Theme: ${theme}, featuring ${hero}. Dreamy, magical, soft pastel colors.`,
+        image_size: 'landscape_4_3',
+        num_inference_steps: 4
+      })
     })
-  })
-  
-  const falData = await falResponse.json()
-  const imageUrl = falData.images?.[0]?.url || ''
+    const falData = await falResponse.json()
+    imageUrl = falData.images?.[0]?.url || ''
+  }
 
   // 7. Ses Üretimi (Eğer kota dahilindeyse ve istenmişse)
   let audioUrl = null
-  if (isRequestingVoice) {
+  if (isRequestingVoice && !isDev) {
     const voiceId = 'EXAVITQu4vr4xnSDxMaL' 
     const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
@@ -153,24 +188,15 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
       body: JSON.stringify({
         text: content.join(' '),
         model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-        }
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
       })
     })
     
     if (elevenLabsResponse.ok) {
       const audioBlob = await elevenLabsResponse.blob()
       const audioFileName = `story_audio_${Date.now()}.mp3`
-      await supabase.storage
-        .from('story_assets')
-        .upload(audioFileName, audioBlob, { contentType: 'audio/mpeg' })
-
-      const { data: publicUrlData } = supabase.storage
-        .from('story_assets')
-        .getPublicUrl(audioFileName)
-      
+      await supabase.storage.from('story_assets').upload(audioFileName, audioBlob, { contentType: 'audio/mpeg' })
+      const { data: publicUrlData } = supabase.storage.from('story_assets').getPublicUrl(audioFileName)
       audioUrl = publicUrlData.publicUrl
     }
   }
