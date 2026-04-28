@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, ChevronRight, Image as ImageIcon, Shuffle } from 'lucide-react'
+import { Sparkles, ChevronDown, ChevronUp, Image as ImageIcon, Shuffle, X, Plus } from 'lucide-react'
 import { generateStoryAction } from '@/app/actions/generateStory'
 
 export default function StoryForm() {
@@ -10,11 +10,19 @@ export default function StoryForm() {
   const [isGenerating, setIsGenerating] = useState(false)
 
   // Accordion states
-  const [age, setAge] = useState<number>(4)
-  const [hero, setHero] = useState<string>('Sevimli Ayı')
+  const [openSection, setOpenSection] = useState<string | null>(null)
+
+  // Form Data
+  const [voice, setVoice] = useState<string>('Sihirli Ses (AI)')
   const [genre, setGenre] = useState<string>('Masal')
   const [imageStyle, setImageStyle] = useState<string>('Sulu Boya')
-  const [voice, setVoice] = useState<string>('Tatlı Kadın Sesi')
+  const [age, setAge] = useState<number>(4)
+  const [characters, setCharacters] = useState<string[]>(['Sevimli Ayı'])
+  const [educationalValue, setEducationalValue] = useState<string>('Dürüstlük')
+
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section)
+  }
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,12 +33,13 @@ export default function StoryForm() {
     
     setIsGenerating(true)
     try {
-      // Prompt, tür ve stil bilgilerini tek bir 'theme' içinde birleştiriyoruz.
-      const fullTheme = `${genre} tarzında. Konu: ${prompt}. Çizim Stili: ${imageStyle}. ${tab === 'egitici' ? 'Eğitici ve öğretici bir ders içermeli.' : ''}`
+      const chars = characters.filter(c => c.trim() !== '').join(', ') || 'İsimsiz Kahraman'
+      const egitici = tab === 'egitici' ? ` Eğitici Değer: ${educationalValue}.` : ''
+      const fullTheme = `${genre} tarzında. Konu: ${prompt}. Çizim Stili: ${imageStyle}. Ses Seçimi: ${voice}. Karakterler: ${chars}.${egitici}`
       
       const response = await generateStoryAction({
-        childName: 'Çocuğum', // Otomatik profil için
-        hero: hero,
+        childName: 'Kullanıcı',
+        hero: chars,
         theme: fullTheme,
         age: age
       })
@@ -53,14 +62,14 @@ export default function StoryForm() {
         <button
           type="button"
           onClick={() => setTab('normal')}
-          className={`px-8 py-4 font-bold text-lg transition-colors ${tab === 'normal' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors ${tab === 'normal' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
         >
           Normal Hikayeler
         </button>
         <button
           type="button"
           onClick={() => setTab('egitici')}
-          className={`px-8 py-4 font-bold text-lg transition-colors ${tab === 'egitici' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors ${tab === 'egitici' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
         >
           Eğitici Hikayeler
         </button>
@@ -72,7 +81,7 @@ export default function StoryForm() {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Bana şu konu hakkında bir hikaye yaz..."
+            placeholder={tab === 'normal' ? "Bana şu konu hakkında bir hikaye yaz..." : "Çocuğunuza ne öğretmek istersiniz? Örn: Ayşe'nin dişlerini fırçalamayı öğrenmesi..."}
             className="w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800"
             required
           />
@@ -82,59 +91,157 @@ export default function StoryForm() {
           </div>
         </div>
 
-        {/* Options List */}
+        {/* Accordions */}
         <div className="divide-y divide-gray-100 border-t border-gray-100">
           
-          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
-            <span className="font-bold text-gray-800 text-lg">Ses</span>
-            <div className="flex items-center gap-2">
-              <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{voice}</span>
-              <ChevronRight className="text-gray-400" />
+          {/* SES (AUDIO) */}
+          <div className="py-2">
+            <div onClick={() => toggleSection('voice')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+              <span className="font-bold text-gray-800 text-lg">Ses</span>
+              <div className="flex items-center gap-2">
+                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{voice}</span>
+                {openSection === 'voice' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+              </div>
             </div>
+            {openSection === 'voice' && (
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50/50 rounded-xl mt-2">
+                {['Sessiz (Sadece Metin)', 'Sihirli Ses (AI)', 'Kendi Sesim (Premium)'].map(v => (
+                  <label key={v} className={`flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer border-2 transition ${voice === v ? 'border-[#b3593b] bg-[#fdfaf3]' : 'border-transparent bg-white hover:border-gray-200 shadow-sm'}`}>
+                    <input type="radio" name="voice" value={v} checked={voice === v} onChange={() => setVoice(v)} className="hidden" />
+                    <span className={`font-bold ${voice === v ? 'text-[#b3593b]' : 'text-gray-600'}`}>{v}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
-            <span className="font-bold text-gray-800 text-lg">Tür</span>
-            <div className="flex items-center gap-2">
-              <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{genre}</span>
-              <ChevronRight className="text-gray-400" />
+          {/* EĞİTİCİ (Sadece Eğitici tabındaysa) */}
+          {tab === 'egitici' && (
+            <div className="py-2">
+              <div onClick={() => toggleSection('educational')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+                <span className="font-bold text-gray-800 text-lg text-emerald-600">Öğretilecek Değer</span>
+                <div className="flex items-center gap-2">
+                  <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold">{educationalValue}</span>
+                  {openSection === 'educational' ? <ChevronUp className="text-emerald-700" /> : <ChevronDown className="text-gray-400" />}
+                </div>
+              </div>
+              {openSection === 'educational' && (
+                <div className="p-4 bg-gray-50/50 rounded-xl mt-2 grid grid-cols-2 gap-3">
+                  {['Dürüstlük', 'Paylaşmak', 'Cesaret', 'Sabır', 'Sorumluluk', 'Doğa Sevgisi'].map(val => (
+                    <button type="button" key={val} onClick={() => setEducationalValue(val)} className={`p-3 rounded-lg font-bold border transition ${educationalValue === val ? 'bg-emerald-100 border-emerald-500 text-emerald-800' : 'bg-white text-gray-600 hover:border-gray-300'}`}>
+                      {val}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+          )}
+
+          {/* TÜR (GENRE) */}
+          <div className="py-2">
+            <div onClick={() => toggleSection('genre')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+              <span className="font-bold text-gray-800 text-lg">Tür</span>
+              <div className="flex items-center gap-2">
+                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{genre}</span>
+                {openSection === 'genre' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+              </div>
+            </div>
+            {openSection === 'genre' && (
+              <div className="p-4 bg-gray-50/50 rounded-xl mt-2 flex flex-wrap gap-2">
+                {['Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl'].map(g => (
+                  <button type="button" key={g} onClick={() => setGenre(g)} className={`px-4 py-2 rounded-full font-bold transition ${genre === g ? 'bg-[#b3593b] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
+                    {g}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
-            <span className="font-bold text-gray-800 text-lg">Görüntü Stili</span>
-            <div className="flex items-center gap-2">
-              <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{imageStyle}</span>
-              <ChevronRight className="text-gray-400" />
+          {/* GÖRÜNTÜ STİLİ */}
+          <div className="py-2">
+            <div onClick={() => toggleSection('style')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+              <span className="font-bold text-gray-800 text-lg">Görüntü Stili</span>
+              <div className="flex items-center gap-2">
+                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{imageStyle}</span>
+                {openSection === 'style' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+              </div>
             </div>
+            {openSection === 'style' && (
+              <div className="p-4 bg-gray-50/50 rounded-xl mt-2 flex flex-wrap gap-2">
+                {['Sulu Boya', 'Karikatür', '3D Animasyon', 'Gerçekçi', 'Anime'].map(s => (
+                  <button type="button" key={s} onClick={() => setImageStyle(s)} className={`px-4 py-2 rounded-full font-bold transition ${imageStyle === s ? 'bg-[#b3593b] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
-            <span className="font-bold text-gray-800 text-lg">Yaş Grubu</span>
-            <div className="flex items-center gap-2">
-              <input 
-                type="number" 
-                value={age} 
-                onChange={(e) => setAge(Number(e.target.value))}
-                className="w-16 text-center bg-[#f0e6dd] text-[#8c6239] px-2 py-1 rounded-full text-sm font-bold outline-none"
-                min="2" max="12"
-              />
-              <ChevronRight className="text-gray-400" />
+          {/* YAŞ GRUBU */}
+          <div className="py-2">
+            <div onClick={() => toggleSection('age')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+              <span className="font-bold text-gray-800 text-lg">Yaş Grubu</span>
+              <div className="flex items-center gap-2">
+                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{age} Yaş</span>
+                {openSection === 'age' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+              </div>
             </div>
+            {openSection === 'age' && (
+              <div className="p-4 bg-gray-50/50 rounded-xl mt-2">
+                <input 
+                  type="range" 
+                  min="2" max="12" 
+                  value={age} 
+                  onChange={(e) => setAge(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#b3593b]"
+                />
+                <div className="flex justify-between text-gray-500 font-bold text-sm mt-2">
+                  <span>2 Yaş</span><span>12 Yaş</span>
+                </div>
+              </div>
+            )}
           </div>
-          
-          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
-            <span className="font-bold text-gray-800 text-lg">Karakterler</span>
-            <div className="flex items-center gap-2">
-              <input 
-                type="text" 
-                value={hero} 
-                onChange={(e) => setHero(e.target.value)}
-                className="w-32 text-right bg-transparent text-[#8c6239] font-bold outline-none placeholder-[#8c6239]/50"
-                placeholder="Kahraman..."
-              />
-              <ChevronRight className="text-gray-400" />
+
+          {/* KARAKTERLER */}
+          <div className="py-2">
+            <div onClick={() => toggleSection('characters')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+              <span className="font-bold text-gray-800 text-lg">Karakterler</span>
+              <div className="flex items-center gap-2">
+                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{characters.length} Karakter</span>
+                {openSection === 'characters' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+              </div>
             </div>
+            {openSection === 'characters' && (
+              <div className="p-4 bg-gray-50/50 rounded-xl mt-2 space-y-3">
+                {characters.map((char, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      value={char}
+                      onChange={(e) => {
+                        const newChars = [...characters]
+                        newChars[index] = e.target.value
+                        setCharacters(newChars)
+                      }}
+                      className="flex-grow p-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#b3593b]"
+                      placeholder={`Karakter ${index + 1} detayları...`}
+                    />
+                    {characters.length > 1 && (
+                      <button type="button" onClick={() => {
+                        setCharacters(characters.filter((_, i) => i !== index))
+                      }} className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition">
+                        <X size={20}/>
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {characters.length < 3 && (
+                  <button type="button" onClick={() => setCharacters([...characters, ''])} className="text-[#b3593b] font-bold text-sm flex items-center p-2 hover:bg-[#f0e6dd] rounded-lg transition">
+                    <Plus size={16} className="mr-1"/> Karakter Ekle
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
         </div>
