@@ -22,6 +22,9 @@ export default async function Home() {
         <div className="flex items-center gap-4 sm:gap-6">
           {user ? (
             <>
+              {user.email === 'halilibrahimyazicigil@gmail.com' && (
+                <Link href="/admin" className="font-bold text-emerald-600 hover:text-emerald-700 transition">Admin</Link>
+              )}
               <Link href="/parent" className="font-bold text-[#b3593b] hover:text-[#8c462e] transition">Panele Dön</Link>
               <form action="/auth/signout" method="post">
                 <button type="submit" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">

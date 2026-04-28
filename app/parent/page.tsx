@@ -38,6 +38,11 @@ export default async function ParentDashboard() {
             <p className="text-gray-500 mt-1">Çocuklarınızın masal dünyasını buradan yönetin.</p>
           </div>
           <div className="flex gap-4">
+            {user.email === 'halilibrahimyazicigil@gmail.com' && (
+              <Link href="/admin" className="px-4 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-bold shadow-sm">
+                Admin
+              </Link>
+            )}
             <Link href="/settings" className="p-3 bg-[#fdfaf3] text-[#b3593b] rounded-xl hover:bg-[#f4e8d3] transition border border-[#e6b17e]/30">
               <Settings size={24} />
             </Link>
