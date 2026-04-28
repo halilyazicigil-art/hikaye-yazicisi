@@ -138,50 +138,9 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
 
     // 6. Görsel Üretimi
     let imageUrl = ''
-    const isDev = process.env.APP_ENV === 'dev'
-
-    if (isDev) {
-      // DEV MODE: Hugging Face (Ücretsiz)
-      try {
-        if (!process.env.HF_TOKEN) throw new Error("HF_TOKEN eksik")
-        const translateResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: `Translate this to a short English image prompt for children's book: "${theme}, featuring ${hero}"` }] }],
-          }),
-        })
-        const transData = await translateResponse.json()
-        const enPrompt = transData.candidates?.[0]?.content?.parts?.[0]?.text || 'a cute illustration'
-
-        const hfResponse = await fetch("https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5", {
-          headers: { Authorization: `Bearer ${process.env.HF_TOKEN}` },
-          method: "POST",
-          body: JSON.stringify({ inputs: enPrompt }),
-        })
-        
-        if (hfResponse.ok) {
-          const contentType = hfResponse.headers.get('content-type')
-          if (contentType && contentType.includes('application/json')) {
-            const errData = await hfResponse.json()
-            console.error("HF API JSON Hatası:", errData)
-          } else {
-            const imageBlob = await hfResponse.blob()
-            const imageFileName = `story_image_${Date.now()}.png`
-            await supabase.storage.from('story_assets').upload(imageFileName, imageBlob, { contentType: 'image/png' })
-            const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
-            imageUrl = imgUrlData.publicUrl
-          }
-        } else {
-           console.error("HF API Hatası:", await hfResponse.text())
-        }
-      } catch (e) {
-        console.error('HF Image Error:', e)
-      }
-    } else {
-      // PROD MODE: fal.ai (Ücretli)
-      try {
-        if (!process.env.FAL_KEY) throw new Error("FAL_KEY eksik")
+    try {
+      if (process.env.FAL_KEY) {
+        // FAL.AI (Öncelikli)
         const falResponse = await fetch('https://fal.run/fal-ai/flux/schnell', {
           method: 'POST',
           headers: {
@@ -200,9 +159,37 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         } else {
           console.error("FAL API Hatası:", await falResponse.text())
         }
-      } catch (e) {
-        console.error('FAL Image Error:', e)
+      } else if (process.env.HF_TOKEN && process.env.HF_TOKEN !== 'buraya_huggingface_token_yazilacak') {
+        // Hugging Face (Yedek)
+        const translateResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `Translate this to a short English image prompt for children's book: "${theme}, featuring ${hero}"` }] }],
+          }),
+        })
+        const transData = await translateResponse.json()
+        const enPrompt = transData.candidates?.[0]?.content?.parts?.[0]?.text || 'a cute illustration'
+
+        const hfResponse = await fetch("https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5", {
+          headers: { Authorization: `Bearer ${process.env.HF_TOKEN}` },
+          method: "POST",
+          body: JSON.stringify({ inputs: enPrompt }),
+        })
+        
+        if (hfResponse.ok) {
+          const contentType = hfResponse.headers.get('content-type')
+          if (contentType && !contentType.includes('application/json')) {
+            const imageBlob = await hfResponse.blob()
+            const imageFileName = `story_image_${Date.now()}.png`
+            await supabase.storage.from('story_assets').upload(imageFileName, imageBlob, { contentType: 'image/png' })
+            const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
+            imageUrl = imgUrlData.publicUrl
+          }
+        }
       }
+    } catch (e) {
+      console.error('Image Generation Error:', e)
     }
 
     // 7. Ses Üretimi (Eğer kota dahilindeyse ve istenmişse)
