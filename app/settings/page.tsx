@@ -68,12 +68,12 @@ export default function SettingsPage() {
           {sub?.status !== 'active' && (
             <div className="mt-8 border-t pt-8">
               <h3 className="text-xl font-bold mb-2">Sınırları Kaldırın</h3>
-              <p className="text-gray-500 mb-6">Ayda 50 masal hakkı ve premium özellikler için Bee Hive paketine geçin.</p>
+              <p className="text-gray-500 mb-6">Ayda 50 masal hakkı ve premium özellikler için MasalKovanı Premium paketine geçin.</p>
               <button 
                 onClick={handleUpgrade}
                 className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
               >
-                Bee Hive Premium ($15/ay)
+                MasalKovanı Premium ($15/ay)
               </button>
             </div>
           )}

@@ -90,7 +90,7 @@ export default async function Home() {
 
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
-            <div className="w-full h-48 bg-amber-100 rounded-2xl mb-6 bg-[url('https://fal.media/files/monkey/j1L-E88888.jpeg')] bg-cover bg-center"></div>
+            <div className="w-full h-48 bg-amber-100 rounded-2xl mb-6 bg-[url('/images/visual_feast.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Görsel Şölen ve Doğal Seslendirme</h3>
             <p className="text-gray-600 mb-6 flex-grow">Her sayfasına özel üretilen yüksek kaliteli resimler ve stüdyo kalitesindeki seslendirmeler ile hikayeler artık çok canlı.</p>
             <ul className="text-left w-full space-y-2 mb-6">
@@ -100,7 +100,7 @@ export default async function Home() {
           </div>
           
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
-            <div className="w-full h-48 bg-blue-100 rounded-2xl mb-6 bg-[url('https://fal.media/files/monkey/a-2-88888.jpeg')] bg-cover bg-center"></div>
+            <div className="w-full h-48 bg-blue-100 rounded-2xl mb-6 bg-[url('/images/parent_reading.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Sizin Sesinizden Düşlere Doğru</h3>
             <p className="text-gray-600 mb-6 flex-grow">Masalları sizden dinlemeyi seven minikler için, kendi sesinizi sisteme tanıtın ve tüm hikayeler sizin sesinizden okunsun.</p>
             <ul className="text-left w-full space-y-2 mb-6">
@@ -110,7 +110,7 @@ export default async function Home() {
           </div>
 
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
-            <div className="w-full h-48 bg-pink-100 rounded-2xl mb-6 bg-[url('https://fal.media/files/monkey/b-3-88888.jpeg')] bg-cover bg-center"></div>
+            <div className="w-full h-48 bg-pink-100 rounded-2xl mb-6 bg-[url('/images/values_education.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Değerler Eğitimi ve Güvenlik</h3>
             <p className="text-gray-600 mb-6 flex-grow">Sadece eğlenceli değil, aynı zamanda öğretici. Dostluk, dürüstlük veya paylaşma gibi dilediğiniz bir dersi seçerek masalın ana fikrini belirleyin.</p>
             <ul className="text-left w-full space-y-2 mb-6">

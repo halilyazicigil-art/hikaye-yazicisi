@@ -24,7 +24,7 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Bee Hive Premium',
+              name: 'MasalKovanı Premium',
               description: 'Ayda 50 masal oluşturma ve ebeveyn ses klonlama özelliği.',
             },
             unit_amount: 1500, // $15.00
@@ -36,8 +36,8 @@ export async function POST(req: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/parent?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/parent?canceled=true`,
+      success_url: `${req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://hikaye-yazicisi.onrender.com'}/parent?success=true`,
+      cancel_url: `${req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://hikaye-yazicisi.onrender.com'}/parent?canceled=true`,
       metadata: {
         userId: user.id,
       },
