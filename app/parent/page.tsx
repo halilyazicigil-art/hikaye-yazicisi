@@ -52,17 +52,25 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
 
   // WEBHOOK BYPASS: If returning from Stripe Checkout successfully
   if (success === 'true' && typeof plan === 'string') {
-    const supabaseAdmin = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-    
-    await supabaseAdmin.from('subscriptions').upsert({
-      user_id: user.id,
-      status: 'active',
-      plan_id: plan,
-      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-    }, { onConflict: 'user_id' })
+    try {
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      if (serviceKey) {
+        const supabaseAdmin = createSupabaseClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          serviceKey
+        )
+        
+        await supabaseAdmin.from('subscriptions').upsert({
+          user_id: user.id,
+          status: 'active',
+          plan_id: plan,
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        }, { onConflict: 'user_id' })
+      }
+    } catch (err) {
+      console.error('Subscription sync error:', err)
+      // Sayfayı çökertmemek için hatayı yutuyoruz, ancak abonelik geç yansıyabilir
+    }
   }
 
   const { data: sub } = await supabase.from('subscriptions').select('plan_id, status, current_period_end').eq('user_id', user.id).maybeSingle()
