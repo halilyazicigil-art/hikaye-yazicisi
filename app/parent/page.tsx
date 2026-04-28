@@ -4,60 +4,9 @@ import { createClient } from '@/utils/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 
-export default async function ParentDashboard({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Next.js 15 searchParams resolution
-  const params = await searchParams
-  const success = params?.success
-  const plan = params?.plan
-
-  // WEBHOOK BYPASS: If returning from Stripe Checkout successfully
-  if (success === 'true' && typeof plan === 'string') {
-    // RLS (Güvenlik) kurallarını aşmak için admin yetkisi kullanıyoruz
-    const supabaseAdmin = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-    
-    await supabaseAdmin.from('subscriptions').upsert({
-      user_id: user.id,
-      status: 'active',
-      plan_id: plan,
-      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-    }, { onConflict: 'user_id' })
-    // In a real app we'd redirect to clear the URL parameters, but this is fine for test mode
-  }
-
-  // Kullanıcının abonelik durumunu kontrol et
-  const { data: sub } = await supabase.from('subscriptions').select('plan_id, status').eq('user_id', user.id).maybeSingle()
-  const isPro = sub?.plan_id === 'pro'
-  const isPremium = sub?.plan_id === 'premium'
-
-  // Kullanıcının profillerini (çocuklarını) alalım
-  const { data: profiles } = await supabase.from('profiles').select('id, name').eq('user_id', user.id)
-  const profileIds = profiles?.map(p => p.id) || []
-
-  // Çocuğun masallarını çekelim ve kotayı hesaplayalım
-  let recentStories: any[] = []
+async function getQuotaStats(supabase: any, profileIds: string[], sub: any, isPro: boolean, isPremium: boolean) {
   let usedStories = 0
-
   if (profileIds.length > 0) {
-    // Son masallar
-    const { data: stories } = await supabase
-      .from('stories')
-      .select('id, title, created_at, profiles(name)')
-      .in('profile_id', profileIds)
-      .order('created_at', { ascending: false })
-      .limit(10)
-    
-    recentStories = stories || []
-
     // Bu ay üretilen masallar (Kota hesabı için - Faturalandırma döngüsüne uygun)
     let startDate = new Date()
     startDate.setDate(1)
@@ -75,7 +24,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
       .gte('created_at', startDate.toISOString())
       
     usedStories = monthStories?.length || 0
-    const usedVoiceStories = monthStories?.filter(s => s.audio_url).length || 0
+    const usedVoiceStories = monthStories?.filter((s: any) => s.audio_url).length || 0
 
     const storyLimit = isPremium ? 80 : (isPro ? 40 : 3)
     const voiceLimit = isPremium ? 40 : (isPro ? 20 : 1)
@@ -89,9 +38,53 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
 }
 
 export default async function ParentDashboard({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  // ...
-  const { usedStories, usedVoiceStories, storyLimit, voiceLimit, remainingText, remainingVoiceText } = await getQuotaStats(supabase, profileIds, sub, isPro, isPremium)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    redirect('/login')
+  }
 
+  // Next.js 15 searchParams resolution
+  const params = await searchParams
+  const success = params?.success
+  const plan = params?.plan as string
+
+  // WEBHOOK BYPASS: If returning from Stripe Checkout successfully
+  if (success === 'true' && typeof plan === 'string') {
+    const supabaseAdmin = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    
+    await supabaseAdmin.from('subscriptions').upsert({
+      user_id: user.id,
+      status: 'active',
+      plan_id: plan,
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    }, { onConflict: 'user_id' })
+  }
+
+  const { data: sub } = await supabase.from('subscriptions').select('plan_id, status, current_period_end').eq('user_id', user.id).maybeSingle()
+  const isPro = sub?.plan_id === 'pro'
+  const isPremium = sub?.plan_id === 'premium'
+
+  const { data: profiles } = await supabase.from('profiles').select('id, name').eq('user_id', user.id)
+  const profileIds = profiles?.map(p => p.id) || []
+
+  let recentStories: any[] = []
+  if (profileIds.length > 0) {
+    const { data: stories } = await supabase
+      .from('stories')
+      .select('id, title, created_at, profiles(name)')
+      .in('profile_id', profileIds)
+      .order('created_at', { ascending: false })
+      .limit(10)
+    
+    recentStories = stories || []
+  }
+
+  const { remainingText, remainingVoiceText } = await getQuotaStats(supabase, profileIds, sub, isPro, isPremium)
 
   return (
     <div className="min-h-screen bg-[#fdfaf3] font-nunito p-4 sm:p-8">

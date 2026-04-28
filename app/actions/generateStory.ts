@@ -191,8 +191,4 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
   if (dbError) throw new Error('Veritabanına kaydedilemedi.')
 
   return { success: true, story: storyData }
-}w Error('Veritabanına kaydedilemedi.')
-  }
-
-  return { success: true, story: storyData }
 }
