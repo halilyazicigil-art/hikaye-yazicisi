@@ -1,0 +1,22 @@
+name: Render Keep-Alive Robot
+
+on:
+  schedule:
+    # Her 15 dakikada bir çalıştırarak Render Free tier'ın uykuya geçmesini engeller
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # İstenildiğinde GitHub üzerinden manuel de tetiklenebilmesi için
+
+jobs:
+  ping-render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sinyal Gönder (Ping)
+        run: |
+          echo "Render sunucusuna uyanık kalması için sinyal gönderiliyor..."
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://hikaye-yazicisi.onrender.com/api/keep-alive)
+          echo "Sunucu Yanıt Kodu: $STATUS_CODE"
+          if [ "$STATUS_CODE" -eq 200 ]; then
+            echo "✅ Sinyal başarıyla ulaştı, sunucu aktif!"
+          else
+            echo "⚠️ Beklenmeyen bir yanıt alındı, ancak istek iletildi."
+          fi

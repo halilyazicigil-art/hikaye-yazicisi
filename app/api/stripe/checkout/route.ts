@@ -44,7 +44,8 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({ sessionId: session.id, url: session.url })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

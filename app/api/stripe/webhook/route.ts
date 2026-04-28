@@ -24,13 +24,15 @@ export async function POST(req: Request) {
     } else {
       event = JSON.parse(payload) // Webhook secret yoksa test ortamı varsayımı
     }
-  } catch (err: any) {
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Webhook error'
+    return NextResponse.json({ error: errorMessage }, { status: 400 })
   }
 
   // Başarılı ödeme ve abonelik tamamlama olaylarını dinle
   if (event.type === 'checkout.session.completed' || event.type === 'invoice.payment_succeeded') {
-    let session = event.data.object as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const session = event.data.object as any
     const userId = session.metadata?.userId || session.subscription_details?.metadata?.userId
 
     if (userId) {

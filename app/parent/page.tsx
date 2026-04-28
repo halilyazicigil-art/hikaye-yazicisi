@@ -86,7 +86,7 @@ export default function ParentDashboard() {
           {/* Upgrade Banner */}
           <div className="mt-8 bg-gradient-to-r from-amber-100 to-yellow-50 border border-amber-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between">
             <div>
-              <h3 className="text-amber-900 font-bold text-lg">Premium'a Geçin!</h3>
+              <h3 className="text-amber-900 font-bold text-lg">Premium&apos;a Geçin!</h3>
               <p className="text-amber-800/80 mt-1">Kendi sesinizi klonlayarak masalları siz okuyun.</p>
             </div>
             <button className="mt-4 md:mt-0 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold shadow-lg shadow-amber-500/30 transition-all">

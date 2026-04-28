@@ -27,8 +27,9 @@ export default function StoryForm() {
         alert('Masal başarıyla oluşturuldu!')
         // window.location.href = `/story/${response.story.id}`
       }
-    } catch (error: any) {
-      alert(error.message)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Bir hata oluştu'
+      alert(errorMessage)
     } finally {
       setIsGenerating(false)
     }
