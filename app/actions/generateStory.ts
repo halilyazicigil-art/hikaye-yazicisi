@@ -7,14 +7,28 @@ interface StoryRequest {
   hero: string
   theme: string
   age: number
-  profileId: string
 }
 
-export async function generateStoryAction({ childName, hero, theme, age, profileId }: StoryRequest) {
+export async function generateStoryAction({ childName, hero, theme, age }: StoryRequest) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Oturum açmanız gerekiyor.')
+
+  // Profil Kontrolü ve Oluşturma
+  let profileId = null
+  const { data: profiles } = await supabase.from('profiles').select('id').eq('user_id', user.id).limit(1)
+  if (profiles && profiles.length > 0) {
+    profileId = profiles[0].id
+  } else {
+    const { data: newProfile, error: profileErr } = await supabase.from('profiles').insert({
+      user_id: user.id,
+      name: childName,
+      age: age
+    }).select().single()
+    if (profileErr) throw new Error('Profil oluşturulamadı.')
+    profileId = newProfile.id
+  }
 
   // Kota Kontrolü (Rate Limiting)
   const { data: subData } = await supabase

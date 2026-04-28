@@ -20,12 +20,10 @@ export default function StoryForm() {
         childName,
         hero,
         theme,
-        age,
-        profileId: 'cf89a5cb-XXXX-XXXX-XXXX-XXXXXXXXXXXX' // Geçici Mock ID, gerçek uygulamada seçilen profilden gelecek
+        age
       })
       if (response.success) {
-        alert('Masal başarıyla oluşturuldu!')
-        // window.location.href = `/story/${response.story.id}`
+        window.location.href = `/story/${response.story.id}`
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Bir hata oluştu'
