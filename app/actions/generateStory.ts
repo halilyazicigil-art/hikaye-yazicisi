@@ -33,24 +33,29 @@ export async function generateStoryAction({ childName, hero, theme, age }: Story
   // Kota Kontrolü (Rate Limiting)
   const { data: subData } = await supabase
     .from('subscriptions')
-    .select('status')
+    .select('status, plan_id')
     .eq('user_id', user.id)
     .maybeSingle()
 
-  const isPremium = subData?.status === 'active'
-  const monthlyLimit = isPremium ? 50 : 3
+  const isActive = subData?.status === 'active'
+  const isPro = isActive && subData?.plan_id === 'pro'
+  const isPremium = isActive && subData?.plan_id === 'premium'
+
+  const monthlyLimit = isPremium ? Infinity : (isPro ? 50 : 3)
 
   const startOfMonth = new Date()
   startOfMonth.setDate(1)
   startOfMonth.setHours(0, 0, 0, 0)
 
+  // Sadece o aya ait bu kullanıcının profilindeki hikayeleri sayıyoruz
   const { count, error: countError } = await supabase
     .from('stories')
     .select('*', { count: 'exact', head: true })
+    .eq('profile_id', profileId)
     .gte('created_at', startOfMonth.toISOString())
 
   if (count !== null && count >= monthlyLimit) {
-    throw new Error(`Aylık masal sınırınıza ulaştınız. (Limit: ${monthlyLimit} masal/ay). Lütfen Bee Hive paketine yükseltin.`)
+    throw new Error(`Aylık masal sınırınıza ulaştınız. (Limit: ${monthlyLimit} masal/ay). Lütfen paketinizi yükseltin.`)
   }
 
   // 1. Masal Üretimi (Google AI Studio - Gemini)

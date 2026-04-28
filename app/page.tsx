@@ -156,14 +156,18 @@ export default async function Home() {
               <li className="flex justify-between border-b pb-2"><span>Kullanım</span> <span>3/Ay</span></li>
               <li className="flex justify-between border-b pb-2"><span>Yapay Zeka Seslendirme</span> <span>Sınırlı</span></li>
             </ul>
-            <Link href="/register" className="w-full mt-8 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-bold text-center transition">
-              Kayıt Ol
+            <Link href={user ? "/parent" : "/register"} className="w-full mt-8 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-bold text-center transition">
+              {user ? 'Panelime Git' : 'Kayıt Ol'}
             </Link>
           </div>
 
           {/* Pro Plan */}
-          <div className="bg-white border-2 border-[#e6b17e] rounded-[2rem] p-8 shadow-xl flex flex-col h-full relative z-10">
-            <div className="absolute -top-4 right-8 bg-[#f5c345] text-amber-900 font-bold px-4 py-1 rounded-full text-sm">En Popüler</div>
+          <div className={`bg-white border-2 border-[#e6b17e] rounded-[2rem] p-8 shadow-xl flex flex-col h-full relative z-10 ${isPro ? 'ring-4 ring-amber-500/30' : ''}`}>
+            {isPro ? (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 🍯</div>
+            ) : (
+              <div className="absolute -top-4 right-8 bg-[#f5c345] text-amber-900 font-bold px-4 py-1 rounded-full text-sm">En Popüler</div>
+            )}
             <h3 className="text-2xl font-lora font-bold mb-2">Tatlı Bal (Pro)</h3>
             <div className="text-4xl font-bold text-[#b3593b] mb-8">15 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
             <ul className="space-y-4 text-sm font-bold text-gray-700 flex-grow">
@@ -172,13 +176,19 @@ export default async function Home() {
               <li className="flex justify-between border-b pb-2"><span>Özel Tema Seçimi</span> <span>Var</span></li>
               <li className="flex justify-between border-b pb-2"><span>Eğitici Mod Seçeneği</span> <span>Açık</span></li>
             </ul>
-            <Link href="/settings" className="w-full mt-8 py-4 bg-[#b3593b] hover:bg-[#8c462e] text-white rounded-xl font-bold text-center transition shadow-md">
-              Hemen Başla
+            <Link 
+              href={isPro || isPremium ? "/parent" : "/settings"} 
+              className={`w-full mt-8 py-4 rounded-xl font-bold text-center transition shadow-md ${isPro || isPremium ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-[#b3593b] hover:bg-[#8c462e] text-white'}`}
+            >
+              {isPro || isPremium ? 'Panale Dön' : 'Hemen Başla'}
             </Link>
           </div>
 
           {/* Premium Plan (Mock) */}
-          <div className="bg-[#fcfaf7] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full opacity-80 scale-95">
+          <div className={`bg-[#fcfaf7] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full opacity-80 scale-95 relative ${isPremium ? 'ring-4 ring-purple-500/30 opacity-100 scale-100 border-purple-200 bg-white' : ''}`}>
+            {isPremium && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 👑</div>
+            )}
             <h3 className="text-2xl font-lora font-bold mb-2">Kraliçe Arı (Premium)</h3>
             <div className="text-4xl font-bold text-[#b3593b] mb-8">40 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
             <ul className="space-y-4 text-sm font-bold text-gray-700 flex-grow">
@@ -186,8 +196,11 @@ export default async function Home() {
               <li className="flex justify-between border-b pb-2"><span>Kullanım</span> <span>Sınırsız</span></li>
               <li className="flex justify-between border-b pb-2"><span>Kendi Sesini Klonlama</span> <span>Açık</span></li>
             </ul>
-            <Link href="/settings" className="w-full mt-8 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-bold text-center transition">
-              Yükselt
+            <Link 
+              href={isPremium ? "/parent" : "/settings"} 
+              className={`w-full mt-8 py-3 rounded-xl font-bold text-center transition ${isPremium ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
+            >
+              {isPremium ? 'Panele Dön' : 'Yükselt'}
             </Link>
           </div>
         </div>

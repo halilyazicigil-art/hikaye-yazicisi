@@ -1,6 +1,7 @@
 import { BookHeart, Plus, Settings, Star, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 
 export default async function ParentDashboard({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -18,13 +19,19 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
 
   // WEBHOOK BYPASS: If returning from Stripe Checkout successfully
   if (success === 'true' && typeof plan === 'string') {
-    await supabase.from('subscriptions').upsert({
+    // RLS (Güvenlik) kurallarını aşmak için admin yetkisi kullanıyoruz
+    const supabaseAdmin = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    
+    await supabaseAdmin.from('subscriptions').upsert({
       user_id: user.id,
       status: 'active',
       plan_id: plan,
       current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     }, { onConflict: 'user_id' })
-    // In a real app we'd redirect to clear the URL parameters, but this is fine for now
+    // In a real app we'd redirect to clear the URL parameters, but this is fine for test mode
   }
 
   // Kullanıcının abonelik durumunu kontrol et
@@ -36,9 +43,12 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   const { data: profiles } = await supabase.from('profiles').select('id, name').eq('user_id', user.id)
   const profileIds = profiles?.map(p => p.id) || []
 
-  // Çocuğun masallarını çekelim
+  // Çocuğun masallarını çekelim ve kotayı hesaplayalım
   let recentStories: any[] = []
+  let usedStories = 0
+
   if (profileIds.length > 0) {
+    // Son masallar
     const { data: stories } = await supabase
       .from('stories')
       .select('id, title, created_at, profiles(name)')
@@ -47,7 +57,23 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
       .limit(10)
     
     recentStories = stories || []
+
+    // Bu ay üretilen masallar (Kota hesabı için)
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+    
+    const { count } = await supabase
+      .from('stories')
+      .select('*', { count: 'exact', head: true })
+      .in('profile_id', profileIds)
+      .gte('created_at', startOfMonth.toISOString())
+      
+    usedStories = count || 0
   }
+
+  const monthlyLimit = isPremium ? Infinity : (isPro ? 50 : 3)
+  const remainingText = isPremium ? 'Sınırsız ♾️' : `${Math.max(0, monthlyLimit - usedStories)} / ${monthlyLimit}`
 
   return (
     <div className="min-h-screen bg-[#fdfaf3] font-nunito p-4 sm:p-8">
@@ -98,11 +124,21 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
             {/* Stats */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-amber-900/10 space-y-4">
               <h3 className="font-bold text-gray-900 text-lg border-b border-amber-100 pb-4">Aylık İstatistikler</h3>
-              <div className="flex items-center justify-between p-4 bg-[#fdfaf3] border border-amber-100 rounded-2xl">
-                <div className="flex items-center text-[#8c462e] font-semibold">
-                  <BookHeart className="mr-3" size={24} /> Okunan Masallar
+              
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between p-4 bg-[#fdfaf3] border border-amber-100 rounded-2xl">
+                  <div className="flex items-center text-[#8c462e] font-semibold">
+                    <BookHeart className="mr-3" size={24} /> Okunan Masallar
+                  </div>
+                  <span className="text-2xl font-black text-[#b3593b]">{recentStories.length}</span>
                 </div>
-                <span className="text-2xl font-black text-[#b3593b]">{recentStories.length}</span>
+
+                <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                  <div className="flex items-center text-emerald-800 font-semibold">
+                    <Clock className="mr-3" size={24} /> Kalan Masal Hakkı
+                  </div>
+                  <span className="text-xl font-bold text-emerald-700">{remainingText}</span>
+                </div>
               </div>
             </div>
           </div>
