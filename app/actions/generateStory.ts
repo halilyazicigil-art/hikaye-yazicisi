@@ -126,7 +126,8 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const aiData = await aiResponse.json()
     if (!aiData.candidates) {
       console.error("Gemini Hatası:", aiData)
-      return { success: false, error: 'Masal üretilemedi. Yapay zeka servisi yanıt vermedi.' }
+      const exactError = aiData.error?.message || 'Bilinmeyen API hatası'
+      return { success: false, error: `Gemini Hatası: ${exactError}. Lütfen API anahtarınızı veya model kotanızı kontrol edin.` }
     }
     
     const storyText = aiData.candidates[0].content.parts[0].text
