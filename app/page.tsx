@@ -7,75 +7,91 @@ export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  let isPro = false
+  let isPremium = false
+
+  if (user) {
+    const { data: sub } = await supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).maybeSingle()
+    if (sub) {
+      isPro = sub.plan_id === 'pro'
+      isPremium = sub.plan_id === 'premium'
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#fdfaf3] text-[#3d3d3d] overflow-x-hidden font-nunito relative">
       {/* Decorative watercolor background blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#f4dcb5] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
       <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-[#f7d6c4] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
 
-      {/* Navbar */}
-      <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center relative z-10">
-        <div className="flex items-center gap-2">
-          <span className="text-3xl">🐝</span>
-          <span className="text-3xl font-lora font-bold tracking-tight text-[#b3593b]">MasalKovanı</span>
-        </div>
-        <div className="flex items-center gap-4 sm:gap-6">
-          {user ? (
-            <>
-              {user.email === 'halilibrahimyazicigil@gmail.com' && (
-                <Link href="/admin" className="font-bold text-emerald-600 hover:text-emerald-700 transition">Admin</Link>
-              )}
-              <Link href="/parent" className="font-bold text-[#b3593b] hover:text-[#8c462e] transition">Panele Dön</Link>
-              <form action="/auth/signout" method="post">
-                <button type="submit" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
-                  Çıkış Yap
-                </button>
-              </form>
-            </>
-          ) : (
-            <>
-              <Link href="/register" className="font-bold text-[#b3593b] hover:text-[#8c462e] transition hidden sm:inline-block">Üye Ol</Link>
-              <Link href="/login" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
-                Giriş Yap
-              </Link>
-            </>
-          )}
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="max-w-5xl mx-auto px-6 pt-20 pb-10 text-center relative z-10">
-        <h1 className="text-5xl md:text-7xl font-lora font-bold text-[#2d2d2d] leading-tight mb-6">
-          Hayallerini Süsleyen Masalları Beraber Yazın
-        </h1>
-        <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto font-medium">
-          Çocuğunuzun ismini, en sevdiği karakteri ve temayı seçin. Geri kalan tüm sihri yapay zeka halletsin. Resimli, sesli ve sadece ona özel uyku öncesi serüvenleri yaratın.
-        </p>
+      {/* Hero and Navbar Wrapper with Background */}
+      <div className="relative w-full bg-[url('/images/hero_bg.png')] bg-cover bg-center bg-no-repeat pb-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#fdfaf3]/90 via-[#fdfaf3]/70 to-[#fdfaf3]"></div>
         
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-10">
-          <a href="#create" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-md w-full sm:w-auto">
-            Masal Üretmeye Başla
-          </a>
-          <a href="#pricing" className="bg-white hover:bg-gray-50 text-[#3d3d3d] px-8 py-4 rounded-xl font-bold text-lg transition shadow-md w-full sm:w-auto border border-gray-100">
-            Abonelik Planları
-          </a>
-        </div>
+        {/* Navbar */}
+        <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center relative z-20">
+          <div className="flex items-center gap-2">
+            <span className="text-3xl">🐝</span>
+            <span className="text-3xl font-lora font-bold tracking-tight text-[#b3593b]">MasalKovanı</span>
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6">
+            {user ? (
+              <>
+                {user.email === 'halilibrahimyazicigil@gmail.com' && (
+                  <Link href="/admin" className="font-bold text-emerald-600 hover:text-emerald-700 transition">Admin</Link>
+                )}
+                <Link href="/parent" className="font-bold text-[#b3593b] hover:text-[#8c462e] transition">Panele Dön</Link>
+                <form action="/auth/signout" method="post">
+                  <button type="submit" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
+                    Çıkış Yap
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <Link href="/register" className="font-bold text-[#b3593b] hover:text-[#8c462e] transition hidden sm:inline-block">Üye Ol</Link>
+                <Link href="/login" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
+                  Giriş Yap
+                </Link>
+              </>
+            )}
+          </div>
+        </nav>
 
-        <div className="flex flex-wrap justify-center gap-6 text-sm font-bold text-emerald-600 mb-16">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Güvenli ve Reklamsız</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Pedagojik Filtreler</span>
-          <span className="flex items-center gap-1 text-amber-500">⭐ Yüzlerce Mutlu Aile</span>
-        </div>
-      </section>
+        {/* Hero Section */}
+        <section className="max-w-5xl mx-auto px-6 pt-16 pb-10 text-center relative z-20">
+          <h1 className="text-5xl md:text-7xl font-lora font-bold text-[#2d2d2d] leading-tight mb-6 drop-shadow-sm">
+            Hayallerini Süsleyen Masalları Beraber Yazın
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-800 mb-10 max-w-3xl mx-auto font-medium drop-shadow-sm">
+            Çocuğunuzun ismini, en sevdiği karakteri ve temayı seçin. Geri kalan tüm sihri yapay zeka halletsin. Resimli, sesli ve sadece ona özel uyku öncesi serüvenleri yaratın.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-10">
+            <a href="#create" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto hover:scale-105">
+              Masal Üretmeye Başla
+            </a>
+            <a href="#pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#3d3d3d] px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto border border-gray-200 hover:scale-105">
+              Abonelik Planları
+            </a>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-6 text-sm font-bold text-emerald-700 mb-6 drop-shadow-sm">
+            <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Güvenli ve Reklamsız</span>
+            <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Pedagojik Filtreler</span>
+            <span className="flex items-center gap-1 text-amber-600 bg-white/50 px-3 py-1 rounded-full">⭐ Yüzlerce Mutlu Aile</span>
+          </div>
+        </section>
+      </div>
 
       {/* Form Section */}
-      <section id="create" className="relative z-10 pb-20 px-4">
+      <section id="create" className="relative z-10 pb-20 px-4 -mt-10">
         <div className="text-center mb-8">
           <p className="text-amber-600 font-bold mb-4 tracking-widest text-sm uppercase">✨ İlk Adımı Birlikte Atın</p>
           <h2 className="text-4xl font-lora font-bold text-[#2d2d2d] mb-4">Macerayı Sen Belirle</h2>
           <p className="text-xl text-gray-600">Sadece birkaç kelimeyle kahramanınızı yönlendirin, gerisini bize bırakın.</p>
         </div>
-        <StoryForm />
+        <StoryForm isPro={isPro} isPremium={isPremium} />
       </section>
 
       {/* Features Section */}

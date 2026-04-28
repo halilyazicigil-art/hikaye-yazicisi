@@ -8,12 +8,22 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: Request) {
   try {
+    const body = await req.json().catch(() => ({}))
+    const plan = body.plan === 'premium' ? 'premium' : 'pro'
+    
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'Oturum açmanız gerekiyor' }, { status: 401 })
     }
+
+    const isPremium = plan === 'premium'
+    const productName = isPremium ? 'MasalKovanı Premium (Kraliçe Arı)' : 'MasalKovanı Pro (Tatlı Bal)'
+    const productDesc = isPremium 
+      ? 'Sınırsız masal oluşturma ve ebeveyn ses klonlama özelliği.' 
+      : 'Ayda 50 masal oluşturma hakkı.'
+    const unitAmount = isPremium ? 4000 : 1500 // $40.00 veya $15.00
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -24,10 +34,10 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'MasalKovanı Premium',
-              description: 'Ayda 50 masal oluşturma ve ebeveyn ses klonlama özelliği.',
+              name: productName,
+              description: productDesc,
             },
-            unit_amount: 1500, // $15.00
+            unit_amount: unitAmount,
             recurring: {
               interval: 'month',
             },
@@ -36,10 +46,11 @@ export async function POST(req: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://hikaye-yazicisi.onrender.com'}/parent?success=true`,
+      success_url: `${req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://hikaye-yazicisi.onrender.com'}/parent?success=true&plan=${plan}`,
       cancel_url: `${req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://hikaye-yazicisi.onrender.com'}/parent?canceled=true`,
       metadata: {
         userId: user.id,
+        planId: plan,
       },
     })
 

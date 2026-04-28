@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, Image as ImageIcon, Shuffle, X, Plus } from 'lucide-react'
 import { generateStoryAction } from '@/app/actions/generateStory'
 
-export default function StoryForm() {
+export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
   const [prompt, setPrompt] = useState('')
   const [tab, setTab] = useState<'normal' | 'egitici'>('normal')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -22,6 +22,22 @@ export default function StoryForm() {
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section)
+  }
+
+  const handleVoiceSelect = (v: string) => {
+    if (v === 'Kendi Sesim (Premium)' && !isPremium) {
+      alert('Kendi sesinizi kullanmak için Kraliçe Arı paketine yükseltmelisiniz.')
+      return
+    }
+    setVoice(v)
+  }
+
+  const handleTabSelect = (selectedTab: 'normal' | 'egitici') => {
+    if (selectedTab === 'egitici' && !isPro && !isPremium) {
+      alert('Eğitici mod için Tatlı Bal veya Kraliçe Arı paketine sahip olmalısınız.')
+      return
+    }
+    setTab(selectedTab)
   }
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -61,17 +77,18 @@ export default function StoryForm() {
       <div className="flex border-b border-gray-100">
         <button
           type="button"
-          onClick={() => setTab('normal')}
+          onClick={() => handleTabSelect('normal')}
           className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors ${tab === 'normal' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
         >
           Normal Hikayeler
         </button>
         <button
           type="button"
-          onClick={() => setTab('egitici')}
-          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors ${tab === 'egitici' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+          onClick={() => handleTabSelect('egitici')}
+          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors flex items-center justify-center gap-2 ${tab === 'egitici' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
         >
           Eğitici Hikayeler
+          {!isPro && !isPremium && <span className="text-xs bg-gray-200 text-gray-500 px-2 py-1 rounded-full">Pro</span>}
         </button>
       </div>
 
@@ -106,10 +123,12 @@ export default function StoryForm() {
             {openSection === 'voice' && (
               <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50/50 rounded-xl mt-2">
                 {['Sessiz (Sadece Metin)', 'Sihirli Ses (AI)', 'Kendi Sesim (Premium)'].map(v => (
-                  <label key={v} className={`flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer border-2 transition ${voice === v ? 'border-[#b3593b] bg-[#fdfaf3]' : 'border-transparent bg-white hover:border-gray-200 shadow-sm'}`}>
-                    <input type="radio" name="voice" value={v} checked={voice === v} onChange={() => setVoice(v)} className="hidden" />
+                  <div key={v} onClick={() => handleVoiceSelect(v)} className={`flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer border-2 transition ${voice === v ? 'border-[#b3593b] bg-[#fdfaf3]' : 'border-transparent bg-white hover:border-gray-200 shadow-sm'} ${v === 'Kendi Sesim (Premium)' && !isPremium ? 'opacity-50 relative' : ''}`}>
+                    {v === 'Kendi Sesim (Premium)' && !isPremium && (
+                      <span className="absolute top-1 right-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">Kraliçe</span>
+                    )}
                     <span className={`font-bold ${voice === v ? 'text-[#b3593b]' : 'text-gray-600'}`}>{v}</span>
-                  </label>
+                  </div>
                 ))}
               </div>
             )}

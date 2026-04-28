@@ -21,9 +21,13 @@ export default function SettingsPage() {
     loadData()
   }, [])
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (planName: 'pro' | 'premium') => {
     try {
-      const res = await fetch('/api/stripe/checkout', { method: 'POST' })
+      const res = await fetch('/api/stripe/checkout', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planName })
+      })
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
@@ -69,12 +73,27 @@ export default function SettingsPage() {
             <div className="mt-8 border-t pt-8">
               <h3 className="text-xl font-bold mb-2">Sınırları Kaldırın</h3>
               <p className="text-gray-500 mb-6">Ayda 50 masal hakkı ve premium özellikler için MasalKovanı Premium paketine geçin.</p>
-              <button 
-                onClick={handleUpgrade}
-                className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-              >
-                MasalKovanı Premium ($15/ay)
-              </button>
+              {sub?.plan_id !== 'premium' && (
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {sub?.plan_id !== 'pro' && (
+                    <button 
+                      onClick={() => handleUpgrade('pro')}
+                      className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                    >
+                      MasalKovanı Pro ($15/ay)
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => handleUpgrade('premium')}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 relative overflow-hidden"
+                  >
+                    <span className="absolute inset-0 bg-white/20 blur-xl rounded-full translate-y-1/2 scale-150 animate-pulse"></span>
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      👑 Kraliçe Arı ($40/ay)
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

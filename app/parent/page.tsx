@@ -3,13 +3,34 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
-export default async function ParentDashboard() {
+export default async function ParentDashboard({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
     redirect('/login')
   }
+
+  // Next.js 15 searchParams resolution
+  const params = await searchParams
+  const success = params?.success
+  const plan = params?.plan
+
+  // WEBHOOK BYPASS: If returning from Stripe Checkout successfully
+  if (success === 'true' && typeof plan === 'string') {
+    await supabase.from('subscriptions').upsert({
+      user_id: user.id,
+      status: 'active',
+      plan_id: plan,
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    }, { onConflict: 'user_id' })
+    // In a real app we'd redirect to clear the URL parameters, but this is fine for now
+  }
+
+  // Kullanıcının abonelik durumunu kontrol et
+  const { data: sub } = await supabase.from('subscriptions').select('plan_id, status').eq('user_id', user.id).maybeSingle()
+  const isPro = sub?.plan_id === 'pro'
+  const isPremium = sub?.plan_id === 'premium'
 
   // Kullanıcının profillerini (çocuklarını) alalım
   const { data: profiles } = await supabase.from('profiles').select('id, name').eq('user_id', user.id)
@@ -37,7 +58,17 @@ export default async function ParentDashboard() {
             <h1 className="text-3xl font-lora font-bold text-[#2d2d2d] tracking-tight">Ebeveyn Kontrol Paneli</h1>
             <p className="text-gray-500 mt-1">Çocuklarınızın masal dünyasını buradan yönetin.</p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+            {isPremium && (
+               <span className="hidden sm:inline-flex items-center bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-bold border border-purple-200">
+                 👑 Kraliçe Arı
+               </span>
+            )}
+            {isPro && !isPremium && (
+               <span className="hidden sm:inline-flex items-center bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-bold border border-amber-200">
+                 🍯 Tatlı Bal
+               </span>
+            )}
             {user.email === 'halilibrahimyazicigil@gmail.com' && (
               <Link href="/admin" className="px-4 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-bold shadow-sm">
                 Admin
@@ -108,16 +139,20 @@ export default async function ParentDashboard() {
               </div>
             )}
 
-            {/* Upgrade Banner */}
-            <div className="mt-8 bg-[#fdfaf3] border border-[#e6b17e] rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between shadow-inner">
-              <div>
-                <h3 className="text-[#8c462e] font-lora font-bold text-lg">Premium'a Geçin!</h3>
-                <p className="text-gray-600 mt-1">Kendi sesinizi klonlayarak masalları siz okuyun.</p>
+            {/* Upgrade Banner - Dinamik */}
+            {!isPremium && (
+              <div className={`mt-8 ${isPro ? 'bg-purple-50 border-purple-200' : 'bg-[#fdfaf3] border-[#e6b17e]'} border rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between shadow-inner`}>
+                <div>
+                  <h3 className={`${isPro ? 'text-purple-800' : 'text-[#8c462e]'} font-lora font-bold text-lg`}>
+                    {isPro ? 'Kraliçe Arı\'ya Terfi Edin! 👑' : 'Premium\'a Geçin!'}
+                  </h3>
+                  <p className="text-gray-600 mt-1">Kendi sesinizi klonlayarak masalları siz okuyun.</p>
+                </div>
+                <Link href="/settings" className={`mt-4 md:mt-0 px-6 py-3 ${isPro ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-[#e6b17e] hover:bg-[#d9a066] text-amber-950'} rounded-xl font-bold shadow-sm transition-all inline-block text-center`}>
+                  Yükselt
+                </Link>
               </div>
-              <Link href="/settings" className="mt-4 md:mt-0 px-6 py-3 bg-[#e6b17e] hover:bg-[#d9a066] text-amber-950 rounded-xl font-bold shadow-sm transition-all inline-block text-center">
-                Yükselt
-              </Link>
-            </div>
+            )}
           </div>
         </div>
       </div>
