@@ -1,27 +1,40 @@
 'use client'
 
 import { useState } from 'react'
-import { Wand2, Sparkles, User, Palette } from 'lucide-react'
-
+import { Sparkles, ChevronRight, Image as ImageIcon, Shuffle } from 'lucide-react'
 import { generateStoryAction } from '@/app/actions/generateStory'
 
 export default function StoryForm() {
-  const [childName, setChildName] = useState('')
-  const [hero, setHero] = useState('')
-  const [theme, setTheme] = useState('')
-  const [age, setAge] = useState<number>(6)
+  const [prompt, setPrompt] = useState('')
+  const [tab, setTab] = useState<'normal' | 'egitici'>('normal')
   const [isGenerating, setIsGenerating] = useState(false)
+
+  // Accordion states
+  const [age, setAge] = useState<number>(4)
+  const [hero, setHero] = useState<string>('Sevimli Ayı')
+  const [genre, setGenre] = useState<string>('Masal')
+  const [imageStyle, setImageStyle] = useState<string>('Sulu Boya')
+  const [voice, setVoice] = useState<string>('Tatlı Kadın Sesi')
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!prompt) {
+      alert('Lütfen bir hikaye konusu yazın!')
+      return
+    }
+    
     setIsGenerating(true)
     try {
+      // Prompt, tür ve stil bilgilerini tek bir 'theme' içinde birleştiriyoruz.
+      const fullTheme = `${genre} tarzında. Konu: ${prompt}. Çizim Stili: ${imageStyle}. ${tab === 'egitici' ? 'Eğitici ve öğretici bir ders içermeli.' : ''}`
+      
       const response = await generateStoryAction({
-        childName,
-        hero,
-        theme,
-        age
+        childName: 'Çocuğum', // Otomatik profil için
+        hero: hero,
+        theme: fullTheme,
+        age: age
       })
+      
       if (response.success) {
         window.location.href = `/story/${response.story.id}`
       }
@@ -34,85 +47,118 @@ export default function StoryForm() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-[2.5rem] shadow-2xl border-4 border-yellow-100 overflow-hidden relative">
-      {/* Decorative background blobs */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-      <div className="absolute top-0 left-0 w-64 h-64 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-
-      <div className="relative z-10 text-center mb-10">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 text-yellow-500 rounded-3xl mb-4 rotate-3 shadow-lg">
-          <Sparkles size={40} />
-        </div>
-        <h2 className="text-4xl font-black text-indigo-900 mb-2 font-['Comic_Sans_MS',_sans-serif]">
-          Kendi Masalını Yarat!
-        </h2>
-        <p className="text-lg text-indigo-600 font-medium">Hayal gücünü serbest bırak, sihir başlasın.</p>
+    <div className="w-full max-w-3xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden mt-12 mb-20 border border-amber-50">
+      {/* Tabs */}
+      <div className="flex border-b border-gray-100">
+        <button
+          type="button"
+          onClick={() => setTab('normal')}
+          className={`px-8 py-4 font-bold text-lg transition-colors ${tab === 'normal' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+        >
+          Normal Hikayeler
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('egitici')}
+          className={`px-8 py-4 font-bold text-lg transition-colors ${tab === 'egitici' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+        >
+          Eğitici Hikayeler
+        </button>
       </div>
 
-      <form onSubmit={handleGenerate} className="relative z-10 space-y-6">
-        <div className="bg-blue-50/50 p-6 rounded-3xl border-2 border-blue-100">
-          <label className="flex items-center text-xl font-bold text-blue-900 mb-3">
-            <User className="mr-2 text-blue-500" size={24} /> Masal Kimin İçin?
-          </label>
-          <input
-            type="text"
-            value={childName}
-            onChange={(e) => setChildName(e.target.value)}
-            className="w-full px-6 py-4 text-xl bg-white border-2 border-blue-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all placeholder-blue-300"
-            placeholder="Çocuğun adı..."
+      <form onSubmit={handleGenerate} className="p-6">
+        {/* Main Textarea */}
+        <div className="relative mb-6">
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Bana şu konu hakkında bir hikaye yaz..."
+            className="w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800"
             required
           />
+          <div className="absolute bottom-2 left-2 flex gap-4 text-amber-700/60">
+            <button type="button" className="p-2 hover:bg-amber-50 rounded-lg transition"><ImageIcon size={20} /></button>
+            <button type="button" className="p-2 hover:bg-amber-50 rounded-lg transition"><Shuffle size={20} /></button>
+          </div>
         </div>
 
-        <div className="bg-emerald-50/50 p-6 rounded-3xl border-2 border-emerald-100">
-          <label className="flex items-center text-xl font-bold text-emerald-900 mb-3">
-            <User className="mr-2 text-emerald-500" size={24} /> Kahramanımız Kim?
-          </label>
-          <input
-            type="text"
-            value={hero}
-            onChange={(e) => setHero(e.target.value)}
-            className="w-full px-6 py-4 text-xl bg-white border-2 border-emerald-200 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all placeholder-emerald-300"
-            placeholder="Cesur bir aslan, uçan bir araba..."
-            required
-          />
+        {/* Options List */}
+        <div className="divide-y divide-gray-100 border-t border-gray-100">
+          
+          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
+            <span className="font-bold text-gray-800 text-lg">Ses</span>
+            <div className="flex items-center gap-2">
+              <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{voice}</span>
+              <ChevronRight className="text-gray-400" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
+            <span className="font-bold text-gray-800 text-lg">Tür</span>
+            <div className="flex items-center gap-2">
+              <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{genre}</span>
+              <ChevronRight className="text-gray-400" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
+            <span className="font-bold text-gray-800 text-lg">Görüntü Stili</span>
+            <div className="flex items-center gap-2">
+              <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{imageStyle}</span>
+              <ChevronRight className="text-gray-400" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
+            <span className="font-bold text-gray-800 text-lg">Yaş Grubu</span>
+            <div className="flex items-center gap-2">
+              <input 
+                type="number" 
+                value={age} 
+                onChange={(e) => setAge(Number(e.target.value))}
+                className="w-16 text-center bg-[#f0e6dd] text-[#8c6239] px-2 py-1 rounded-full text-sm font-bold outline-none"
+                min="2" max="12"
+              />
+              <ChevronRight className="text-gray-400" />
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between py-4 hover:bg-gray-50/50 cursor-pointer transition px-2">
+            <span className="font-bold text-gray-800 text-lg">Karakterler</span>
+            <div className="flex items-center gap-2">
+              <input 
+                type="text" 
+                value={hero} 
+                onChange={(e) => setHero(e.target.value)}
+                className="w-32 text-right bg-transparent text-[#8c6239] font-bold outline-none placeholder-[#8c6239]/50"
+                placeholder="Kahraman..."
+              />
+              <ChevronRight className="text-gray-400" />
+            </div>
+          </div>
+
         </div>
 
-        <div className="bg-purple-50/50 p-6 rounded-3xl border-2 border-purple-100">
-          <label className="flex items-center text-xl font-bold text-purple-900 mb-3">
-            <Palette className="mr-2 text-purple-500" size={24} /> Masalın Konusu Ne Olsun?
-          </label>
-          <select
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            className="w-full px-6 py-4 text-xl bg-white border-2 border-purple-200 rounded-2xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all text-purple-900"
-            required
+        {/* Submit Button */}
+        <div className="mt-8 flex justify-center pb-4">
+          <button
+            type="submit"
+            disabled={isGenerating}
+            className="bg-[#c28d75] hover:bg-[#a6745f] text-white px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-md flex items-center justify-center disabled:opacity-70 w-64"
           >
-            <option value="" disabled>Bir tema seçin...</option>
-            <option value="friendship">Arkadaşlık ve Paylaşmak</option>
-            <option value="courage">Cesaret ve Özgüven</option>
-            <option value="space">Uzay Macerası</option>
-            <option value="animals">Hayvanlar Alemi</option>
-          </select>
+            {isGenerating ? (
+              <span className="flex items-center animate-pulse">
+                <Sparkles className="animate-spin mr-2" size={20} />
+                Sihir Yapılıyor...
+              </span>
+            ) : (
+              <span className="flex items-center">
+                <Sparkles className="mr-2" size={20} />
+                Gönder
+              </span>
+            )}
+          </button>
         </div>
-
-        <button
-          type="submit"
-          disabled={isGenerating}
-          className="w-full py-5 px-8 bg-gradient-to-r from-orange-400 to-pink-500 hover:from-orange-500 hover:to-pink-600 text-white rounded-3xl font-black text-2xl transition-all flex items-center justify-center shadow-xl shadow-pink-500/30 hover:scale-[1.02] active:scale-95 mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {isGenerating ? (
-            <span className="flex items-center animate-pulse">
-              <Sparkles className="animate-spin mr-3" size={28} />
-              Sihir Yapılıyor...
-            </span>
-          ) : (
-            <span className="flex items-center">
-              <Wand2 className="mr-3" size={28} />
-              Masalımı Yaz!
-            </span>
-          )}
-        </button>
       </form>
     </div>
   )
