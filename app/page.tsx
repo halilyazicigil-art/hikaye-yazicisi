@@ -170,35 +170,42 @@ export default async function Home() {
             )}
             <h3 className="text-2xl font-lora font-bold mb-2">Tatlı Bal (Pro)</h3>
             <div className="text-4xl font-bold text-[#b3593b] mb-8">15 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
-            <ul className="space-y-4 text-sm font-bold text-gray-700 flex-grow">
-              <li className="flex justify-between border-b pb-2"><span>Hikaye Uzunluğu</span> <span>Uzun (800 kelime)</span></li>
-              <li className="flex justify-between border-b pb-2"><span>Kullanım</span> <span>50/Ay</span></li>
-              <li className="flex justify-between border-b pb-2"><span>Özel Tema Seçimi</span> <span>Var</span></li>
-              <li className="flex justify-between border-b pb-2"><span>Eğitici Mod Seçeneği</span> <span>Açık</span></li>
+            <ul className="space-y-3 text-xs font-bold text-gray-700 flex-grow">
+              <li className="flex justify-between border-b pb-1"><span>Aylık Masal</span> <span>40 Adet</span></li>
+              <li className="flex justify-between border-b pb-1"><span>Sesli Masal</span> <span>20 Adet</span></li>
+              <li className="flex justify-between border-b pb-1"><span>Ses Klonlama</span> <span>Aktif</span></li>
+              <li className="flex justify-between border-b pb-1"><span>Bölüm Sayısı</span> <span>20 Bölüm</span></li>
+              <li className="flex justify-between border-b pb-1"><span>İstek Sınırı</span> <span>400 Karakter</span></li>
+              <li className="flex justify-between border-b pb-1"><span>Arşiv Kapasitesi</span> <span>80 Masal</span></li>
+              <li className="flex justify-between border-b pb-1 text-emerald-600"><span>Yayın Lisansı</span> <span>Dahil</span></li>
             </ul>
             <Link 
               href={isPro || isPremium ? "/parent" : "/settings"} 
-              className={`w-full mt-8 py-4 rounded-xl font-bold text-center transition shadow-md ${isPro || isPremium ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-[#b3593b] hover:bg-[#8c462e] text-white'}`}
+              className={`w-full mt-6 py-4 rounded-xl font-bold text-center transition shadow-md ${isPro || isPremium ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-[#b3593b] hover:bg-[#8c462e] text-white'}`}
             >
-              {isPro || isPremium ? 'Panale Dön' : 'Hemen Başla'}
+              {isPro || isPremium ? 'Panele Dön' : 'Hemen Başla'}
             </Link>
           </div>
 
-          {/* Premium Plan (Mock) */}
-          <div className={`bg-[#fcfaf7] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full opacity-80 scale-95 relative ${isPremium ? 'ring-4 ring-purple-500/30 opacity-100 scale-100 border-purple-200 bg-white' : ''}`}>
+          {/* Premium Plan */}
+          <div className={`bg-[#fcfaf7] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full relative ${isPremium ? 'ring-4 ring-purple-500/30 opacity-100 scale-100 border-purple-200 bg-white' : 'opacity-80 scale-95'}`}>
             {isPremium && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 👑</div>
             )}
             <h3 className="text-2xl font-lora font-bold mb-2">Kraliçe Arı (Premium)</h3>
             <div className="text-4xl font-bold text-[#b3593b] mb-8">40 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
-            <ul className="space-y-4 text-sm font-bold text-gray-700 flex-grow">
-              <li className="flex justify-between border-b pb-2"><span>Hikaye Uzunluğu</span> <span>Destansı</span></li>
-              <li className="flex justify-between border-b pb-2"><span>Kullanım</span> <span>Sınırsız</span></li>
-              <li className="flex justify-between border-b pb-2"><span>Kendi Sesini Klonlama</span> <span>Açık</span></li>
+            <ul className="space-y-3 text-xs font-bold text-gray-700 flex-grow">
+              <li className="flex justify-between border-b pb-1"><span>Aylık Masal</span> <span>80 Adet</span></li>
+              <li className="flex justify-between border-b pb-1"><span>Sesli Masal</span> <span>40 Adet</span></li>
+              <li className="flex justify-between border-b pb-1"><span>Ses Klonlama</span> <span>Aktif</span></li>
+              <li className="flex justify-between border-b pb-1"><span>Bölüm Sayısı</span> <span>20 Bölüm</span></li>
+              <li className="flex justify-between border-b pb-1"><span>İstek Sınırı</span> <span>610 Karakter</span></li>
+              <li className="flex justify-between border-b pb-1"><span>Arşiv Kapasitesi</span> <span>80 Masal</span></li>
+              <li className="flex justify-between border-b pb-1 text-emerald-600"><span>Yayın Lisansı</span> <span>Dahil</span></li>
             </ul>
             <Link 
               href={isPremium ? "/parent" : "/settings"} 
-              className={`w-full mt-8 py-3 rounded-xl font-bold text-center transition ${isPremium ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
+              className={`w-full mt-6 py-3 rounded-xl font-bold text-center transition ${isPremium ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
             >
               {isPremium ? 'Panele Dön' : 'Yükselt'}
             </Link>

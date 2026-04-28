@@ -25,12 +25,14 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   }
 
   const handleVoiceSelect = (v: string) => {
-    if (v === 'Kendi Sesim (Premium)' && !isPremium) {
-      alert('Kendi sesinizi kullanmak için Kraliçe Arı paketine yükseltmelisiniz.')
+    if (v === 'Kendi Sesim' && !isPro && !isPremium) {
+      alert('Kendi sesinizi kullanmak için Tatlı Bal veya Kraliçe Arı paketine yükseltmelisiniz.')
       return
     }
     setVoice(v)
   }
+
+  const maxChars = isPremium ? 610 : (isPro ? 400 : 200)
 
   const handleTabSelect = (selectedTab: 'normal' | 'egitici') => {
     if (selectedTab === 'egitici' && !isPro && !isPremium) {
@@ -57,7 +59,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         childName: 'Kullanıcı',
         hero: chars,
         theme: fullTheme,
-        age: age
+        age: age,
+        voiceOption: voice === 'Sessiz (Sadece Metin)' ? 'Sessiz' : 'AI'
       })
       
       if (response.success) {
@@ -97,11 +100,14 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         <div className="relative mb-6">
           <textarea
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => setPrompt(e.target.value.slice(0, maxChars))}
             placeholder={tab === 'normal' ? "Bana şu konu hakkında bir hikaye yaz..." : "Çocuğunuza ne öğretmek istersiniz? Örn: Ayşe'nin dişlerini fırçalamayı öğrenmesi..."}
             className="w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800"
             required
           />
+          <div className="absolute top-2 right-2 text-xs font-bold text-gray-400">
+            {prompt.length} / {maxChars}
+          </div>
           <div className="absolute bottom-2 left-2 flex gap-4 text-amber-700/60">
             <button type="button" className="p-2 hover:bg-amber-50 rounded-lg transition"><ImageIcon size={20} /></button>
             <button type="button" className="p-2 hover:bg-amber-50 rounded-lg transition"><Shuffle size={20} /></button>
@@ -122,10 +128,10 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
             {openSection === 'voice' && (
               <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50/50 rounded-xl mt-2">
-                {['Sessiz (Sadece Metin)', 'Sihirli Ses (AI)', 'Kendi Sesim (Premium)'].map(v => (
-                  <div key={v} onClick={() => handleVoiceSelect(v)} className={`flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer border-2 transition ${voice === v ? 'border-[#b3593b] bg-[#fdfaf3]' : 'border-transparent bg-white hover:border-gray-200 shadow-sm'} ${v === 'Kendi Sesim (Premium)' && !isPremium ? 'opacity-50 relative' : ''}`}>
-                    {v === 'Kendi Sesim (Premium)' && !isPremium && (
-                      <span className="absolute top-1 right-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">Kraliçe</span>
+                {['Sessiz (Sadece Metin)', 'Sihirli Ses (AI)', 'Kendi Sesim'].map(v => (
+                  <div key={v} onClick={() => handleVoiceSelect(v)} className={`flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer border-2 transition ${voice === v ? 'border-[#b3593b] bg-[#fdfaf3]' : 'border-transparent bg-white hover:border-gray-200 shadow-sm'} ${v === 'Kendi Sesim' && !isPro && !isPremium ? 'opacity-50 relative' : ''}`}>
+                    {v === 'Kendi Sesim' && !isPro && !isPremium && (
+                      <span className="absolute top-1 right-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">Pro</span>
                     )}
                     <span className={`font-bold ${voice === v ? 'text-[#b3593b]' : 'text-gray-600'}`}>{v}</span>
                   </div>

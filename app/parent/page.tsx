@@ -58,22 +58,40 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
     
     recentStories = stories || []
 
-    // Bu ay üretilen masallar (Kota hesabı için)
-    const startOfMonth = new Date()
-    startOfMonth.setDate(1)
-    startOfMonth.setHours(0, 0, 0, 0)
-    
-    const { count } = await supabase
-      .from('stories')
-      .select('*', { count: 'exact', head: true })
-      .in('profile_id', profileIds)
-      .gte('created_at', startOfMonth.toISOString())
-      
-    usedStories = count || 0
-  }
+    // Bu ay üretilen masallar (Kota hesabı için - Faturalandırma döngüsüne uygun)
+    let startDate = new Date()
+    startDate.setDate(1)
+    startDate.setHours(0, 0, 0, 0)
 
-  const monthlyLimit = isPremium ? Infinity : (isPro ? 50 : 3)
-  const remainingText = isPremium ? 'Sınırsız ♾️' : `${Math.max(0, monthlyLimit - usedStories)} / ${monthlyLimit}`
+    if (sub?.current_period_end) {
+      startDate = new Date(sub.current_period_end)
+      startDate.setDate(startDate.getDate() - 30)
+    }
+    
+    const { data: monthStories } = await supabase
+      .from('stories')
+      .select('id, audio_url')
+      .in('profile_id', profileIds)
+      .gte('created_at', startDate.toISOString())
+      
+    usedStories = monthStories?.length || 0
+    const usedVoiceStories = monthStories?.filter(s => s.audio_url).length || 0
+
+    const storyLimit = isPremium ? 80 : (isPro ? 40 : 3)
+    const voiceLimit = isPremium ? 40 : (isPro ? 20 : 1)
+
+    const remainingText = `${Math.max(0, storyLimit - usedStories)} / ${storyLimit}`
+    const remainingVoiceText = `${Math.max(0, voiceLimit - usedVoiceStories)} / ${voiceLimit}`
+
+    return { usedStories, usedVoiceStories, storyLimit, voiceLimit, remainingText, remainingVoiceText }
+  }
+  return { usedStories: 0, usedVoiceStories: 0, storyLimit: 3, voiceLimit: 1, remainingText: '0 / 3', remainingVoiceText: '0 / 1' }
+}
+
+export default async function ParentDashboard({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  // ...
+  const { usedStories, usedVoiceStories, storyLimit, voiceLimit, remainingText, remainingVoiceText } = await getQuotaStats(supabase, profileIds, sub, isPro, isPremium)
+
 
   return (
     <div className="min-h-screen bg-[#fdfaf3] font-nunito p-4 sm:p-8">
@@ -134,10 +152,17 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                  <div className="flex items-center text-emerald-800 font-semibold">
-                    <Clock className="mr-3" size={24} /> Kalan Masal Hakkı
+                  <div className="flex items-center text-emerald-800 font-semibold text-sm">
+                    <Clock className="mr-3" size={20} /> Kalan Masal Hakkı
                   </div>
-                  <span className="text-xl font-bold text-emerald-700">{remainingText}</span>
+                  <span className="text-lg font-bold text-emerald-700">{remainingText}</span>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                  <div className="flex items-center text-blue-800 font-semibold text-sm">
+                    <Star className="mr-3" size={20} /> Kalan Sesli Masal Hakkı
+                  </div>
+                  <span className="text-lg font-bold text-blue-700">{remainingVoiceText}</span>
                 </div>
               </div>
             </div>

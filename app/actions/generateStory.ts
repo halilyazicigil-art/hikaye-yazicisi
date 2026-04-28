@@ -7,9 +7,10 @@ interface StoryRequest {
   hero: string
   theme: string
   age: number
+  voiceOption?: string // 'Sessiz', 'AI', 'Kendi Sesim'
 }
 
-export async function generateStoryAction({ childName, hero, theme, age }: StoryRequest) {
+export async function generateStoryAction({ childName, hero, theme, age, voiceOption = 'AI' }: StoryRequest) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -30,10 +31,10 @@ export async function generateStoryAction({ childName, hero, theme, age }: Story
     profileId = newProfile.id
   }
 
-  // Kota Kontrolü (Rate Limiting)
+  // 1. Abonelik ve Kota Bilgilerini Al
   const { data: subData } = await supabase
     .from('subscriptions')
-    .select('status, plan_id')
+    .select('status, plan_id, current_period_end')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -41,28 +42,69 @@ export async function generateStoryAction({ childName, hero, theme, age }: Story
   const isPro = isActive && subData?.plan_id === 'pro'
   const isPremium = isActive && subData?.plan_id === 'premium'
 
-  const monthlyLimit = isPremium ? Infinity : (isPro ? 50 : 3)
+  // Kural: Pro: 40, Premium: 80, Free: 3
+  const storyLimit = isPremium ? 80 : (isPro ? 40 : 3)
+  // Kural: Sesli Hikaye: Pro: 20, Premium: 40, Free: 1
+  const voiceLimit = isPremium ? 40 : (isPro ? 20 : 1)
 
-  const startOfMonth = new Date()
-  startOfMonth.setDate(1)
-  startOfMonth.setHours(0, 0, 0, 0)
+  // 2. Faturalandırma Döngüsüne Göre Başlangıç Tarihi Hesapla
+  let startDate = new Date()
+  startDate.setDate(1) // Varsayılan ay başı
+  startDate.setHours(0, 0, 0, 0)
 
-  // Sadece o aya ait bu kullanıcının profilindeki hikayeleri sayıyoruz
-  const { count, error: countError } = await supabase
-    .from('stories')
-    .select('*', { count: 'exact', head: true })
-    .eq('profile_id', profileId)
-    .gte('created_at', startOfMonth.toISOString())
-
-  if (count !== null && count >= monthlyLimit) {
-    throw new Error(`Aylık masal sınırınıza ulaştınız. (Limit: ${monthlyLimit} masal/ay). Lütfen paketinizi yükseltin.`)
+  if (subData?.current_period_end) {
+    startDate = new Date(subData.current_period_end)
+    startDate.setDate(startDate.getDate() - 30) // 30 gün öncesi (Faturalandırma başlangıcı)
   }
 
-  // 1. Masal Üretimi (Google AI Studio - Gemini)
-  // Adaptive Age Logic (Yaşa Göre Uyarlama) prompt içinde sağlanıyor.
+  // 3. Mevcut Kullanımı Sorgula
+  const { data: currentMonthStories } = await supabase
+    .from('stories')
+    .select('id, audio_url')
+    .in('profile_id', [profileId]) // Mevcut profil için
+    .gte('created_at', startDate.toISOString())
+
+  const totalUsed = currentMonthStories?.length || 0
+  const voiceUsed = currentMonthStories?.filter(s => s.audio_url).length || 0
+
+  // Kota Kontrolleri
+  if (totalUsed >= storyLimit) {
+    throw new Error(`Aylık toplam masal sınırınıza ulaştınız (${totalUsed}/${storyLimit}).`)
+  }
+
+  const isRequestingVoice = voiceOption !== 'Sessiz'
+  if (isRequestingVoice && voiceUsed >= voiceLimit) {
+    throw new Error(`Aylık sesli masal sınırınıza ulaştınız (${voiceUsed}/${voiceLimit}). Sadece sessiz masal oluşturabilirsiniz.`)
+  }
+
+  // 4. Arşiv Limiti Kontrolü (Maksimum 80 hikaye tutulabilir)
+  const { count: totalArchiveCount } = await supabase
+    .from('stories')
+    .select('*', { count: 'exact', head: true })
+    .in('profile_id', [profileId])
+
+  if (totalArchiveCount !== null && totalArchiveCount >= 80) {
+    // En eski hikayeyi bul ve sil
+    const { data: oldestStory } = await supabase
+      .from('stories')
+      .select('id')
+      .in('profile_id', [profileId])
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single()
+
+    if (oldestStory) {
+      await supabase.from('stories').delete().eq('id', oldestStory.id)
+    }
+  }
+
+  // 5. Masal Üretimi (Gemini)
   const prompt = `Sen 3-12 yaş arası çocuklar için mükemmel, pedagojik olarak onaylanmış masallar anlatan bir yapay zeka yazarısın. 
-  Lütfen ${age} yaşındaki "${childName}" isimli çocuk için, baş kahramanı "${hero}" olan ve ana teması "${theme}" üzerine kurulu eğitici, akıcı ve hayal gücünü geliştiren yaklaşık 800 kelimelik bir masal yaz. 
-  Kelimeleri ve cümle yapılarını ${age} yaşındaki bir çocuğun gelişimine tam uygun olacak şekilde seç. Hikayeyi paragraflara böl ve ilk satıra sadece masalın başlığını yaz (markdown kullanma).`
+  Lütfen ${age} yaşındaki "${childName}" isimli çocuk için, baş kahramanı "${hero}" olan ve ana teması "${theme}" üzerine kurulu eğitici, akıcı ve hayal gücünü geliştiren bir masal yaz. 
+  KURALLAR:
+  - Tam olarak 20 bölümden (paragraftan) oluşsun.
+  - Kelimeleri ve cümle yapılarını ${age} yaşındaki bir çocuğun gelişimine tam uygun seç. 
+  - İlk satıra sadece masalın başlığını yaz (markdown kullanma).`
   
   const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
     method: 'POST',
@@ -78,9 +120,9 @@ export async function generateStoryAction({ childName, hero, theme, age }: Story
   const storyText = aiData.candidates[0].content.parts[0].text
   const lines = storyText.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0)
   const title = lines[0].replace(/[*#]/g, '')
-  const content = lines.slice(1) // Paragraflar dizisi
+  const content = lines.slice(1)
 
-  // 2. Görsel Üretimi (fal.ai FLUX.1)
+  // 6. Görsel Üretimi
   const falResponse = await fetch('https://fal.run/fal-ai/flux/schnell', {
     method: 'POST',
     headers: {
@@ -88,7 +130,7 @@ export async function generateStoryAction({ childName, hero, theme, age }: Story
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      prompt: `A highly detailed watercolor illustration for a children's book cover. Theme: ${theme}, featuring ${hero}. Dreamy, magical, soft pastel colors, cute and pedagogical.`,
+      prompt: `A highly detailed watercolor illustration for a children's book cover. Theme: ${theme}, featuring ${hero}. Dreamy, magical, soft pastel colors.`,
       image_size: 'landscape_4_3',
       num_inference_steps: 4
     })
@@ -97,46 +139,43 @@ export async function generateStoryAction({ childName, hero, theme, age }: Story
   const falData = await falResponse.json()
   const imageUrl = falData.images?.[0]?.url || ''
 
-  // 3. Ses Üretimi (ElevenLabs TTS)
-  // 'Bella' isimli ElevenLabs hazır çocuk dostu ses ID'si kullanıldı. (Premiumda dinamik ebeveyn sesi ID'si ile değiştirilebilir)
-  const voiceId = 'EXAVITQu4vr4xnSDxMaL' 
-  const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-    method: 'POST',
-    headers: {
-      'Accept': 'audio/mpeg',
-      'xi-api-key': process.env.ELEVENLABS_API_KEY!,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      text: content.join(' '), // Sadece masal metni okutuluyor
-      model_id: 'eleven_multilingual_v2',
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-      }
+  // 7. Ses Üretimi (Eğer kota dahilindeyse ve istenmişse)
+  let audioUrl = null
+  if (isRequestingVoice) {
+    const voiceId = 'EXAVITQu4vr4xnSDxMaL' 
+    const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'audio/mpeg',
+        'xi-api-key': process.env.ELEVENLABS_API_KEY!,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text: content.join(' '),
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+        }
+      })
     })
-  })
-  
-  const audioBlob = await elevenLabsResponse.blob()
-  
-  // 4. Supabase Storage'a Ses Dosyasını Yükleme
-  const audioFileName = `story_audio_${Date.now()}.mp3`
-  const { error: uploadError } = await supabase.storage
-    .from('story_assets')
-    .upload(audioFileName, audioBlob, { contentType: 'audio/mpeg' })
+    
+    if (elevenLabsResponse.ok) {
+      const audioBlob = await elevenLabsResponse.blob()
+      const audioFileName = `story_audio_${Date.now()}.mp3`
+      await supabase.storage
+        .from('story_assets')
+        .upload(audioFileName, audioBlob, { contentType: 'audio/mpeg' })
 
-  if (uploadError) {
-    console.error('Storage upload error:', uploadError)
-    throw new Error('Ses dosyası Storage alanına yüklenemedi.')
+      const { data: publicUrlData } = supabase.storage
+        .from('story_assets')
+        .getPublicUrl(audioFileName)
+      
+      audioUrl = publicUrlData.publicUrl
+    }
   }
 
-  const { data: publicUrlData } = supabase.storage
-    .from('story_assets')
-    .getPublicUrl(audioFileName)
-    
-  const audioUrl = publicUrlData.publicUrl
-
-  // 5. Veritabanına (PostgreSQL) Kaydetme
+  // 8. Kaydet
   const { data: storyData, error: dbError } = await supabase
     .from('stories')
     .insert({
@@ -149,9 +188,10 @@ export async function generateStoryAction({ childName, hero, theme, age }: Story
     .select()
     .single()
 
-  if (dbError) {
-    console.error('DB Insert error:', dbError)
-    throw new Error('Veritabanına kaydedilemedi.')
+  if (dbError) throw new Error('Veritabanına kaydedilemedi.')
+
+  return { success: true, story: storyData }
+}w Error('Veritabanına kaydedilemedi.')
   }
 
   return { success: true, story: storyData }
