@@ -160,9 +160,9 @@ export default async function AdminDashboard() {
                   <span>{t.result.ms}ms</span>
                 </div>
                 <p className={`${t.result.status === 'ok' ? 'text-emerald-400' : 'text-red-400'}`}>
-                  > {t.result.message}
+                  &gt; {t.result.message}
                 </p>
-                <p className="text-gray-500 mt-2">> Ping successful. System ready.</p>
+                <p className="text-gray-500 mt-2">&gt; Ping successful. System ready.</p>
               </div>
             </div>
           ))}
