@@ -139,40 +139,23 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     // 6. Görsel Üretimi
     let imageUrl = ''
     try {
-      if (process.env.FAL_KEY) {
-        // FAL.AI (Öncelikli)
-        const falResponse = await fetch('https://fal.run/fal-ai/flux/schnell', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Key ${process.env.FAL_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: `A highly detailed watercolor illustration for a children's book cover. Theme: ${theme}, featuring ${hero}. Dreamy, magical, soft pastel colors.`,
-            image_size: 'landscape_4_3',
-            num_inference_steps: 4
-          })
-        })
-        if (falResponse.ok) {
-          const falData = await falResponse.json()
-          imageUrl = falData.images?.[0]?.url || ''
-        } else {
-          console.error("FAL API Hatası:", await falResponse.text())
-        }
-      } else if (process.env.HF_TOKEN && process.env.HF_TOKEN !== 'buraya_huggingface_token_yazilacak') {
-        // Hugging Face (Yedek)
+      if (process.env.HF_TOKEN && process.env.HF_TOKEN !== 'buraya_huggingface_token_yazilacak') {
+        // Hugging Face (Sadece HF kullanılacak)
         const translateResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: `Translate this to a short English image prompt for children's book: "${theme}, featuring ${hero}"` }] }],
+            contents: [{ parts: [{ text: `Translate this to a short English image prompt for children's book illustration (soft colors, watercolor style): "${theme}, featuring ${hero}"` }] }],
           }),
         })
         const transData = await translateResponse.json()
-        const enPrompt = transData.candidates?.[0]?.content?.parts?.[0]?.text || 'a cute illustration'
+        const enPrompt = transData.candidates?.[0]?.content?.parts?.[0]?.text || 'a cute children illustration'
 
         const hfResponse = await fetch("https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5", {
-          headers: { Authorization: `Bearer ${process.env.HF_TOKEN}` },
+          headers: { 
+            "Authorization": `Bearer ${process.env.HF_TOKEN}`,
+            "Content-Type": "application/json"
+          },
           method: "POST",
           body: JSON.stringify({ inputs: enPrompt }),
         })
@@ -182,14 +165,26 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
           if (contentType && !contentType.includes('application/json')) {
             const imageBlob = await hfResponse.blob()
             const imageFileName = `story_image_${Date.now()}.png`
-            await supabase.storage.from('story_assets').upload(imageFileName, imageBlob, { contentType: 'image/png' })
-            const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
-            imageUrl = imgUrlData.publicUrl
+            const { error: uploadError } = await supabase.storage.from('story_assets').upload(imageFileName, imageBlob, { contentType: 'image/png' })
+            
+            if (!uploadError) {
+              const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
+              imageUrl = imgUrlData.publicUrl
+            } else {
+              console.error("Supabase Image Upload Error:", uploadError)
+            }
+          } else {
+            const errData = await hfResponse.json()
+            console.error("HF API JSON Response (Wait or Error):", errData)
           }
+        } else {
+          console.error("HF API HTTP Error:", await hfResponse.text())
         }
+      } else {
+        console.warn("HF_TOKEN eksik veya geçersiz. Görsel üretilemedi.")
       }
     } catch (e) {
-      console.error('Image Generation Error:', e)
+      console.error('Hugging Face Image Generation Error:', e)
     }
 
     // 7. Ses Üretimi (Eğer kota dahilindeyse ve istenmişse)
@@ -206,7 +201,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            text: content.join(' ').slice(0, 4500),
+            text: content.join(' '),
             model_id: 'eleven_multilingual_v2',
             voice_settings: { stability: 0.3, similarity_boost: 0.85 }
           })
