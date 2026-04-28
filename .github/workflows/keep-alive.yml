@@ -2,8 +2,8 @@ name: Render Keep-Alive Robot
 
 on:
   schedule:
-    # Her 15 dakikada bir çalıştırarak Render Free tier'ın uykuya geçmesini engeller
-    - cron: '*/15 * * * *'
+    # GitHub cron gecikmelerini (bazen 15dk'yı geçer) telafi etmek için 5 dakikada bir çalıştırıyoruz.
+    - cron: '*/5 * * * *'
   workflow_dispatch: # İstenildiğinde GitHub üzerinden manuel de tetiklenebilmesi için
 
 jobs:
