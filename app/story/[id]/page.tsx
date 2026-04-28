@@ -24,10 +24,21 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50/50 to-orange-50/30 p-4 sm:p-8">
       <div className="w-full max-w-6xl mx-auto">
-        <div className="mb-8 flex justify-between">
+        <div className="mb-8 flex justify-between items-center">
           <Link href="/parent" className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 font-bold text-gray-700 hover:bg-gray-50 transition-all hover:shadow-md">
             &larr; Kütüphaneye Dön
           </Link>
+          {story.audio_url && (
+            <a 
+              href={story.audio_url} 
+              download={`MyStory_Masal_${story.id}.mp3`}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-purple-100 text-purple-700 px-6 py-3 rounded-2xl font-bold flex items-center shadow-sm border border-purple-200 hover:bg-purple-200 transition-all hover:shadow-md"
+            >
+              🎙️ Podcast Olarak İndir
+            </a>
+          )}
         </div>
         <StoryPlayer 
           title={story.title} 

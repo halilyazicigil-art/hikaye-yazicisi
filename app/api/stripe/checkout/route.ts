@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     }
 
     const isPremium = plan === 'premium'
-    const productName = isPremium ? 'MasalKovanı Premium (Kraliçe Arı)' : 'MasalKovanı Pro (Tatlı Bal)'
+    const productName = isPremium ? 'MyStory Premium (Kraliçe Arı)' : 'MyStory Pro (Tatlı Bal)'
     const productDesc = isPremium 
       ? 'Sınırsız masal oluşturma ve ebeveyn ses klonlama özelliği.' 
       : 'Ayda 50 masal oluşturma hakkı.'

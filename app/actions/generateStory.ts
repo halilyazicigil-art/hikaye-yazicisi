@@ -111,11 +111,11 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const prompt = `Sen 3-12 yaş arası çocuklar için mükemmel, pedagojik olarak onaylanmış masallar anlatan bir yapay zeka yazarısın. 
     Lütfen ${age} yaşındaki "${childName}" isimli çocuk için, baş kahramanı "${hero}" olan ve ana teması "${theme}" üzerine kurulu eğitici, akıcı ve hayal gücünü geliştiren bir masal yaz. 
     KURALLAR:
-    - Tam olarak 20 bölümden (paragraftan) oluşsun.
+    - En az 40 uzun paragraftan oluşan, çok detaylı, olay örgüsü zengin bir masal yaz.
     - Kelimeleri ve cümle yapılarını ${age} yaşındaki bir çocuğun gelişimine tam uygun seç. 
     - İlk satıra sadece masalın başlığını yaz (markdown kullanma).`
     
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -143,7 +143,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
       // DEV MODE: Hugging Face (Ücretsiz)
       try {
         if (!process.env.HF_TOKEN) throw new Error("HF_TOKEN eksik")
-        const translateResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
+        const translateResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -160,11 +160,17 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         })
         
         if (hfResponse.ok) {
-          const imageBlob = await hfResponse.blob()
-          const imageFileName = `story_image_${Date.now()}.png`
-          await supabase.storage.from('story_assets').upload(imageFileName, imageBlob, { contentType: 'image/png' })
-          const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
-          imageUrl = imgUrlData.publicUrl
+          const contentType = hfResponse.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            const errData = await hfResponse.json()
+            console.error("HF API JSON Hatası:", errData)
+          } else {
+            const imageBlob = await hfResponse.blob()
+            const imageFileName = `story_image_${Date.now()}.png`
+            await supabase.storage.from('story_assets').upload(imageFileName, imageBlob, { contentType: 'image/png' })
+            const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
+            imageUrl = imgUrlData.publicUrl
+          }
         } else {
            console.error("HF API Hatası:", await hfResponse.text())
         }
@@ -200,7 +206,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
 
     // 7. Ses Üretimi (Eğer kota dahilindeyse ve istenmişse)
     let audioUrl = null
-    if (isRequestingVoice && !isDev) {
+    if (isRequestingVoice) {
       try {
         if (!process.env.ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY eksik")
         const voiceId = 'EXAVITQu4vr4xnSDxMaL' 
@@ -214,7 +220,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
           body: JSON.stringify({
             text: content.join(' '),
             model_id: 'eleven_multilingual_v2',
-            voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+            voice_settings: { stability: 0.3, similarity_boost: 0.85 }
           })
         })
         

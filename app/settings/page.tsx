@@ -72,7 +72,7 @@ export default function SettingsPage() {
           {sub?.status !== 'active' && (
             <div className="mt-8 border-t pt-8">
               <h3 className="text-xl font-bold mb-2">Sınırları Kaldırın</h3>
-              <p className="text-gray-500 mb-6">Ayda 50 masal hakkı ve premium özellikler için MasalKovanı Premium paketine geçin.</p>
+              <p className="text-gray-500 mb-6">Ayda 50 masal hakkı ve premium özellikler için MyStory Premium paketine geçin.</p>
               {sub?.plan_id !== 'premium' && (
                 <div className="flex flex-col sm:flex-row gap-4">
                   {sub?.plan_id !== 'pro' && (
@@ -80,7 +80,7 @@ export default function SettingsPage() {
                       onClick={() => handleUpgrade('pro')}
                       className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
                     >
-                      MasalKovanı Pro ($15/ay)
+                      MyStory Pro ($15/ay)
                     </button>
                   )}
                   <button 

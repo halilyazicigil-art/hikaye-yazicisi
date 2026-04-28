@@ -13,7 +13,7 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "MasalKovanı - Çocuklar İçin Yapay Zeka Masal Üreticisi",
+  title: "MyStory - Çocuklar İçin Yapay Zeka Masal Üreticisi",
   description: "3-12 yaş arası çocuklara özel, kişiselleştirilmiş, resimli ve sesli uyku öncesi masalları yaratan yapay zeka platformu.",
 };
 

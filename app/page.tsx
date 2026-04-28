@@ -32,7 +32,7 @@ export default async function Home() {
         <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center relative z-20">
           <div className="flex items-center gap-2">
             <span className="text-3xl">🐝</span>
-            <span className="text-3xl font-lora font-bold tracking-tight text-[#b3593b]">MasalKovanı</span>
+            <span className="text-3xl font-lora font-bold tracking-tight text-[#b3593b]">MyStory</span>
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
             {user ? (
@@ -97,7 +97,7 @@ export default async function Home() {
       {/* Features Section */}
       <section className="max-w-7xl mx-auto px-6 py-20 border-t border-amber-900/5 relative z-10">
         <div className="text-center mb-16">
-          <span className="text-[#b3593b] font-bold tracking-widest uppercase text-sm">MasalKovanı Ayrıcalıkları</span>
+          <span className="text-[#b3593b] font-bold tracking-widest uppercase text-sm">MyStory Ayrıcalıkları</span>
           <h2 className="text-4xl md:text-5xl font-lora font-bold text-[#2d2d2d] mt-4 mb-4">
             Her Gece Yeni Bir Dünyaya Uyanın
           </h2>

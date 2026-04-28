@@ -105,7 +105,7 @@ export default async function AdminDashboard() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Sistem Sağlık Merkezi</h1>
-              <p className="text-gray-400 mt-1">MasalKovanı Admin Paneli</p>
+              <p className="text-gray-400 mt-1">MyStory Admin Paneli</p>
             </div>
           </div>
           <div className="flex gap-4">

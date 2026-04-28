@@ -14,7 +14,6 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl }: Stor
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-
   const togglePlay = () => {
     if (audioUrl) {
       if (audioRef.current) {
@@ -24,20 +23,6 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl }: Stor
           audioRef.current.play()
         }
         setIsPlaying(!isPlaying)
-      }
-    } else {
-      // WEB SPEECH API (Ücretsiz Fallback - Dev Mode)
-      if (isPlaying) {
-        window.speechSynthesis.cancel()
-        setIsPlaying(false)
-      } else {
-        const text = content.join(' ')
-        const utterance = new SpeechSynthesisUtterance(text)
-        utterance.lang = 'tr-TR'
-        utterance.rate = 0.9 // Çocuklar için biraz daha yavaş
-        utterance.onend = () => setIsPlaying(false)
-        window.speechSynthesis.speak(utterance)
-        setIsPlaying(true)
       }
     }
   }
