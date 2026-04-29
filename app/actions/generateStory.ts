@@ -1,6 +1,43 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { createSign } from 'crypto'
+
+// =====================================================================
+// Vertex AI için Service Account'tan OAuth2 Access Token üretici
+// Gemini 3 Flash Preview ve Imagen 4.0 bu token ile çalışır
+// =====================================================================
+async function getVertexAccessToken(): Promise<string> {
+  const sa = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!)
+  const now = Math.floor(Date.now() / 1000)
+
+  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url')
+  const payload = Buffer.from(JSON.stringify({
+    iss: sa.client_email,
+    scope: 'https://www.googleapis.com/auth/cloud-platform',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now
+  })).toString('base64url')
+
+  const signingInput = `${header}.${payload}`
+  const sign = createSign('RSA-SHA256')
+  sign.update(signingInput)
+  const signature = sign.sign(sa.private_key, 'base64url')
+  const jwt = `${signingInput}.${signature}`
+
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
+  })
+  const tokenData = await tokenRes.json()
+  if (!tokenData.access_token) {
+    console.error('Vertex AI Token Hatası:', tokenData)
+    throw new Error('Vertex AI access token alınamadı.')
+  }
+  return tokenData.access_token
+}
 
 interface StoryRequest {
   childName: string
@@ -104,10 +141,8 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     }
 
     // 5. Masal Üretimi ve Sahneleme (Gemini 3 Flash)
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      console.error("Eksik API Anahtarı: GOOGLE_GENERATIVE_AI_API_KEY")
-      return { success: false, error: 'Sistem yapılandırma hatası: AI API anahtarı eksik.' }
-    }
+    // Vertex AI için Service Account'tan token al (Gemini 3 Flash + Imagen 4.0)
+    const vertexToken = await getVertexAccessToken()
 
     // İlk adım: Hikayeyi yaz ve sahneleri belirle
     const prompt = `Sen profesyonel bir çocuk kitabı yazarısın. 
@@ -130,13 +165,13 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
          ]
        }`
     
-    // Gemini Flash → generativelanguage API üzerinden (desteklenen model: gemini-1.5-flash)
-    // NOT: gemini-3-flash-preview sadece Vertex AI üzerinden çalışır.
-    // Vertex AI için Bearer token yerine service account key gerekir.
-    // Bu nedenle GOOGLE_GENERATIVE_AI_API_KEY (AIzaSy... formatı) kullanıyoruz.
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
+    // Gemini 3 Flash Preview → Vertex AI (Service Account ile)
+    const aiResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikayeyazicisi/locations/us-central1/publishers/google/models/gemini-flash-3-preview:generateContent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': `Bearer ${vertexToken}`,
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { responseMimeType: "application/json" }
@@ -159,7 +194,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikayeyazicisi/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`, {
           method: 'POST',
           headers: { 
-            'Authorization': `Bearer ${process.env.GOOGLE_CLOUD_VERTEX_API_KEY}`,
+            'Authorization': `Bearer ${vertexToken}`,
             'Content-Type': 'application/json' 
           },
           body: JSON.stringify({
