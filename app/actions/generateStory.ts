@@ -6,14 +6,22 @@ import { createSign } from 'crypto'
 // =====================================================================
 // Vertex AI için Service Account'tan OAuth2 Access Token üretici
 // Gemini 3 Flash Preview ve Imagen 4.0 bu token ile çalışır
+// JSON parse yerine iki ayrı env değişkeni kullanıyoruz (daha kararlı)
 // =====================================================================
 async function getVertexAccessToken(): Promise<string> {
-  const sa = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!)
-  const now = Math.floor(Date.now() / 1000)
+  // Private key'deki \n karakterlerini gerçek newline'a çevir
+  const privateKey = (process.env.GOOGLE_SA_PRIVATE_KEY || '')
+    .replace(/\\n/g, '\n')
+  const clientEmail = process.env.GOOGLE_SA_CLIENT_EMAIL || ''
 
+  if (!privateKey || !clientEmail) {
+    throw new Error('GOOGLE_SA_PRIVATE_KEY veya GOOGLE_SA_CLIENT_EMAIL eksik!')
+  }
+
+  const now = Math.floor(Date.now() / 1000)
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url')
   const payload = Buffer.from(JSON.stringify({
-    iss: sa.client_email,
+    iss: clientEmail,
     scope: 'https://www.googleapis.com/auth/cloud-platform',
     aud: 'https://oauth2.googleapis.com/token',
     exp: now + 3600,
@@ -23,7 +31,7 @@ async function getVertexAccessToken(): Promise<string> {
   const signingInput = `${header}.${payload}`
   const sign = createSign('RSA-SHA256')
   sign.update(signingInput)
-  const signature = sign.sign(sa.private_key, 'base64url')
+  const signature = sign.sign(privateKey, 'base64url')
   const jwt = `${signingInput}.${signature}`
 
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
