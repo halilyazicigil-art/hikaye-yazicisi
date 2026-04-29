@@ -140,7 +140,10 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     })
     
     const aiData = await aiResponse.json()
-    if (!aiData.candidates) return { success: false, error: 'Gemini hikayeyi oluşturamadı.' }
+    if (!aiData.candidates) {
+      console.error("Gemini Hikaye Hatası:", aiData)
+      return { success: false, error: 'Gemini hikayeyi oluşturamadı. API loglarını kontrol edin.' }
+    }
     
     const storyDataRaw = JSON.parse(aiData.candidates[0].content.parts[0].text)
     const { title, scenes } = storyDataRaw
@@ -156,7 +159,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
             'Content-Type': 'application/json' 
           },
           body: JSON.stringify({
-            instances: [{ prompt: scene.imagePrompt }],
+            instances: [{ prompt: `${scene.imagePrompt}, high quality, cinematic lighting, consistent character design, children book illustration` }],
             parameters: {
               sampleCount: 1,
               aspectRatio: "1:1",
@@ -181,14 +184,16 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
             const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
             sceneImageUrl = imgUrlData.publicUrl
           }
+        } else {
+          console.error(`Imagen 4.0 Hatası (Sayfa ${index}):`, imagenData)
         }
       } catch (e) {
-        console.error(`Sayfa ${index} görsel hatası:`, e)
+        console.error(`Sayfa ${index} görsel üretim hatası:`, e)
       }
       return { text: scene.text, image_url: sceneImageUrl }
     }))
 
-    // 7. Ses Üretimi (Tüm metin için tek bir ses veya sayfa bazlı - Şimdilik tüm metin)
+    // 7. Ses Üretimi
     let audioUrl = null
     if (isRequestingVoice) {
       try {
@@ -210,13 +215,16 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
           const audioBuffer = Buffer.from(ttsData.audioContent, 'base64')
           const audioFileName = `story_audio_${Date.now()}.mp3`
           const { error: uploadError } = await supabase.storage.from('story_assets').upload(audioFileName, audioBuffer, { contentType: 'audio/mpeg' })
-          if (!uploadError) {
+          if (!audioUploadError) {
             const { data: publicUrlData } = supabase.storage.from('story_assets').getPublicUrl(audioFileName)
             audioUrl = publicUrlData.publicUrl
           }
+        } else {
+          const errorData = await ttsResponse.json()
+          console.error("TTS API Hatası:", errorData)
         }
       } catch (e) {
-        console.error('Seslendirme hatası:', e)
+        console.error('Seslendirme genel hatası:', e)
       }
     }
 
@@ -226,16 +234,21 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
       .insert({
         profile_id: profileId,
         title: title,
-        content_json: scenes.map((s: any) => s.text), // Eski yapı uyumluluğu için
-        pages: pages, // Yeni çoklu sayfa yapısı
-        image_url: pages[0].image_url, // İlk sayfa kapak olsun
+        content_json: scenes.map((s: any) => s.text),
+        pages: pages,
+        image_url: pages[0]?.image_url || '',
         audio_url: audioUrl
       })
       .select()
       .single()
 
-    if (dbError) throw dbError
-    return { success: true, story: finalStory }
+    if (dbError) {
+      console.error("Veritabanı Kayıt Hatası:", dbError)
+      throw dbError
+    }
+    
+    return { success: true, id: finalStory.id }
+
   } catch (globalError: any) {
     console.error("Sistem Hatası:", globalError)
     return { success: false, error: globalError.message || 'Beklenmeyen hata.' }
