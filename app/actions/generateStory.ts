@@ -149,10 +149,10 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const pages = await Promise.all(scenes.map(async (scene: any, index: number) => {
       let sceneImageUrl = ''
       try {
-        const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikay-494819/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`, {
+        const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikayeyazicisi/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`, {
           method: 'POST',
           headers: { 
-            'Authorization': `Bearer ${process.env.GOOGLE_CLOUD_TTS_API_KEY}`,
+            'Authorization': `Bearer ${process.env.GOOGLE_CLOUD_VERTEX_API_KEY}`,
             'Content-Type': 'application/json' 
           },
           body: JSON.stringify({
@@ -166,8 +166,9 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
           })
         })
 
-        if (imagenResponse.ok) {
-          const imagenData = await imagenResponse.json()
+        const imagenData = await imagenResponse.json()
+
+        if (imagenData.predictions && imagenData.predictions.length > 0) {
           const b64Image = imagenData.predictions[0].bytesBase64Encoded
           const imageBuffer = Buffer.from(b64Image, 'base64')
           const imageFileName = `story_${Date.now()}_page_${index}.png`
