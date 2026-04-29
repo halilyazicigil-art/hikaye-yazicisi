@@ -130,7 +130,11 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
          ]
        }`
     
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
+    // Gemini Flash → generativelanguage API üzerinden (desteklenen model: gemini-1.5-flash)
+    // NOT: gemini-3-flash-preview sadece Vertex AI üzerinden çalışır.
+    // Vertex AI için Bearer token yerine service account key gerekir.
+    // Bu nedenle GOOGLE_GENERATIVE_AI_API_KEY (AIzaSy... formatı) kullanıyoruz.
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
