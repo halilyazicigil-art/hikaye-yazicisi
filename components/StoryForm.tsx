@@ -7,16 +7,14 @@ import { createClient } from '@/utils/supabase/client'
 import { useEffect } from 'react'
 
 const AI_VOICES = [
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Anne Şefkati', desc: 'Yumuşak ve sevgi dolu' },
-  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Masalcı Baba', desc: 'Tok ve güven verici' },
-  { id: 'IKne3meq5pSxc9nNC7vY', name: 'Cesur Şövalye', desc: 'Kahramanvari ve enerjik' },
-  { id: 'Lcf7NAUoQs9mX74shS92', name: 'Küçük Peri', desc: 'Neşeli ve büyülü' },
-  { id: 'VR6Aewyiyih3pM1nuFpD', name: 'Bilge Kaplumbağa', desc: 'Yavaş ve öğretici' },
-  { id: 'N2lVS1wzCLPce5hPByuF', name: 'Yıldız Tozu', desc: 'Huzurlu ve mistik' },
-  { id: 'SAz9YHcvj6GT2oSNwa6X', name: 'Dev Devran', desc: 'Derin ve güçlü' },
-  { id: 'ErXw3p0z3HjgvePyS0UN', name: 'Neşeli Tavşan', desc: 'Hızlı ve eğlenceli' },
-  { id: 'Zlb1ssbc9RfoaQdO6K9f', name: 'Deniz Kızı', desc: 'Akıcı ve melodik' },
-  { id: 'piTKPvrLXI70W7G3O7mH', name: 'Rüzgarın Fısıltısı', desc: 'Hafif ve sakin' },
+  { id: 'tr-TR-Neural2-A', name: 'Anne Şefkati', desc: 'Yumuşak ve sevgi dolu' },
+  { id: 'tr-TR-Neural2-C', name: 'Masalcı Baba', desc: 'Tok ve güven verici' },
+  { id: 'tr-TR-Wavenet-B', name: 'Cesur Şövalye', desc: 'Kahramanvari ve enerjik' },
+  { id: 'tr-TR-Wavenet-C', name: 'Küçük Peri', desc: 'Neşeli ve büyülü' },
+  { id: 'tr-TR-Wavenet-E', name: 'Bilge Kaplumbağa', desc: 'Yavaş ve öğretici' },
+  { id: 'tr-TR-Wavenet-D', name: 'Yıldız Tozu', desc: 'Huzurlu ve mistik' },
+  { id: 'tr-TR-Neural2-B', name: 'Neşeli Tavşan', desc: 'Hızlı ve eğlenceli' },
+  { id: 'tr-TR-Wavenet-A', name: 'Deniz Kızı', desc: 'Akıcı ve melodik' },
 ]
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
@@ -28,7 +26,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   const [openSection, setOpenSection] = useState<string | null>(null)
 
   // Form Data
-  const [voice, setVoice] = useState<string>('EXAVITQu4vr4xnSDxMaL') // Varsayılan: Anne Şefkati
+  const [voice, setVoice] = useState<string>('tr-TR-Neural2-A') // Varsayılan: Anne Şefkati
   const [voiceName, setVoiceName] = useState<string>('Anne Şefkati')
   const [clonedVoices, setClonedVoices] = useState<any[]>([])
   const [isUploadingVoice, setIsUploadingVoice] = useState(false)

@@ -187,37 +187,50 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
       console.error('Hugging Face Image Generation Error:', e)
     }
 
-    // 7. Ses Üretimi (Eğer kota dahilindeyse ve istenmişse)
+    // 7. Ses Üretimi (Google Cloud TTS - Neural2)
     let audioUrl = null
     if (isRequestingVoice) {
       try {
-        if (!process.env.ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY eksik")
-        const voiceId = elevenVoiceId || 'EXAVITQu4vr4xnSDxMaL' 
-        const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        if (!process.env.GOOGLE_CLOUD_TTS_API_KEY) throw new Error("GOOGLE_CLOUD_TTS_API_KEY eksik")
+        const voiceId = elevenVoiceId || 'tr-TR-Neural2-A' 
+
+        const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_CLOUD_TTS_API_KEY}`, {
           method: 'POST',
-          headers: {
-            'Accept': 'audio/mpeg',
-            'xi-api-key': process.env.ELEVENLABS_API_KEY,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            text: content.join(' ').slice(0, 6500),
-            model_id: 'eleven_multilingual_v2',
-            voice_settings: { stability: 0.3, similarity_boost: 0.85 }
+            input: { text: content.join(' ').slice(0, 3200) },
+            voice: { 
+              languageCode: 'tr-TR', 
+              name: voiceId
+            },
+            audioConfig: { 
+              audioEncoding: 'MP3',
+              pitch: 0,
+              speakingRate: 1.0
+            }
           })
         })
-        
-        if (elevenLabsResponse.ok) {
-          const audioBlob = await elevenLabsResponse.blob()
+
+        if (ttsResponse.ok) {
+          const ttsData = await ttsResponse.json()
+          const audioBuffer = Buffer.from(ttsData.audioContent, 'base64')
           const audioFileName = `story_audio_${Date.now()}.mp3`
-          await supabase.storage.from('story_assets').upload(audioFileName, audioBlob, { contentType: 'audio/mpeg' })
-          const { data: publicUrlData } = supabase.storage.from('story_assets').getPublicUrl(audioFileName)
-          audioUrl = publicUrlData.publicUrl
+          
+          const { error: uploadError } = await supabase.storage
+            .from('story_assets')
+            .upload(audioFileName, audioBuffer, { contentType: 'audio/mpeg' })
+
+          if (!uploadError) {
+            const { data: publicUrlData } = supabase.storage.from('story_assets').getPublicUrl(audioFileName)
+            audioUrl = publicUrlData.publicUrl
+          } else {
+            console.error("Supabase Audio Upload Error:", uploadError)
+          }
         } else {
-           console.error("ElevenLabs API Hatası:", await elevenLabsResponse.text())
+          console.error("Google TTS API Hatası:", await ttsResponse.text())
         }
       } catch (e) {
-         console.error('ElevenLabs Audio Error:', e)
+        console.error('Google TTS Audio Error:', e)
       }
     }
 
