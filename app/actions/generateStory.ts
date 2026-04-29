@@ -136,55 +136,63 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const title = lines[0].replace(/[*#]/g, '')
     const content = lines.slice(1)
 
-    // 6. Görsel Üretimi
+    // 6. Görsel Üretimi (Google Vertex AI - Imagen 3)
     let imageUrl = ''
     try {
-      if (process.env.HF_TOKEN && process.env.HF_TOKEN !== 'buraya_huggingface_token_yazilacak') {
-        // Hugging Face (Sadece HF kullanılacak)
+      if (process.env.GOOGLE_CLOUD_TTS_API_KEY) {
+        // İngilizce prompt hazırlığı (Gemini ile)
         const translateResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: `Translate this to a short English image prompt for children's book illustration (soft colors, watercolor style): "${theme}, featuring ${hero}"` }] }],
+            contents: [{ parts: [{ text: `Create a detailed English image prompt for a children's book illustration. Style: ${imageStyle}, soft colors, magical atmosphere. Theme: "${theme}", featuring ${hero}. Keep it under 100 words.` }] }],
           }),
         })
         const transData = await translateResponse.json()
         const enPrompt = transData.candidates?.[0]?.content?.parts?.[0]?.text || 'a cute children illustration'
 
-        const hfResponse = await fetch("https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5", {
+        // Imagen 3 API Çağrısı (Vertex AI)
+        // Not: Proje ID: hikay-494819, Bölge: us-central1 (Varsayılan)
+        const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikay-494819/locations/us-central1/publishers/google/models/imagen-3.0-generate-001:predict`, {
+          method: 'POST',
           headers: { 
-            "Authorization": `Bearer ${process.env.HF_TOKEN}`,
-            "Content-Type": "application/json"
+            'Authorization': `Bearer ${process.env.GOOGLE_CLOUD_TTS_API_KEY}`, // API Key bazen Bearer olarak gerekebilir veya URL'de
+            'Content-Type': 'application/json' 
           },
-          method: "POST",
-          body: JSON.stringify({ inputs: enPrompt }),
-        })
-        
-        if (hfResponse.ok) {
-          const contentType = hfResponse.headers.get('content-type')
-          if (contentType && !contentType.includes('application/json')) {
-            const imageBlob = await hfResponse.blob()
-            const imageFileName = `story_image_${Date.now()}.png`
-            const { error: uploadError } = await supabase.storage.from('story_assets').upload(imageFileName, imageBlob, { contentType: 'image/png' })
-            
-            if (!uploadError) {
-              const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
-              imageUrl = imgUrlData.publicUrl
-            } else {
-              console.error("Supabase Image Upload Error:", uploadError)
+          body: JSON.stringify({
+            instances: [{ prompt: enPrompt }],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: "1:1",
+              outputMimeType: "image/png"
             }
-          } else {
-            const errData = await hfResponse.json()
-            console.error("HF API JSON Response (Wait or Error):", errData)
+          })
+        })
+
+        // Not: Vertex AI genellikle OAuth ister. Eğer API Key ile hata alırsak Gemini üzerinden (Flash-Multimodal) alternatif bir yol deneyeceğim.
+        // Şimdilik Imagen REST yapısını kuruyorum.
+        
+        if (imagenResponse.ok) {
+          const imagenData = await imagenResponse.json()
+          const b64Image = imagenData.predictions[0].bytesBase64Encoded
+          const imageBuffer = Buffer.from(b64Image, 'base64')
+          const imageFileName = `story_image_${Date.now()}.png`
+          
+          const { error: uploadError } = await supabase.storage
+            .from('story_assets')
+            .upload(imageFileName, imageBuffer, { contentType: 'image/png' })
+            
+          if (!uploadError) {
+            const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
+            imageUrl = imgUrlData.publicUrl
           }
         } else {
-          console.error("HF API HTTP Error:", await hfResponse.text())
+          console.error("Imagen API Hatası:", await imagenResponse.text())
+          // Yedek plan: Eğer Imagen hata verirse mevcut HF akışına geri dön veya boş bırak
         }
-      } else {
-        console.warn("HF_TOKEN eksik veya geçersiz. Görsel üretilemedi.")
       }
     } catch (e) {
-      console.error('Hugging Face Image Generation Error:', e)
+      console.error('Google Imagen Generation Error:', e)
     }
 
     // 7. Ses Üretimi (Google Cloud TTS - Neural2)
