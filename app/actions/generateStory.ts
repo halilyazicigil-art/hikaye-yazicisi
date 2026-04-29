@@ -151,27 +151,28 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         const transData = await translateResponse.json()
         const enPrompt = transData.candidates?.[0]?.content?.parts?.[0]?.text || 'a cute children illustration'
 
-        // Imagen 3 API Çağrısı (Vertex AI)
-        // Not: Proje ID: hikay-494819, Bölge: us-central1 (Varsayılan)
-        const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikay-494819/locations/us-central1/publishers/google/models/imagen-3.0-generate-001:predict`, {
+        // Imagen 4.0 API Çağrısı (2026 Standartı)
+        // Not: Proje ID: hikay-494819, Bölge: us-central1
+        const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikay-494819/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`, {
           method: 'POST',
           headers: { 
-            'Authorization': `Bearer ${process.env.GOOGLE_CLOUD_TTS_API_KEY}`, // API Key bazen Bearer olarak gerekebilir veya URL'de
+            'Authorization': `Bearer ${process.env.GOOGLE_CLOUD_TTS_API_KEY}`,
             'Content-Type': 'application/json' 
           },
           body: JSON.stringify({
-            instances: [{ prompt: enPrompt }],
+            instances: [{ 
+              prompt: `A beautiful children's book illustration in EXACT ${imageStyle} style. ${enPrompt}. Vibrant colors, highly detailed.` 
+            }],
             parameters: {
               sampleCount: 1,
               aspectRatio: "1:1",
-              outputMimeType: "image/png"
+              outputMimeType: "image/png",
+              // Style intensity: 2026 parametresi
+              addWatermark: false
             }
           })
         })
 
-        // Not: Vertex AI genellikle OAuth ister. Eğer API Key ile hata alırsak Gemini üzerinden (Flash-Multimodal) alternatif bir yol deneyeceğim.
-        // Şimdilik Imagen REST yapısını kuruyorum.
-        
         if (imagenResponse.ok) {
           const imagenData = await imagenResponse.json()
           const b64Image = imagenData.predictions[0].bytesBase64Encoded
@@ -188,21 +189,21 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
           }
         } else {
           console.error("Imagen API Hatası:", await imagenResponse.text())
-          // Yedek plan: Eğer Imagen hata verirse mevcut HF akışına geri dön veya boş bırak
         }
       }
     } catch (e) {
       console.error('Google Imagen Generation Error:', e)
     }
 
-    // 7. Ses Üretimi (Google Cloud TTS - Neural2)
+    // 7. Ses Üretimi (Google Cloud TTS v2)
     let audioUrl = null
     if (isRequestingVoice) {
       try {
         if (!process.env.GOOGLE_CLOUD_TTS_API_KEY) throw new Error("GOOGLE_CLOUD_TTS_API_KEY eksik")
-        const voiceId = elevenVoiceId || 'tr-TR-Neural2-A' 
+        const voiceId = elevenVoiceId || 'tr-TR-Studio-A' 
 
-        const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_CLOUD_TTS_API_KEY}`, {
+        // v2 endpoint ve studio ses desteği
+        const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v2/text:synthesize?key=${process.env.GOOGLE_CLOUD_TTS_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -212,9 +213,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
               name: voiceId
             },
             audioConfig: { 
-              audioEncoding: 'MP3',
-              pitch: 0,
-              speakingRate: 1.0
+              audioEncoding: 'MP3'
             }
           })
         })

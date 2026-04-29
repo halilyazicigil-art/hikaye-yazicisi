@@ -7,14 +7,13 @@ import { createClient } from '@/utils/supabase/client'
 import { useEffect } from 'react'
 
 const AI_VOICES = [
-  { id: 'tr-TR-Neural2-A', name: 'Anne Şefkati', desc: 'Yumuşak ve sevgi dolu' },
-  { id: 'tr-TR-Neural2-C', name: 'Masalcı Baba', desc: 'Tok ve güven verici' },
-  { id: 'tr-TR-Wavenet-B', name: 'Cesur Şövalye', desc: 'Kahramanvari ve enerjik' },
-  { id: 'tr-TR-Wavenet-C', name: 'Küçük Peri', desc: 'Neşeli ve büyülü' },
-  { id: 'tr-TR-Wavenet-E', name: 'Bilge Kaplumbağa', desc: 'Yavaş ve öğretici' },
-  { id: 'tr-TR-Wavenet-D', name: 'Yıldız Tozu', desc: 'Huzurlu ve mistik' },
-  { id: 'tr-TR-Neural2-B', name: 'Neşeli Tavşan', desc: 'Hızlı ve eğlenceli' },
-  { id: 'tr-TR-Wavenet-A', name: 'Deniz Kızı', desc: 'Akıcı ve melodik' },
+  { id: 'tr-TR-Studio-A', name: 'Zeynep (Studio)', desc: 'Ultra gerçekçi ve şefkatli' },
+  { id: 'tr-TR-Studio-B', name: 'Can (Studio)', desc: 'Profesyonel ve tok ses' },
+  { id: 'tr-TR-Neural2-A', name: 'Merve (HD)', desc: 'Doğal ve akıcı' },
+  { id: 'tr-TR-Neural2-C', name: 'Kerem (HD)', desc: 'Güven verici ve derin' },
+  { id: 'tr-TR-Wavenet-C', name: 'Peri Kızı', desc: 'Neşeli ve büyülü' },
+  { id: 'tr-TR-Wavenet-B', name: 'Şövalye', desc: 'Kahramanvari ve enerjik' },
+  { id: 'tr-TR-Neural2-B', name: 'Tavşan', desc: 'Hızlı ve eğlenceli' },
 ]
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
@@ -26,8 +25,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   const [openSection, setOpenSection] = useState<string | null>(null)
 
   // Form Data
-  const [voice, setVoice] = useState<string>('tr-TR-Neural2-A') // Varsayılan: Anne Şefkati
-  const [voiceName, setVoiceName] = useState<string>('Anne Şefkati')
+  const [voice, setVoice] = useState<string>('tr-TR-Studio-A') // Varsayılan: Zeynep
+  const [voiceName, setVoiceName] = useState<string>('Zeynep (Studio)')
   const [clonedVoices, setClonedVoices] = useState<any[]>([])
   const [isUploadingVoice, setIsUploadingVoice] = useState(false)
   const [showVoiceModal, setShowVoiceModal] = useState(false)
@@ -351,7 +350,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
             {openSection === 'style' && (
               <div className="p-4 bg-gray-50/50 rounded-xl mt-2 flex flex-wrap gap-2">
-                {['Sulu Boya', 'Karikatür', '3D Animasyon', 'Gerçekçi', 'Anime', 'Yağlı Boya', 'Kil Modelleme', 'Karakalem', 'Pastel Düşler', 'Pop Art', 'Piksel Sanat'].map(s => (
+                {['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Kil Modelleme', 'Gerçekçi Foto', 'Anime', 'Yağlı Boya', 'Diorama', 'Karakalem', 'Pop Art', 'Fütüristik'].map(s => (
                   <button type="button" key={s} onClick={() => setImageStyle(s)} className={`px-4 py-2 rounded-full font-bold transition ${imageStyle === s ? 'bg-[#b3593b] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
                     {s}
                   </button>
