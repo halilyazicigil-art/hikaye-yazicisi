@@ -45,6 +45,7 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
           content={story.content_json} 
           imageUrl={story.image_url} 
           audioUrl={story.audio_url} 
+          pages={story.pages}
         />
       </div>
     </div>

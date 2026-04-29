@@ -103,56 +103,52 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
       }
     }
 
-    // 5. Masal Üretimi (Gemini)
+    // 5. Masal Üretimi ve Sahneleme (Gemini 3 Flash)
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       console.error("Eksik API Anahtarı: GOOGLE_GENERATIVE_AI_API_KEY")
       return { success: false, error: 'Sistem yapılandırma hatası: AI API anahtarı eksik.' }
     }
 
-    const prompt = `Sen 3-12 yaş arası çocuklar için mükemmel, pedagojik olarak onaylanmış masallar anlatan bir yapay zeka yazarısın. 
-    Lütfen ${age} yaşındaki "${childName}" isimli çocuk için, baş kahramanı "${hero}" olan ve ana teması "${theme}" üzerine kurulu eğitici, akıcı ve hayal gücünü geliştiren bir masal yaz. 
+    // İlk adım: Hikayeyi yaz ve sahneleri belirle
+    const prompt = `Sen profesyonel bir çocuk kitabı yazarısın. 
+    Lütfen ${age} yaşındaki "${childName}" için, kahramanı "${hero}" olan, "${theme}" temalı harika bir masal yaz.
+    
     KURALLAR:
-    - En az 40 uzun paragraftan oluşan, çok detaylı, olay örgüsü zengin bir masal yaz.
-    - Kelimeleri ve cümle yapılarını ${age} yaşındaki bir çocuğun gelişimine tam uygun seç. 
-    - İlk satıra sadece masalın başlığını yaz (markdown kullanma).`
+    1. Masalı tam olarak 9 ile 11 arasında sahneye (sayfaya) böl.
+    2. Her sahne için:
+       - "text": O sayfanın hikaye metni (en az 3-4 cümle).
+       - "imagePrompt": O sahneyi anlatan, Imagen 4 için İNGİLİZCE görsel komutu.
+    3. GÖRSEL TUTARLILIK İÇİN: 
+       - Karakterlerin (özellikle ${hero}) fiziksel özelliklerini (saç rengi, kıyafeti, yaşı) her "imagePrompt" içinde AYNI şekilde detaylıca tekrarla.
+       - Stil olarak "${theme}" içinde belirtilen stili kullan.
+    4. Yanıtı SADECE şu JSON formatında ver:
+       {
+         "title": "Masal Başlığı",
+         "scenes": [
+           { "text": "...", "imagePrompt": "..." },
+           ...
+         ]
+       }`
     
     const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" }
       }),
     })
     
     const aiData = await aiResponse.json()
-    if (!aiData.candidates) {
-      console.error("Gemini Hatası:", aiData)
-      const exactError = aiData.error?.message || 'Bilinmeyen API hatası'
-      return { success: false, error: `Gemini Hatası: ${exactError}. Lütfen API anahtarınızı veya model kotanızı kontrol edin.` }
-    }
+    if (!aiData.candidates) return { success: false, error: 'Gemini hikayeyi oluşturamadı.' }
     
-    const storyText = aiData.candidates[0].content.parts[0].text
-    const lines = storyText.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0)
-    const title = lines[0].replace(/[*#]/g, '')
-    const content = lines.slice(1)
+    const storyDataRaw = JSON.parse(aiData.candidates[0].content.parts[0].text)
+    const { title, scenes } = storyDataRaw
 
-    // 6. Görsel Üretimi (Google Vertex AI - Imagen 3)
-    let imageUrl = ''
-    try {
-      if (process.env.GOOGLE_CLOUD_TTS_API_KEY) {
-        // İngilizce prompt hazırlığı (Gemini ile)
-        const translateResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: `Create a detailed English image prompt for a children's book illustration. Style: ${imageStyle}, soft colors, magical atmosphere. Theme: "${theme}", featuring ${hero}. Keep it under 100 words.` }] }],
-          }),
-        })
-        const transData = await translateResponse.json()
-        const enPrompt = transData.candidates?.[0]?.content?.parts?.[0]?.text || 'a cute children illustration'
-
-        // Imagen 4.0 API Çağrısı (2026 Standartı)
-        // Not: Proje ID: hikay-494819, Bölge: us-central1
+    // 6. Çoklu Görsel Üretimi (Imagen 4.0 - Her Sahne İçin)
+    const pages = await Promise.all(scenes.map(async (scene: any, index: number) => {
+      let sceneImageUrl = ''
+      try {
         const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikay-494819/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`, {
           method: 'POST',
           headers: { 
@@ -160,14 +156,11 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
             'Content-Type': 'application/json' 
           },
           body: JSON.stringify({
-            instances: [{ 
-              prompt: `A beautiful children's book illustration in EXACT ${imageStyle} style. ${enPrompt}. Vibrant colors, highly detailed.` 
-            }],
+            instances: [{ prompt: scene.imagePrompt }],
             parameters: {
               sampleCount: 1,
               aspectRatio: "1:1",
               outputMimeType: "image/png",
-              // Style intensity: 2026 parametresi
               addWatermark: false
             }
           })
@@ -177,7 +170,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
           const imagenData = await imagenResponse.json()
           const b64Image = imagenData.predictions[0].bytesBase64Encoded
           const imageBuffer = Buffer.from(b64Image, 'base64')
-          const imageFileName = `story_image_${Date.now()}.png`
+          const imageFileName = `story_${Date.now()}_page_${index}.png`
           
           const { error: uploadError } = await supabase.storage
             .from('story_assets')
@@ -185,36 +178,29 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
             
           if (!uploadError) {
             const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
-            imageUrl = imgUrlData.publicUrl
+            sceneImageUrl = imgUrlData.publicUrl
           }
-        } else {
-          console.error("Imagen API Hatası:", await imagenResponse.text())
         }
+      } catch (e) {
+        console.error(`Sayfa ${index} görsel hatası:`, e)
       }
-    } catch (e) {
-      console.error('Google Imagen Generation Error:', e)
-    }
+      return { text: scene.text, image_url: sceneImageUrl }
+    }))
 
-    // 7. Ses Üretimi (Google Cloud TTS v2)
+    // 7. Ses Üretimi (Tüm metin için tek bir ses veya sayfa bazlı - Şimdilik tüm metin)
     let audioUrl = null
     if (isRequestingVoice) {
       try {
-        if (!process.env.GOOGLE_CLOUD_TTS_API_KEY) throw new Error("GOOGLE_CLOUD_TTS_API_KEY eksik")
+        const fullText = scenes.map((s: any) => s.text).join(' ')
         const voiceId = elevenVoiceId || 'tr-TR-Studio-A' 
 
-        // v2 endpoint ve studio ses desteği
         const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v2/text:synthesize?key=${process.env.GOOGLE_CLOUD_TTS_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            input: { text: content.join(' ').slice(0, 3200) },
-            voice: { 
-              languageCode: 'tr-TR', 
-              name: voiceId
-            },
-            audioConfig: { 
-              audioEncoding: 'MP3'
-            }
+            input: { text: fullText.slice(0, 3200) },
+            voice: { languageCode: 'tr-TR', name: voiceId },
+            audioConfig: { audioEncoding: 'MP3' }
           })
         })
 
@@ -222,46 +208,35 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
           const ttsData = await ttsResponse.json()
           const audioBuffer = Buffer.from(ttsData.audioContent, 'base64')
           const audioFileName = `story_audio_${Date.now()}.mp3`
-          
-          const { error: uploadError } = await supabase.storage
-            .from('story_assets')
-            .upload(audioFileName, audioBuffer, { contentType: 'audio/mpeg' })
-
+          const { error: uploadError } = await supabase.storage.from('story_assets').upload(audioFileName, audioBuffer, { contentType: 'audio/mpeg' })
           if (!uploadError) {
             const { data: publicUrlData } = supabase.storage.from('story_assets').getPublicUrl(audioFileName)
             audioUrl = publicUrlData.publicUrl
-          } else {
-            console.error("Supabase Audio Upload Error:", uploadError)
           }
-        } else {
-          console.error("Google TTS API Hatası:", await ttsResponse.text())
         }
       } catch (e) {
-        console.error('Google TTS Audio Error:', e)
+        console.error('Seslendirme hatası:', e)
       }
     }
 
-    // 8. Kaydet
-    const { data: storyData, error: dbError } = await supabase
+    // 8. Veritabanına Kaydet
+    const { data: finalStory, error: dbError } = await supabase
       .from('stories')
       .insert({
         profile_id: profileId,
         title: title,
-        content_json: content,
-        image_url: imageUrl,
+        content_json: scenes.map((s: any) => s.text), // Eski yapı uyumluluğu için
+        pages: pages, // Yeni çoklu sayfa yapısı
+        image_url: pages[0].image_url, // İlk sayfa kapak olsun
         audio_url: audioUrl
       })
       .select()
       .single()
 
-    if (dbError) {
-      console.error("DB Kayıt Hatası:", dbError)
-      return { success: false, error: 'Veritabanına kaydedilemedi. Lütfen tekrar deneyin.' }
-    }
-
-    return { success: true, story: storyData }
+    if (dbError) throw dbError
+    return { success: true, story: finalStory }
   } catch (globalError: any) {
-    console.error("Bilinmeyen Sistem Hatası:", globalError)
-    return { success: false, error: 'Sunucu tarafında beklenmeyen bir hata oluştu.' }
+    console.error("Sistem Hatası:", globalError)
+    return { success: false, error: globalError.message || 'Beklenmeyen hata.' }
   }
 }
