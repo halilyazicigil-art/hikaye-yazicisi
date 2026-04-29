@@ -351,7 +351,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
             {openSection === 'style' && (
               <div className="p-4 bg-gray-50/50 rounded-xl mt-2 flex flex-wrap gap-2">
-                {['Sulu Boya', 'Karikatür', '3D Animasyon', 'Gerçekçi', 'Anime'].map(s => (
+                {['Sulu Boya', 'Karikatür', '3D Animasyon', 'Gerçekçi', 'Anime', 'Yağlı Boya', 'Kil Modelleme', 'Karakalem', 'Pastel Düşler', 'Pop Art', 'Piksel Sanat'].map(s => (
                   <button type="button" key={s} onClick={() => setImageStyle(s)} className={`px-4 py-2 rounded-full font-bold transition ${imageStyle === s ? 'bg-[#b3593b] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
                     {s}
                   </button>
