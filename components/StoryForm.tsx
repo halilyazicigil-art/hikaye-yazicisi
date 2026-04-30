@@ -7,13 +7,13 @@ import { createClient } from '@/utils/supabase/client'
 import { useEffect } from 'react'
 
 const AI_VOICES = [
-  { id: 'tr-TR-Studio-A', name: 'Zeynep (Studio)', desc: 'Ultra gerçekçi ve şefkatli' },
-  { id: 'tr-TR-Studio-B', name: 'Can (Studio)', desc: 'Profesyonel ve tok ses' },
-  { id: 'tr-TR-Neural2-A', name: 'Merve (HD)', desc: 'Doğal ve akıcı' },
-  { id: 'tr-TR-Neural2-C', name: 'Kerem (HD)', desc: 'Güven verici ve derin' },
-  { id: 'tr-TR-Wavenet-C', name: 'Peri Kızı', desc: 'Neşeli ve büyülü' },
-  { id: 'tr-TR-Wavenet-B', name: 'Şövalye', desc: 'Kahramanvari ve enerjik' },
-  { id: 'tr-TR-Neural2-B', name: 'Tavşan', desc: 'Hızlı ve eğlenceli' },
+  { id: 'tr-TR-Chirp3-HD-Aoede', name: 'Zeynep (Studio)', desc: 'Ultra gerçekçi ve şefkatli' },
+  { id: 'tr-TR-Chirp3-HD-Orus', name: 'Can (Studio)', desc: 'Profesyonel ve tok ses' },
+  { id: 'tr-TR-Chirp3-HD-Achernar', name: 'Merve (HD)', desc: 'Doğal ve akıcı' },
+  { id: 'tr-TR-Chirp3-HD-Algenib', name: 'Kerem (HD)', desc: 'Güven verici ve derin' },
+  { id: 'tr-TR-Chirp3-HD-Leda', name: 'Peri Kızı', desc: 'Neşeli ve büyülü' },
+  { id: 'tr-TR-Chirp3-HD-Puck', name: 'Şövalye', desc: 'Kahramanvari ve enerjik' },
+  { id: 'tr-TR-Wavenet-A', name: 'Tavşan', desc: 'Hızlı ve eğlenceli' },
 ]
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {

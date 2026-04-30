@@ -264,15 +264,15 @@ STRICT RULES:
     if (isRequestingVoice) {
       try {
         const fullText = scenes.map((s: any) => s.text).join(' ')
-        const voiceId = elevenVoiceId || 'tr-TR-Studio-A' 
+        const voiceId = elevenVoiceId || 'tr-TR-Chirp3-HD-Aoede' 
 
-        const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v2/text:synthesize?key=${process.env.GOOGLE_CLOUD_TTS_API_KEY}`, {
+        const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_CLOUD_TTS_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            input: { text: fullText.slice(0, 3200) },
+            input: { text: fullText.slice(0, 4800) },
             voice: { languageCode: 'tr-TR', name: voiceId },
-            audioConfig: { audioEncoding: 'MP3' }
+            audioConfig: { audioEncoding: 'MP3', speakingRate: 0.95 }
           })
         })
 
