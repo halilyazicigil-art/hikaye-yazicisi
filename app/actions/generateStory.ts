@@ -56,20 +56,57 @@ interface StoryRequest {
   elevenVoiceId?: string
 }
 
-// Görüntü stili → Imagen 4.0 prompt karşılığı
-const IMAGE_STYLE_MAP: Record<string, string> = {
-  'Sulu Boya': 'warm watercolor painting style, soft washes, gentle blending',
-  '3D Pixar Stili': '3D rendered Pixar-style animation, smooth CGI, vibrant lighting, cartoon 3D',
-  'Pastel Düşler': 'soft pastel colors, dreamy ethereal atmosphere, gentle whimsical illustration',
-  'Kil Modelleme': 'claymation style, clay figurine characters, stop-motion look, textured clay',
-  'Anime': 'anime style illustration, Japanese animation aesthetic, vivid colors, expressive eyes',
-  'Yağlı Boya': 'oil painting style, rich textured brushstrokes, classical art, warm tones',
-  'Diorama': 'miniature diorama style, tilt-shift photography, tiny detailed world, macro lens',
-  'Karakalem': 'pencil sketch, detailed charcoal drawing, hand-drawn, monochrome shading',
-  'Pop Art': 'pop art style, bold primary colors, comic book aesthetic, halftone dots',
-  'Çizgi Film': 'cartoon style, vibrant flat colors, bold outlines, animated series look',
-  'Origami Kağıt': 'paper craft origami style, folded paper art, textured paper, geometric shapes',
-  'Vintage Retro': 'vintage retro storybook illustration, 1950s children book art, muted warm palette',
+// Görüntü stili → Imagen 4.0 prompt karşılığı (Prefix ve Description olarak)
+const IMAGE_STYLE_MAP: Record<string, { prefix: string, desc: string, negative?: string }> = {
+  'Sulu Boya': { 
+    prefix: 'Children\'s storybook illustration, warm watercolor painting style,', 
+    desc: 'soft washes, gentle blending, magical and soft aesthetic' 
+  },
+  '3D Pixar Stili': { 
+    prefix: 'Professional 3D animation render, Pixar-style 3D character art,', 
+    desc: 'smooth CGI, vibrant cinematic lighting, highly detailed 3D cartoon' 
+  },
+  'Pastel Düşler': { 
+    prefix: 'Ethereal pastel illustration, soft dreamy aesthetic,', 
+    desc: 'gentle whimsical style, soft diffused lighting, magical atmosphere' 
+  },
+  'Kil Modelleme': { 
+    prefix: 'Hand-crafted claymation style art, stop-motion clay figurine look,', 
+    desc: 'textured clay, miniature world aesthetic, tactile craft style' 
+  },
+  'Anime': { 
+    prefix: 'Modern anime style illustration, vibrant Japanese animation aesthetic,', 
+    desc: 'clean lines, vivid colors, expressive cinematic anime look' 
+  },
+  'Yağlı Boya': { 
+    prefix: 'Classic oil painting style, rich textured brushstrokes,', 
+    desc: 'classical storybook art, impasto technique, warm artistic lighting' 
+  },
+  'Diorama': { 
+    prefix: 'Miniature diorama photography style, detailed model world,', 
+    desc: 'tilt-shift effect, macro lens perspective, tiny handcrafted scene' 
+  },
+  'Karakalem': { 
+    prefix: 'Detailed monochrome pencil sketch, charcoal drawing art,', 
+    desc: 'black and white hand-drawn illustration, realistic graphite shading, no colors',
+    negative: 'color, colorful, rainbow, saturation, paint'
+  },
+  'Pop Art': { 
+    prefix: 'Bold Pop Art style, comic book aesthetic,', 
+    desc: 'vibrant primary colors, halftone dots, high contrast graphic art' 
+  },
+  'Çizgi Film': { 
+    prefix: 'Clean vector cartoon style, modern animated series look,', 
+    desc: 'bold outlines, flat vibrant colors, cheerful 2D animation' 
+  },
+  'Origami Kağıt': { 
+    prefix: 'Paper craft origami style, folded paper art scene,', 
+    desc: 'textured paper, sharp folds, geometric paper shapes, layered paper art' 
+  },
+  'Vintage Retro': { 
+    prefix: 'Vintage 1950s storybook illustration, nostalgic retro children\'s book art,', 
+    desc: 'muted warm color palette, grainy paper texture, classic storybook feel' 
+  },
 }
 
 // Yaş grubuna göre dil ve karmaşıklık kuralları
@@ -184,7 +221,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     
     const styleMatch = theme.match(/Çizim Stili:\s*([^.]+)/)
     const selectedStyle = styleMatch ? styleMatch[1].trim() : 'Sulu Boya'
-    const imagenStylePrompt = IMAGE_STYLE_MAP[selectedStyle] || IMAGE_STYLE_MAP['Sulu Boya']
+    const styleConfig = IMAGE_STYLE_MAP[selectedStyle] || IMAGE_STYLE_MAP['Sulu Boya']
 
     const ageKey = typeof age === 'string' ? age : (age <= 2 ? '1-2' : age <= 4 ? '2-4' : age <= 6 ? '4-6' : age <= 10 ? '6-10' : '10-13')
     const ageRules = AGE_RULES[ageKey] || AGE_RULES['2-4']
@@ -222,13 +259,18 @@ STRICT RULES:
    - EVERY "imagePrompt" MUST include the EXACT character description string, word for word, copied verbatim.
    - NEVER change skin tone, hair color, outfit, or any physical trait between scenes.
    - The story has EXACTLY ${characterCount} main character(s). NEVER add more characters.
-4. IMAGEN PROMPT RULES:
-   - Start every imagePrompt with: "Children's storybook illustration, ${imagenStylePrompt}, soft lighting,"
+4. STRICT IMAGE RULES:
+   - NEVER, EVER include any text, letters, names, or words in the images.
+   - Do NOT include labels, captions, or signposts.
+   - Response ONLY with visual descriptions.
+5. IMAGEN PROMPT RULES:
+   - Start every imagePrompt with: "${styleConfig.prefix} ${styleConfig.desc}, soft lighting,"
    - Then COPY-PASTE the EXACT character descriptions from characterDescriptions.
    - Then describe what is happening in the scene.
-   - End EVERY imagePrompt with: "exactly ${characterCount} character(s) only, no extra people, no text overlay, no letters, no words, no labels, no captions, no titles, no writing of any kind"
+   - End EVERY imagePrompt with: "exactly ${characterCount} character(s) only, no extra people, ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING, NO CAPTIONS, NO LABELS, NO SIGNATURES"
+   ${styleConfig.negative ? `- NEGATIVE INSTRUCTIONS: ${styleConfig.negative}` : ''}
    - NEVER describe characters differently across scenes.
-5. Respond ONLY in this exact JSON format:
+6. Respond ONLY in this exact JSON format:
 {
   "title": "Story Title in Turkish",
   "characterDescriptions": {
@@ -262,9 +304,9 @@ STRICT RULES:
     const storyDataRaw = JSON.parse(aiData.candidates[0].content.parts[0].text)
     const { title, scenes, characterDescriptions } = storyDataRaw
     
-    // Karakterlerin tam tanımlarını bir string olarak hazırla (Imagen'e anchor olarak verilecek)
+    // Karakterlerin tam tanımlarını bir string olarak hazırla (İsimleri temizleyerek - yazıyı engellemek için)
     const charAnchor = characterDescriptions 
-      ? Object.entries(characterDescriptions).map(([name, desc]) => `${name}: ${desc}`).join('; ')
+      ? Object.entries(characterDescriptions).map(([name, desc]) => `${desc}`).join('; ')
       : ''
 
     // 6. Çoklu Görsel Üretimi (Imagen 4.0 - Her Sahne İçin)
@@ -279,7 +321,7 @@ STRICT RULES:
           },
           body: JSON.stringify({
             instances: [{ 
-              prompt: `${scene.imagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR (must match exactly): ${charAnchor}` : ''}, high quality illustration, NO TEXT OF ANY KIND, no letters, no words, no labels, no captions, no name tags, no title text, no writing anywhere in the image, pure illustration only` 
+              prompt: `ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS. ${scene.imagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR: ${charAnchor}` : ''}, high quality, NO TEXT, NO LABELS, NO CAPTIONS, NO NAME TAGS, NO WRITING, pure illustration only` 
             }],
             parameters: {
               sampleCount: 1,
