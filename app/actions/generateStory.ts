@@ -67,9 +67,9 @@ const IMAGE_STYLE_MAP: Record<string, { prefix: string, desc: string, negative?:
     desc: 'smooth CGI, vibrant cinematic lighting, highly detailed 3D cartoon' 
   },
   'Pastel Düşler': { 
-    prefix: 'Ethereal pastel illustration, soft dreamy aesthetic,', 
-    desc: 'muted color palette, pale tones, desaturated colors, gentle whimsical style, soft diffused lighting',
-    negative: 'saturated colors, bright colors, high contrast, neon, vivid'
+    prefix: 'High-quality children\'s storybook illustration, ethereal magic pastel style,', 
+    desc: 'glowing pastel colors, soft luminous lighting, whimsical dreamy atmosphere, magical sparkles, soft watercolor edges, vibrant yet gentle palette',
+    negative: 'dark, moody, grayscale, muted colors, realistic, photo, rough, jagged'
   },
   'Kil Modelleme': { 
     prefix: 'Hand-crafted claymation style art, stop-motion clay figurine look,', 
