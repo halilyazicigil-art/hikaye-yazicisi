@@ -253,7 +253,10 @@ STRICT RULES:
 1. Split the story into exactly 9-11 scenes (pages).
 2. For each scene provide:
    - "text": The story text for that page (minimum 3-4 sentences, in Turkish).
-   - "imagePrompt": An English image generation prompt for Imagen 4.0. NEVER include character names here. Use only physical descriptions (e.g. "The red-capped boy" instead of "Ali").
+   - "imagePrompt": A strictly NEUTRAL English visual description for Imagen 4.0. 
+     * NEVER include character names.
+     * NEVER include art styles, genres, or moods (e.g. do NOT use "fairytale", "sci-fi", "realistic", "watercolor").
+     * ONLY describe objects, poses, and actions (e.g. "A child sitting on a wooden chair, holding a glowing crystal"). Art style will be applied by the system.
 3. CHARACTER CONSISTENCY (ABSOLUTELY CRITICAL - NO EXCEPTIONS):
    - Define EVERY character's appearance ONCE in "characterDescriptions" at the top level.
    - ${characterDesc}
@@ -265,8 +268,9 @@ STRICT RULES:
    - Do NOT include labels, captions, or signposts.
    - Response ONLY with visual descriptions.
 5. IMAGEN PROMPT RULES:
-   - Start every imagePrompt with: "A high-quality scene where..."
-   - Then COPY-PASTE the EXACT character descriptions from characterDescriptions.
+   - Start every imagePrompt with: "A clear scene where..."
+   - Describe ONLY physical objects, actions, and the character's physical traits (e.g. "a boy with a red hat and blue shirt").
+   - NEVER use character names. Art style will be applied by the system.
    - Then describe what is happening in the scene.
    - End EVERY imagePrompt with: "exactly ${characterCount} character(s) only, no extra people, ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING, NO CAPTIONS, NO LABELS, NO SIGNATURES"
    ${styleConfig.negative ? `- NEGATIVE INSTRUCTIONS: ${styleConfig.negative}` : ''}
@@ -331,7 +335,7 @@ STRICT RULES:
           },
           body: JSON.stringify({
             instances: [{ 
-              prompt: `ABSOLUTELY NO TEXT. ${styleConfig.prefix} ${styleConfig.desc}. ${cleanImagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR: ${charAnchor}` : ''}, high quality, NO TEXT, NO LABELS, NO WRITING` 
+              prompt: `ABSOLUTELY NO TEXT. In a ${selectedGenre} theme, ${styleConfig.prefix} ${styleConfig.desc}. ${cleanImagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR: ${charAnchor}` : ''}, high quality, NO TEXT, NO LABELS` 
             }],
             parameters: {
               sampleCount: 1,
