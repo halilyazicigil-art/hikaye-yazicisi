@@ -186,9 +186,17 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const selectedStyle = styleMatch ? styleMatch[1].trim() : 'Sulu Boya'
     const imagenStylePrompt = IMAGE_STYLE_MAP[selectedStyle] || IMAGE_STYLE_MAP['Sulu Boya']
 
-    // Yaş grubuna özel kuralı al
     const ageKey = typeof age === 'string' ? age : (age <= 2 ? '1-2' : age <= 4 ? '2-4' : age <= 6 ? '4-6' : age <= 10 ? '6-10' : '10-13')
     const ageRules = AGE_RULES[ageKey] || AGE_RULES['2-4']
+
+    // Eğitici değer ayıklama ve talimatı
+    const eduMatch = theme.match(/Eğitici Değer:\s*([^.]+)/)
+    const educationalValue = eduMatch ? eduMatch[1].trim() : null
+    const educationalInstructions = educationalValue 
+      ? `MISSION: This is an EDUCATIONAL story. The primary goal is to teach the child the value of "${educationalValue}". 
+         The plot MUST revolve around this lesson. Characters' choices and the story's resolution MUST reinforce this value. 
+         Ensure the moral of the story is clear and impactful for the child.`
+      : ''
 
     // İlk adım: Hikayeyi yaz ve sahneleri belirle
     // Karakterleri parse et (tutarlılık için)
@@ -200,7 +208,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
 
     const prompt = `You are a professional children's book author and illustrator director.
 Write a ${selectedGenre} story for a ${age}-year-old child. 
-Linguistic and Complexity Rules for this age: ${ageRules}
+${educationalInstructions ? educationalInstructions + '\n' : ''}Linguistic and Complexity Rules for this age: ${ageRules}
 Heroes: "${hero}". Theme: "${theme}".
 
 STRICT RULES:
