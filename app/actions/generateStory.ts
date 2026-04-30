@@ -157,7 +157,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const characterList = hero.split(',').map((c: string) => c.trim()).filter(Boolean)
     const characterCount = characterList.length
     const characterDesc = characterList.map((c: string, i: number) => 
-      `Character ${i+1}: "${c}" - give this character a unique, consistent visual identity (specific hair color, outfit color, distinguishing feature)`
+      `Character ${i+1}: "${c}" - MUST include: exact skin tone (e.g. "warm olive skin", "light peach skin", "dark brown skin"), exact hair (color + style), exact outfit (color + style), approximate age. This description MUST be identical in every scene.`
     ).join('\n')
 
     const prompt = `You are a professional children's book author and illustrator director.
@@ -168,21 +168,23 @@ STRICT RULES:
 2. For each scene provide:
    - "text": The story text for that page (minimum 3-4 sentences, in Turkish).
    - "imagePrompt": An English image generation prompt for Imagen 4.0.
-3. CHARACTER CONSISTENCY (CRITICAL):
-   - You must define each character's appearance ONCE in a "characterDescriptions" field at the top level.
+3. CHARACTER CONSISTENCY (ABSOLUTELY CRITICAL - NO EXCEPTIONS):
+   - Define EVERY character's appearance ONCE in "characterDescriptions" at the top level.
    - ${characterDesc}
-   - Every single "imagePrompt" MUST copy-paste the EXACT same character descriptions word for word.
-   - The story has EXACTLY ${characterCount} main character(s). Never add more.
+   - EVERY "imagePrompt" MUST include the EXACT character description string, word for word, copied verbatim.
+   - NEVER change skin tone, hair color, outfit, or any physical trait between scenes.
+   - The story has EXACTLY ${characterCount} main character(s). NEVER add more characters.
 4. IMAGEN PROMPT RULES:
-   - Start every imagePrompt with: "Children's storybook illustration, flat vector art style,"
-   - Then list ALL ${characterCount} character(s) with their EXACT appearance (from characterDescriptions).
-   - End every imagePrompt with: "exactly ${characterCount} character(s) in the scene, no extra people, no background characters"
-   - Never describe characters differently across scenes.
+   - Start every imagePrompt with: "Children's storybook illustration, warm watercolor style, soft lighting,"
+   - Then COPY-PASTE the EXACT character descriptions from characterDescriptions.
+   - Then describe what is happening in the scene.
+   - End EVERY imagePrompt with: "exactly ${characterCount} character(s) only, no extra people, no text overlay, no letters, no words, no labels, no captions, no titles, no writing of any kind"
+   - NEVER describe characters differently across scenes.
 5. Respond ONLY in this exact JSON format:
 {
   "title": "Story Title in Turkish",
   "characterDescriptions": {
-    ${characterList.map((c: string) => `"${c}": "[specific appearance: hair color, outfit, age, distinguishing feature]"`).join(',\n    ')}
+    ${characterList.map((c: string) => `"${c}": "[REQUIRED: exact skin tone, exact hair color+style, exact outfit color+style, approximate age, one distinguishing feature]"`).join(',\n    ')}
   },
   "scenes": [
     { "text": "...", "imagePrompt": "..." },
@@ -210,7 +212,12 @@ STRICT RULES:
     }
     
     const storyDataRaw = JSON.parse(aiData.candidates[0].content.parts[0].text)
-    const { title, scenes } = storyDataRaw
+    const { title, scenes, characterDescriptions } = storyDataRaw
+    
+    // Karakterlerin tam tanımlarını bir string olarak hazırla (Imagen'e anchor olarak verilecek)
+    const charAnchor = characterDescriptions 
+      ? Object.entries(characterDescriptions).map(([name, desc]) => `${name}: ${desc}`).join('; ')
+      : ''
 
     // 6. Çoklu Görsel Üretimi (Imagen 4.0 - Her Sahne İçin)
     const pages = await Promise.all(scenes.map(async (scene: any, index: number) => {
@@ -224,7 +231,7 @@ STRICT RULES:
           },
           body: JSON.stringify({
             instances: [{ 
-              prompt: `${scene.imagePrompt}, high quality, children's book illustration, consistent character design, no text, no watermark` 
+              prompt: `${scene.imagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR (must match exactly): ${charAnchor}` : ''}, high quality illustration, NO TEXT OF ANY KIND, no letters, no words, no labels, no captions, no name tags, no title text, no writing anywhere in the image, pure illustration only` 
             }],
             parameters: {
               sampleCount: 1,
