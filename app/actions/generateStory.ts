@@ -192,9 +192,9 @@ STRICT RULES:
   ]
 }`
     
-    // Gemini 3.1 Pro Preview → Google AI Studio API (bağımsız, GOOGLE_GENERATIVE_AI_API_KEY ile)
-    // Model ID teyit: gemini-3.1-pro-preview
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
+    // Gemini 3 Flash Preview → Google AI Studio API (bağımsız, GOOGLE_GENERATIVE_AI_API_KEY ile)
+    // Model ID teyit: https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
