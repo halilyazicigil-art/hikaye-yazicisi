@@ -56,6 +56,22 @@ interface StoryRequest {
   elevenVoiceId?: string
 }
 
+// Görüntü stili → Imagen 4.0 prompt karşılığı
+const IMAGE_STYLE_MAP: Record<string, string> = {
+  'Sulu Boya': 'warm watercolor painting style, soft washes, gentle blending',
+  '3D Pixar Stili': '3D rendered Pixar-style animation, smooth CGI, vibrant lighting, cartoon 3D',
+  'Pastel Düşler': 'soft pastel colors, dreamy ethereal atmosphere, gentle whimsical illustration',
+  'Kil Modelleme': 'claymation style, clay figurine characters, stop-motion look, textured clay',
+  'Anime': 'anime style illustration, Japanese animation aesthetic, vivid colors, expressive eyes',
+  'Yağlı Boya': 'oil painting style, rich textured brushstrokes, classical art, warm tones',
+  'Diorama': 'miniature diorama style, tilt-shift photography, tiny detailed world, macro lens',
+  'Karakalem': 'pencil sketch, detailed charcoal drawing, hand-drawn, monochrome shading',
+  'Pop Art': 'pop art style, bold primary colors, comic book aesthetic, halftone dots',
+  'Çizgi Film': 'cartoon style, vibrant flat colors, bold outlines, animated series look',
+  'Origami Kağıt': 'paper craft origami style, folded paper art, textured paper, geometric shapes',
+  'Vintage Retro': 'vintage retro storybook illustration, 1950s children book art, muted warm palette',
+}
+
 export async function generateStoryAction({ childName, hero, theme, age, voiceOption = 'AI', elevenVoiceId }: StoryRequest) {
   try {
     const supabase = await createClient()
@@ -152,6 +168,11 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     // Vertex AI için Service Account'tan token al (Gemini 3 Flash + Imagen 4.0)
     const vertexToken = await getVertexAccessToken()
 
+    // Kullanıcının seçtiği görüntü stilini theme string'inden parse et
+    const styleMatch = theme.match(/Çizim Stili:\s*([^.]+)/)
+    const selectedStyle = styleMatch ? styleMatch[1].trim() : 'Sulu Boya'
+    const imagenStylePrompt = IMAGE_STYLE_MAP[selectedStyle] || IMAGE_STYLE_MAP['Sulu Boya']
+
     // İlk adım: Hikayeyi yaz ve sahneleri belirle
     // Karakterleri parse et (tutarlılık için)
     const characterList = hero.split(',').map((c: string) => c.trim()).filter(Boolean)
@@ -175,7 +196,7 @@ STRICT RULES:
    - NEVER change skin tone, hair color, outfit, or any physical trait between scenes.
    - The story has EXACTLY ${characterCount} main character(s). NEVER add more characters.
 4. IMAGEN PROMPT RULES:
-   - Start every imagePrompt with: "Children's storybook illustration, warm watercolor style, soft lighting,"
+   - Start every imagePrompt with: "Children's storybook illustration, ${imagenStylePrompt}, soft lighting,"
    - Then COPY-PASTE the EXACT character descriptions from characterDescriptions.
    - Then describe what is happening in the scene.
    - End EVERY imagePrompt with: "exactly ${characterCount} character(s) only, no extra people, no text overlay, no letters, no words, no labels, no captions, no titles, no writing of any kind"
