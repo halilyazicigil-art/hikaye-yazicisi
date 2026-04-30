@@ -43,7 +43,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   
   const [genre, setGenre] = useState<string>('Masal')
   const [imageStyle, setImageStyle] = useState<string>('Sulu Boya')
-  const [age, setAge] = useState<number>(4)
+  const [ageGroup, setAgeGroup] = useState<string>('2-4')
   const [characters, setCharacters] = useState<string[]>(['Sevimli Ayı'])
   const [educationalValue, setEducationalValue] = useState<string>('Dürüstlük')
 
@@ -133,7 +133,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         childName: 'Kullanıcı',
         hero: chars,
         theme: fullTheme,
-        age: age,
+        age: ageGroup, // Artık string olarak gönderiliyor (0-1, 1-2 vb.)
         voiceOption: voice === 'Sessiz' ? 'Sessiz' : 'AI',
         elevenVoiceId: voice !== 'Sessiz' ? voice : undefined
       })
@@ -374,22 +374,31 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('age')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Yaş Grubu</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{age} Yaş</span>
+                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{ageGroup} Yaş</span>
                 {openSection === 'age' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
             {openSection === 'age' && (
               <div className="p-4 bg-gray-50/50 rounded-xl mt-2">
-                <input 
-                  type="range" 
-                  min="2" max="12" 
-                  value={age} 
-                  onChange={(e) => setAge(Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#b3593b]"
-                />
-                <div className="flex justify-between text-gray-500 font-bold text-sm mt-2">
-                  <span>2 Yaş</span><span>12 Yaş</span>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {['0-1', '1-2', '2-4', '4-6', '6-10', '10-13'].map((range) => (
+                    <button
+                      key={range}
+                      type="button"
+                      onClick={() => setAgeGroup(range)}
+                      className={`px-5 py-3 rounded-xl font-bold transition-all border-2 ${
+                        ageGroup === range
+                          ? 'bg-[#b3593b] text-white border-[#b3593b] shadow-lg scale-105'
+                          : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
+                      }`}
+                    >
+                      {range}
+                    </button>
+                  ))}
                 </div>
+                <p className="text-center text-[11px] text-gray-400 mt-4 font-medium uppercase tracking-widest">
+                  Masal içeriği seçilen yaşa göre özel olarak hazırlanacaktır
+                </p>
               </div>
             )}
           </div>

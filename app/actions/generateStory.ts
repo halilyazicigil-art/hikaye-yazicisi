@@ -51,7 +51,7 @@ interface StoryRequest {
   childName: string
   hero: string
   theme: string
-  age: number
+  age: string | number
   voiceOption?: string 
   elevenVoiceId?: string
 }
@@ -70,6 +70,16 @@ const IMAGE_STYLE_MAP: Record<string, string> = {
   'Çizgi Film': 'cartoon style, vibrant flat colors, bold outlines, animated series look',
   'Origami Kağıt': 'paper craft origami style, folded paper art, textured paper, geometric shapes',
   'Vintage Retro': 'vintage retro storybook illustration, 1950s children book art, muted warm palette',
+}
+
+// Yaş grubuna göre dil ve karmaşıklık kuralları
+const AGE_RULES: Record<string, string> = {
+  '0-1': 'Extremely simple sentences (max 3 words). Focus on sounds (onomatopoeia), colors, and basic objects. Use a rhythmic, lullaby-like tone.',
+  '1-2': 'Very simple sentences (max 4-5 words). Focus on daily actions, animals, and family. Use repetition and a very gentle tone.',
+  '2-4': 'Simple story structure with concrete events. Use repetitive phrases and clear, descriptive words. Tone should be magical and nurturing.',
+  '4-6': 'Engaging plot with more dialogue and descriptive language. Include a clear moral lesson or discovery. Tone should be curious and warm.',
+  '6-10': 'Rich descriptive language and a clear adventure structure. Focus on character emotions and problem-solving. Tone should be adventurous and engaging.',
+  '10-13': 'Complex plot with abstract themes and advanced vocabulary. Focus on character growth and more intricate challenges. Tone should be mature and compelling.',
 }
 
 export async function generateStoryAction({ childName, hero, theme, age, voiceOption = 'AI', elevenVoiceId }: StoryRequest) {
@@ -168,10 +178,17 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     // Vertex AI için Service Account'tan token al (Gemini 3 Flash + Imagen 4.0)
     const vertexToken = await getVertexAccessToken()
 
-    // Kullanıcının seçtiği görüntü stilini theme string'inden parse et
+    // Kullanıcının seçtiği türü ve stili theme string'inden parse et
+    const genreMatch = theme.match(/^([^ ]+)/)
+    const selectedGenre = genreMatch ? genreMatch[1].trim() : 'Masal'
+    
     const styleMatch = theme.match(/Çizim Stili:\s*([^.]+)/)
     const selectedStyle = styleMatch ? styleMatch[1].trim() : 'Sulu Boya'
     const imagenStylePrompt = IMAGE_STYLE_MAP[selectedStyle] || IMAGE_STYLE_MAP['Sulu Boya']
+
+    // Yaş grubuna özel kuralı al
+    const ageKey = typeof age === 'string' ? age : (age <= 2 ? '1-2' : age <= 4 ? '2-4' : age <= 6 ? '4-6' : age <= 10 ? '6-10' : '10-13')
+    const ageRules = AGE_RULES[ageKey] || AGE_RULES['2-4']
 
     // İlk adım: Hikayeyi yaz ve sahneleri belirle
     // Karakterleri parse et (tutarlılık için)
@@ -182,7 +199,9 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     ).join('\n')
 
     const prompt = `You are a professional children's book author and illustrator director.
-Write a fairy tale for a ${age}-year-old child. Heroes: "${hero}". Theme: "${theme}".
+Write a ${selectedGenre} story for a ${age}-year-old child. 
+Linguistic and Complexity Rules for this age: ${ageRules}
+Heroes: "${hero}". Theme: "${theme}".
 
 STRICT RULES:
 1. Split the story into exactly 9-11 scenes (pages).
