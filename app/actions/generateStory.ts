@@ -283,9 +283,8 @@ STRICT RULES:
   ]
 }`
     
-    // Gemini 3 Flash Preview → Google AI Studio API (bağımsız, GOOGLE_GENERATIVE_AI_API_KEY ile)
-    // Model ID teyit: https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
+    // Gemini 1.5 Flash (En hızlı ve stabil Flash sürümü)
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -302,7 +301,9 @@ STRICT RULES:
       return { success: false, error: 'Gemini hikayeyi oluşturamadı. API loglarını kontrol edin.' }
     }
     
-    const storyDataRaw = JSON.parse(aiData.candidates[0].content.parts[0].text)
+    const rawText = aiData.candidates[0].content.parts[0].text
+    const cleanJson = rawText.replace(/```json|```/g, "").trim()
+    const storyDataRaw = JSON.parse(cleanJson)
     const { title, scenes, characterDescriptions } = storyDataRaw
     
     // Karakterlerin tam tanımlarını bir string olarak hazırla (İsimleri temizleyerek - yazıyı engellemek için)
