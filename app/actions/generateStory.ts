@@ -252,7 +252,7 @@ STRICT RULES:
 1. Split the story into exactly 9-11 scenes (pages).
 2. For each scene provide:
    - "text": The story text for that page (minimum 3-4 sentences, in Turkish).
-   - "imagePrompt": An English image generation prompt for Imagen 4.0.
+   - "imagePrompt": An English image generation prompt for Imagen 4.0. NEVER include character names here. Use only physical descriptions (e.g. "The red-capped boy" instead of "Ali").
 3. CHARACTER CONSISTENCY (ABSOLUTELY CRITICAL - NO EXCEPTIONS):
    - Define EVERY character's appearance ONCE in "characterDescriptions" at the top level.
    - ${characterDesc}
@@ -312,6 +312,15 @@ STRICT RULES:
     // 6. Çoklu Görsel Üretimi (Imagen 4.0 - Her Sahne İçin)
     const pages = await Promise.all(scenes.map(async (scene: any, index: number) => {
       let sceneImageUrl = ''
+      
+      // İSİM SÜZGECİ: imagePrompt içindeki karakter isimlerini yazılımsal olarak temizle
+      let cleanImagePrompt = scene.imagePrompt || ''
+      characterList.forEach((name: string) => {
+        // İsmi (case-insensitive ve tam kelime olarak) bul ve kaldır
+        const nameRegex = new RegExp(`\\b${name}\\b`, 'gi')
+        cleanImagePrompt = cleanImagePrompt.replace(nameRegex, '')
+      })
+
       try {
         const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikayeyazicisi/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`, {
           method: 'POST',
@@ -321,7 +330,7 @@ STRICT RULES:
           },
           body: JSON.stringify({
             instances: [{ 
-              prompt: `ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS. ${scene.imagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR: ${charAnchor}` : ''}, high quality, NO TEXT, NO LABELS, NO CAPTIONS, NO NAME TAGS, NO WRITING, pure illustration only` 
+              prompt: `ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS. ${cleanImagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR: ${charAnchor}` : ''}, high quality, NO TEXT, NO LABELS, NO CAPTIONS, NO NAME TAGS, NO WRITING, pure illustration only` 
             }],
             parameters: {
               sampleCount: 1,

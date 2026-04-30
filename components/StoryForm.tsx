@@ -360,7 +360,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
             {openSection === 'style' && (
               <div className="p-4 bg-gray-50/50 rounded-xl mt-2 flex flex-wrap gap-2">
-                {['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Kil Modelleme', 'Anime', 'Yağlı Boya', 'Diorama', 'Karakalem', 'Pop Art', 'Çizgi Film', 'Origami Kağıt', 'Vintage Retro'].map(s => (
+                {['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Anime', 'Yağlı Boya', 'Pop Art', 'Çizgi Film', 'Vintage Retro'].map(s => (
                   <button type="button" key={s} onClick={() => setImageStyle(s)} className={`px-4 py-2 rounded-full font-bold transition ${imageStyle === s ? 'bg-[#b3593b] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
                     {s}
                   </button>
