@@ -7,13 +7,13 @@ import { createClient } from '@/utils/supabase/client'
 import { useEffect } from 'react'
 
 const AI_VOICES = [
-  { id: 'tr-TR-Chirp3-HD-Aoede', name: 'Zeynep (Studio)', desc: 'Ultra gerçekçi ve şefkatli' },
-  { id: 'tr-TR-Chirp3-HD-Orus', name: 'Can (Studio)', desc: 'Profesyonel ve tok ses' },
-  { id: 'tr-TR-Chirp3-HD-Achernar', name: 'Merve (HD)', desc: 'Doğal ve akıcı' },
-  { id: 'tr-TR-Chirp3-HD-Algenib', name: 'Kerem (HD)', desc: 'Güven verici ve derin' },
-  { id: 'tr-TR-Chirp3-HD-Leda', name: 'Peri Kızı', desc: 'Neşeli ve büyülü' },
-  { id: 'tr-TR-Chirp3-HD-Puck', name: 'Şövalye', desc: 'Kahramanvari ve enerjik' },
-  { id: 'tr-TR-Wavenet-A', name: 'Tavşan', desc: 'Hızlı ve eğlenceli' },
+  { id: 'tr-TR-Chirp3-HD-Aoede',      name: 'Zeynep (Studio)', desc: 'Ultra gerçekçi ve şefkatli' },    // Kadın, sıcak
+  { id: 'tr-TR-Chirp3-HD-Orus',       name: 'Can (Studio)',    desc: 'Profesyonel ve tok ses' },         // Erkek, profesyonel
+  { id: 'tr-TR-Chirp3-HD-Achernar',   name: 'Merve (HD)',      desc: 'Doğal ve akıcı' },                // Kadın, doğal
+  { id: 'tr-TR-Chirp3-HD-Algenib',    name: 'Kerem (HD)',      desc: 'Güven verici ve derin' },          // Erkek, derin
+  { id: 'tr-TR-Chirp3-HD-Zephyr',     name: 'Peri Kızı',      desc: 'Neşeli ve büyülü' },               // Kadın, parlak/enerjik
+  { id: 'tr-TR-Chirp3-HD-Fenrir',     name: 'Şövalye',        desc: 'Kahramanvari ve güçlü' },          // Erkek, güçlü/kahraman
+  { id: 'tr-TR-Chirp3-HD-Puck',       name: 'Tavşan',         desc: 'Hızlı ve eğlenceli' },             // Erkek, enerjik/oyuncu
 ]
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
