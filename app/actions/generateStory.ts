@@ -68,7 +68,8 @@ const IMAGE_STYLE_MAP: Record<string, { prefix: string, desc: string, negative?:
   },
   'Pastel Düşler': { 
     prefix: 'Ethereal pastel illustration, soft dreamy aesthetic,', 
-    desc: 'gentle whimsical style, soft diffused lighting, magical atmosphere' 
+    desc: 'muted color palette, pale tones, desaturated colors, gentle whimsical style, soft diffused lighting',
+    negative: 'saturated colors, bright colors, high contrast, neon, vivid'
   },
   'Kil Modelleme': { 
     prefix: 'Hand-crafted claymation style art, stop-motion clay figurine look,', 
@@ -264,7 +265,7 @@ STRICT RULES:
    - Do NOT include labels, captions, or signposts.
    - Response ONLY with visual descriptions.
 5. IMAGEN PROMPT RULES:
-   - Start every imagePrompt with: "${styleConfig.prefix} ${styleConfig.desc}, soft lighting,"
+   - Start every imagePrompt with: "A high-quality scene where..."
    - Then COPY-PASTE the EXACT character descriptions from characterDescriptions.
    - Then describe what is happening in the scene.
    - End EVERY imagePrompt with: "exactly ${characterCount} character(s) only, no extra people, ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO WRITING, NO CAPTIONS, NO LABELS, NO SIGNATURES"
@@ -330,7 +331,7 @@ STRICT RULES:
           },
           body: JSON.stringify({
             instances: [{ 
-              prompt: `ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS. ${cleanImagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR: ${charAnchor}` : ''}, high quality, NO TEXT, NO LABELS, NO CAPTIONS, NO NAME TAGS, NO WRITING, pure illustration only` 
+              prompt: `ABSOLUTELY NO TEXT. ${styleConfig.prefix} ${styleConfig.desc}. ${cleanImagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR: ${charAnchor}` : ''}, high quality, NO TEXT, NO LABELS, NO WRITING` 
             }],
             parameters: {
               sampleCount: 1,
