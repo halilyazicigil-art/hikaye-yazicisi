@@ -129,7 +129,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       })
       
       if (response.success) {
-        window.location.href = `/story/${response.story.id}`
+        window.location.href = `/story/${response.id}`
       } else {
         alert(response.error || 'Bilinmeyen bir hata oluştu.')
       }
