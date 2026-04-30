@@ -254,8 +254,9 @@ STRICT RULES:
 2. For each scene provide:
    - "text": The story text for that page (minimum 3-4 sentences, in Turkish).
    - "imagePrompt": A strictly NEUTRAL English visual description for Imagen 4.0. 
+     * VISUAL MIRRORING RULE: Every object, action, location, and emotion mentioned in the "text" field MUST be included in the "imagePrompt".
      * NEVER include character names.
-     * NEVER include art styles, genres, or moods (e.g. do NOT use "fairytale", "sci-fi", "realistic", "watercolor").
+     * NEVER include art styles, genres, or moods.
      * ONLY describe objects, poses, and actions (e.g. "A child sitting on a wooden chair, holding a glowing crystal"). Art style will be applied by the system.
 3. CHARACTER CONSISTENCY (ABSOLUTELY CRITICAL - NO EXCEPTIONS):
    - Define EVERY character's appearance ONCE in "characterDescriptions" at the top level.
