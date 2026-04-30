@@ -153,25 +153,42 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const vertexToken = await getVertexAccessToken()
 
     // İlk adım: Hikayeyi yaz ve sahneleri belirle
-    const prompt = `Sen profesyonel bir çocuk kitabı yazarısın. 
-    Lütfen ${age} yaşındaki "${childName}" için, kahramanı "${hero}" olan, "${theme}" temalı harika bir masal yaz.
-    
-    KURALLAR:
-    1. Masalı tam olarak 9 ile 11 arasında sahneye (sayfaya) böl.
-    2. Her sahne için:
-       - "text": O sayfanın hikaye metni (en az 3-4 cümle).
-       - "imagePrompt": O sahneyi anlatan, Imagen 4 için İNGİLİZCE görsel komutu.
-    3. GÖRSEL TUTARLILIK İÇİN: 
-       - Karakterlerin (özellikle ${hero}) fiziksel özelliklerini (saç rengi, kıyafeti, yaşı) her "imagePrompt" içinde AYNI şekilde detaylıca tekrarla.
-       - Stil olarak "${theme}" içinde belirtilen stili kullan.
-    4. Yanıtı SADECE şu JSON formatında ver:
-       {
-         "title": "Masal Başlığı",
-         "scenes": [
-           { "text": "...", "imagePrompt": "..." },
-           ...
-         ]
-       }`
+    // Karakterleri parse et (tutarlılık için)
+    const characterList = hero.split(',').map((c: string) => c.trim()).filter(Boolean)
+    const characterCount = characterList.length
+    const characterDesc = characterList.map((c: string, i: number) => 
+      `Character ${i+1}: "${c}" - give this character a unique, consistent visual identity (specific hair color, outfit color, distinguishing feature)`
+    ).join('\n')
+
+    const prompt = `You are a professional children's book author and illustrator director.
+Write a fairy tale for a ${age}-year-old child. Heroes: "${hero}". Theme: "${theme}".
+
+STRICT RULES:
+1. Split the story into exactly 9-11 scenes (pages).
+2. For each scene provide:
+   - "text": The story text for that page (minimum 3-4 sentences, in Turkish).
+   - "imagePrompt": An English image generation prompt for Imagen 4.0.
+3. CHARACTER CONSISTENCY (CRITICAL):
+   - You must define each character's appearance ONCE in a "characterDescriptions" field at the top level.
+   - ${characterDesc}
+   - Every single "imagePrompt" MUST copy-paste the EXACT same character descriptions word for word.
+   - The story has EXACTLY ${characterCount} main character(s). Never add more.
+4. IMAGEN PROMPT RULES:
+   - Start every imagePrompt with: "Children's storybook illustration, flat vector art style,"
+   - Then list ALL ${characterCount} character(s) with their EXACT appearance (from characterDescriptions).
+   - End every imagePrompt with: "exactly ${characterCount} character(s) in the scene, no extra people, no background characters"
+   - Never describe characters differently across scenes.
+5. Respond ONLY in this exact JSON format:
+{
+  "title": "Story Title in Turkish",
+  "characterDescriptions": {
+    ${characterList.map((c: string) => `"${c}": "[specific appearance: hair color, outfit, age, distinguishing feature]"`).join(',\n    ')}
+  },
+  "scenes": [
+    { "text": "...", "imagePrompt": "..." },
+    ...
+  ]
+}`
     
     // Gemini 3 Flash Preview → Google AI Studio API (bağımsız, GOOGLE_GENERATIVE_AI_API_KEY ile)
     // Model ID teyit: https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview
@@ -206,7 +223,9 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
             'Content-Type': 'application/json' 
           },
           body: JSON.stringify({
-            instances: [{ prompt: `${scene.imagePrompt}, high quality, cinematic lighting, consistent character design, children book illustration` }],
+            instances: [{ 
+              prompt: `${scene.imagePrompt}, high quality, children's book illustration, consistent character design, no text, no watermark` 
+            }],
             parameters: {
               sampleCount: 1,
               aspectRatio: "1:1",
@@ -262,7 +281,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
           const audioBuffer = Buffer.from(ttsData.audioContent, 'base64')
           const audioFileName = `story_audio_${Date.now()}.mp3`
           const { error: uploadError } = await supabase.storage.from('story_assets').upload(audioFileName, audioBuffer, { contentType: 'audio/mpeg' })
-          if (!audioUploadError) {
+          if (!uploadError) {
             const { data: publicUrlData } = supabase.storage.from('story_assets').getPublicUrl(audioFileName)
             audioUrl = publicUrlData.publicUrl
           }
