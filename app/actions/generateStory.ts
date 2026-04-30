@@ -173,11 +173,11 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
          ]
        }`
     
-    // Gemini 3 Flash Preview → Vertex AI (Service Account ile)
-    const aiResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikayeyazicisi/locations/us-central1/publishers/google/models/gemini-flash-3-preview:generateContent`, {
+    // Gemini 3 Flash Preview → Google AI Studio API (bağımsız, GOOGLE_GENERATIVE_AI_API_KEY ile)
+    // Model ID teyit: https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${vertexToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
