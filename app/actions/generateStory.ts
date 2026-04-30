@@ -275,8 +275,8 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
       }
     }
 
-    // 8. Veritabanına Kaydet
-    const { data: finalStory, error: dbError } = await supabase
+    // 8. Veritabanına Kaydet (insert ve select ayrı - RLS uyumlu)
+    const { error: dbError } = await supabase
       .from('stories')
       .insert({
         profile_id: profileId,
@@ -286,15 +286,28 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         image_url: pages[0]?.image_url || '',
         audio_url: audioUrl
       })
-      .select()
-      .single()
 
     if (dbError) {
       console.error("Veritabanı Kayıt Hatası:", dbError)
       throw dbError
     }
+
+    // RLS nedeniyle insert'ten ID dönmeyebilir, ayrı sorguluyoruz
+    const { data: savedStory, error: fetchError } = await supabase
+      .from('stories')
+      .select('id')
+      .eq('profile_id', profileId)
+      .eq('title', title)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (fetchError || !savedStory) {
+      console.error("Kayıt sonrası ID sorgu hatası:", fetchError)
+      return { success: true, id: null } // Hikaye kaydedildi ama yönlendirme yapılamıyor
+    }
     
-    return { success: true, id: finalStory.id }
+    return { success: true, id: savedStory.id }
 
   } catch (globalError: any) {
     console.error("Sistem Hatası:", globalError)
