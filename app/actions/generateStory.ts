@@ -306,15 +306,22 @@ STRICT RULES:
     })
     
     const aiDataRaw = await aiResponse.json()
-    // Vertex AI stream result formatını parse et
-    const aiData = aiDataRaw[0] || aiDataRaw // Stream array'in ilk elemanını al veya direkt objeyi al
-    if (!aiData.candidates) {
-      console.error("Gemini Hikaye Hatası:", aiData)
-      return { success: false, error: 'Gemini hikayeyi oluşturamadı. API loglarını kontrol edin.' }
-    }
     
-    // 5. Yanıtı Parse Et (Hata Payını Azaltmak İçin Temizleme Eklenmiştir)
-    let storyDataRaw = aiData.candidates[0].content.parts[0].text
+    // Vertex AI stream result: Tüm parçaları (chunks) birleştir
+    if (!Array.isArray(aiDataRaw)) {
+      console.error("Gemini Beklenmedik Yanıt Formatı:", aiDataRaw)
+      return { success: false, error: 'Gemini yanıtı anlaşılamadı.' }
+    }
+
+    // Her parçadaki metni al ve birleştir
+    let storyDataRaw = aiDataRaw
+      .map(chunk => chunk.candidates?.[0]?.content?.parts?.[0]?.text || '')
+      .join('')
+
+    if (!storyDataRaw) {
+      console.error("Gemini Boş Yanıt Döndürdü:", aiDataRaw)
+      return { success: false, error: 'Gemini hikayeyi oluşturamadı.' }
+    }
     
     // JSON Temizleme: Markdown bloklarını ve gereksiz boşlukları temizle
     const cleanJson = (str: string) => {
