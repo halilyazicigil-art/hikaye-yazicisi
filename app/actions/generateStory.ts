@@ -301,11 +301,23 @@ STRICT RULES:
       },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json" }
+        generationConfig: { 
+          responseMimeType: "application/json",
+          temperature: 1,
+          topP: 0.95,
+          maxOutputTokens: 8192
+        },
+        safetySettings: [
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+        ]
       }),
     })
     
     const aiDataRaw = await aiResponse.json()
+    console.log("Gemini Ham Yanıt Yapısı:", JSON.stringify(aiDataRaw).substring(0, 500))
     
     // Vertex AI stream result: Tüm parçaları (chunks) birleştir
     if (!Array.isArray(aiDataRaw)) {
@@ -315,7 +327,12 @@ STRICT RULES:
 
     // Her parçadaki metni al ve birleştir
     let storyDataRaw = aiDataRaw
-      .map(chunk => chunk.candidates?.[0]?.content?.parts?.[0]?.text || '')
+      .map(chunk => {
+        if (chunk.candidates?.[0]?.finishReason !== 'STOP' && chunk.candidates?.[0]?.finishReason !== undefined) {
+          console.warn("Gemini Parça Durma Nedeni:", chunk.candidates[0].finishReason)
+        }
+        return chunk.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      })
       .join('')
 
     if (!storyDataRaw) {
