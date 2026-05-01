@@ -313,8 +313,28 @@ STRICT RULES:
       return { success: false, error: 'Gemini hikayeyi oluşturamadı. API loglarını kontrol edin.' }
     }
     
-    const storyDataRaw = JSON.parse(aiData.candidates[0].content.parts[0].text)
-    const { title, scenes, characterDescriptions } = storyDataRaw
+    // 5. Yanıtı Parse Et (Hata Payını Azaltmak İçin Temizleme Eklenmiştir)
+    let storyDataRaw = aiData.candidates[0].content.parts[0].text
+    
+    // JSON Temizleme: Markdown bloklarını ve gereksiz boşlukları temizle
+    const cleanJson = (str: string) => {
+      let cleaned = str.trim()
+      if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json/, '')
+      if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```/, '')
+      if (cleaned.endsWith('```')) cleaned = cleaned.replace(/```$/, '')
+      return cleaned.trim()
+    }
+
+    let storyData: any
+    try {
+      const cleanedData = cleanJson(storyDataRaw)
+      storyData = JSON.parse(cleanedData)
+    } catch (parseError) {
+      console.error("JSON Parse Hatası (Ham Yanıt):", storyDataRaw)
+      return { success: false, error: 'Hikaye formatı hatalı geldi. Lütfen tekrar deneyin.' }
+    }
+    
+    const { title, scenes, characterDescriptions } = storyData
     
     // Karakterlerin tam tanımlarını bir string olarak hazırla (İsimleri temizleyerek - yazıyı engellemek için)
     const charAnchor = characterDescriptions 
