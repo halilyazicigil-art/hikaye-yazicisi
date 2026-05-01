@@ -289,11 +289,14 @@ STRICT RULES:
   ]
 }`
     
-    // Gemini 3 Flash Preview (Google AI Studio - En Güncel Sürüm)
-    // Model ID Teyit: gemini-3-flash-preview
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GOOGLE_GENERATIVE_AI_API_KEY}`, {
+    // Gemini 3 Flash Preview (Vertex AI - Global Endpoint - GCP Kredileri)
+    // KURAL 4: Sadece gemini-3-flash-preview kullanılacaktır.
+    const geminiUrl = `https://aiplatform.googleapis.com/v1/projects/hikayeyazicisi/locations/global/publishers/google/models/gemini-3-flash-preview:streamGenerateContent`
+    
+    const aiResponse = await fetch(geminiUrl, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${vertexToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -302,7 +305,9 @@ STRICT RULES:
       }),
     })
     
-    const aiData = await aiResponse.json()
+    const aiDataRaw = await aiResponse.json()
+    // Vertex AI stream result formatını parse et
+    const aiData = aiDataRaw[0] || aiDataRaw // Stream array'in ilk elemanını al veya direkt objeyi al
     if (!aiData.candidates) {
       console.error("Gemini Hikaye Hatası:", aiData)
       return { success: false, error: 'Gemini hikayeyi oluşturamadı. API loglarını kontrol edin.' }
