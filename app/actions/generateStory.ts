@@ -365,95 +365,93 @@ STRICT RULES:
       ? Object.entries(characterDescriptions).map(([name, desc]) => `${desc}`).join('; ')
       : ''
 
-    // 6. Çoklu Görsel Üretimi (Imagen 4.0 - Her Sahne İçin)
-    const pages = await Promise.all(scenes.map(async (scene: any, index: number) => {
+    // 6. Çoklu Görsel Üretimi (Imagen 4.0 - Her Sahne İçin) - SIRALI VE HATA KORUMALI
+    const pages = []
+    for (let index = 0; index < scenes.length; index++) {
+      const scene = scenes[index]
       let sceneImageUrl = ''
       
-      // İSİM SÜZGECİ: imagePrompt içindeki karakter isimlerini yazılımsal olarak temizle
       let cleanImagePrompt = scene.imagePrompt || ''
       characterList.forEach((name: string) => {
-        // İsmi (case-insensitive ve tam kelime olarak) bul ve kaldır
         const nameRegex = new RegExp(`\\b${name}\\b`, 'gi')
         cleanImagePrompt = cleanImagePrompt.replace(nameRegex, '')
       })
 
       try {
-        const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikayeyazicisi/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`, {
-          method: 'POST',
-          headers: { 
-            'Authorization': `Bearer ${vertexToken}`,
-            'Content-Type': 'application/json' 
-          },
-          body: JSON.stringify({
-            instances: [{ 
-              prompt: `ABSOLUTELY NO TEXT. In a ${selectedGenre} theme, ${styleConfig.prefix} ${styleConfig.desc}. ${cleanImagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR: ${charAnchor}` : ''}, high quality, NO TEXT, NO LABELS` 
-            }],
-            parameters: {
-              sampleCount: 1,
-              aspectRatio: "1:1",
-              outputMimeType: "image/png",
-              addWatermark: false
-            }
+        console.log(`Görsel üretiliyor (Sayfa ${index + 1}/${scenes.length})...`)
+        let retryCount = 0
+        const maxRetries = 2
+        while (retryCount <= maxRetries) {
+          const imagenResponse = await fetch(`https://us-central1-aiplatform.googleapis.com/v1/projects/hikayeyazicisi/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`, {
+            method: 'POST',
+            headers: { 
+              'Authorization': `Bearer ${vertexToken}`,
+              'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({
+              instances: [{ 
+                prompt: `ABSOLUTELY NO TEXT. In a ${selectedGenre} theme, ${styleConfig.prefix} ${styleConfig.desc}. ${cleanImagePrompt}${charAnchor ? ` -- CHARACTER ANCHOR: ${charAnchor}` : ''}, high quality, NO TEXT, NO LABELS` 
+              }],
+              parameters: { sampleCount: 1, aspectRatio: "1:1", outputMimeType: "image/png", addWatermark: false }
+            })
           })
-        })
 
-        const imagenData = await imagenResponse.json()
-
-        if (imagenData.predictions && imagenData.predictions.length > 0) {
-          const b64Image = imagenData.predictions[0].bytesBase64Encoded
-          const imageBuffer = Buffer.from(b64Image, 'base64')
-          const imageFileName = `story_${Date.now()}_page_${index}.png`
-          
-          const { error: uploadError } = await supabase.storage
-            .from('story_assets')
-            .upload(imageFileName, imageBuffer, { contentType: 'image/png' })
-            
-          if (!uploadError) {
-            const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
-            sceneImageUrl = imgUrlData.publicUrl
+          if (imagenResponse.status === 429) {
+            await new Promise(resolve => setTimeout(resolve, 3000))
+            retryCount++
+          } else {
+            const imagenData = await imagenResponse.json()
+            if (imagenData.predictions?.[0]?.bytesBase64Encoded) {
+              const imageBuffer = Buffer.from(imagenData.predictions[0].bytesBase64Encoded, 'base64')
+              const imageFileName = `story_${Date.now()}_page_${index}.png`
+              const { error: uploadError } = await supabase.storage.from('story_assets').upload(imageFileName, imageBuffer, { contentType: 'image/png' })
+              if (!uploadError) {
+                const { data: imgUrlData } = supabase.storage.from('story_assets').getPublicUrl(imageFileName)
+                sceneImageUrl = imgUrlData.publicUrl
+              }
+            }
+            break
           }
-        } else {
-          console.error(`Imagen 4.0 Hatası (Sayfa ${index}):`, imagenData)
         }
-      } catch (e) {
-        console.error(`Sayfa ${index} görsel üretim hatası:`, e)
-      }
-      return { text: scene.text, image_url: sceneImageUrl }
-    }))
+      } catch (e) { console.error(`Görsel hatası (Sayfa ${index}):`, e) }
+      pages.push({ text: scene.text, image_url: sceneImageUrl })
+      if (index < scenes.length - 1) await new Promise(resolve => setTimeout(resolve, 2000))
+    }
 
-    // 7. Ses Üretimi
+    // 7. Ses Üretimi (Krediye Bağlı ve Chirp HD)
     let audioUrl = null
     if (isRequestingVoice) {
-      try {
-        const fullText = scenes.map((s: any) => s.text).join(' ')
-        const voiceId = elevenVoiceId || 'tr-TR-Chirp3-HD-Aoede' 
-
-        const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_CLOUD_TTS_API_KEY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            input: { text: fullText.slice(0, 4800) },
-            voice: { languageCode: 'tr-TR', name: voiceId },
-            audioConfig: { audioEncoding: 'MP3', speakingRate: 0.95 }
-          })
+    try {
+      console.log("Ses üretiliyor (Chirp HD + Token)...")
+      const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input: { text: scenes.map((s: any) => s.text).join(' ') },
+          voice: { 
+            languageCode: 'tr-TR', 
+            name: selectedVoice === 'Zeynep' ? 'tr-TR-Chirp3-HD-Aoede' : 
+                  selectedVoice === 'Can' ? 'tr-TR-Chirp3-HD-Charon' : 
+                  selectedVoice === 'Merve' ? 'tr-TR-Neural2-A' :
+                  'tr-TR-Chirp3-HD-Aoede'
+          },
+          audioConfig: { audioEncoding: 'MP3', speakingRate: 0.95 }
         })
+      })
 
-        if (ttsResponse.ok) {
-          const ttsData = await ttsResponse.json()
-          const audioBuffer = Buffer.from(ttsData.audioContent, 'base64')
-          const audioFileName = `story_audio_${Date.now()}.mp3`
-          const { error: uploadError } = await supabase.storage.from('story_assets').upload(audioFileName, audioBuffer, { contentType: 'audio/mpeg' })
-          if (!uploadError) {
-            const { data: publicUrlData } = supabase.storage.from('story_assets').getPublicUrl(audioFileName)
-            audioUrl = publicUrlData.publicUrl
-          }
-        } else {
-          const errorData = await ttsResponse.json()
-          console.error("TTS API Hatası:", errorData)
+      const ttsData = await ttsResponse.json()
+      if (ttsData.audioContent) {
+        const audioBuffer = Buffer.from(ttsData.audioContent, 'base64')
+        const audioFileName = `story_audio_${Date.now()}.mp3`
+        const { error: uploadError } = await supabase.storage.from('story_assets').upload(audioFileName, audioBuffer, { contentType: 'audio/mpeg' })
+        if (!uploadError) {
+          const { data: publicUrlData } = supabase.storage.from('story_assets').getPublicUrl(audioFileName)
+          audioUrl = publicUrlData.publicUrl
         }
-      } catch (e) {
-        console.error('Seslendirme genel hatası:', e)
       }
+    } catch (e) {
+      console.error('Seslendirme hatası:', e)
+    }
     }
 
     // 8. Veritabanına Kaydet (insert ve select ayrı - RLS uyumlu)
