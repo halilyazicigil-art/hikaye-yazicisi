@@ -121,7 +121,9 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
           KURALLAR:
           1. Masal tam 8-10 sahneden oluşmalı.
           2. KAHRAMAN ÇAPASI: Hikayedeki en fazla 3 ana karakter için SABİT birer fiziksel tarif (İngilizce) oluştur. 
-             (Örn: "A small white rabbit with a blue vest and red hat"). Bu tarifi her sahnede AYNI kullan.
+             ÖNEMLİ: Karakterlerin birbirine göre BOY ve YAŞ farklarını mutlaka belirt. 
+             (Örn: "Character A is a tall adult elephant, Character B is a tiny baby mouse. A is much larger than B"). 
+             Bu karşılaştırmalı tarifi her sahnede AYNI kullan.
           3. SAHNE TEMASI: Her sahne için sadece O AN ne olduğunu anlatan teknik bir görsel tarif (İngilizce) yaz. 
              ASLA stil (watercolor vb.) kelimeleri kullanma! Sadece eylemi ve mekanı yaz.
           
@@ -194,29 +196,36 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
             'tr-TR-Chirp3-HD-Kore': 'Canlı, renkli, çocuksu ve her cümlesinde neşe saçan bir sesle, hayat dolu bir tonda oku.',
         };
 
-        const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                input: { 
-                    text: pages.map(p => p.text).join(' '),
-                    prompt: VOICE_INSTRUCTIONS[elevenVoiceId] || 'Sıcak ve masalsı bir tonda oku.'
-                },
-                voice: { 
-                    languageCode: 'tr-TR', 
-                    name: elevenVoiceId,
-                    modelName: 'gemini-3.1-flash-tts-preview'
-                },
-                audioConfig: { audioEncoding: 'MP3' }
+        try {
+            const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    input: { 
+                        text: pages.map(p => p.text).join(' '),
+                        prompt: VOICE_INSTRUCTIONS[elevenVoiceId] || 'Sıcak ve masalsı bir tonda oku.'
+                    },
+                    voice: { 
+                        languageCode: 'tr-TR', 
+                        name: elevenVoiceId
+                    },
+                    audioConfig: { audioEncoding: 'MP3' }
+                })
             })
-        })
-        const audioData = await audioResponse.json()
-        if (audioData.audioContent) {
-            const audioFileName = `voice_${Date.now()}.mp3`
-            const { error: upErr } = await supabase.storage.from('story_assets').upload(audioFileName, Buffer.from(audioData.audioContent, 'base64'), { contentType: 'audio/mpeg' })
-            if (!upErr) {
-                audioUrl = supabase.storage.from('story_assets').getPublicUrl(audioFileName).data.publicUrl
+            const audioData = await audioResponse.json()
+            console.log("TTS Yanıt Özeti:", audioData.error ? "HATA VAR" : "BAŞARILI")
+
+            if (audioData.audioContent) {
+                const audioFileName = `voice_${Date.now()}.mp3`
+                const { error: upErr } = await supabase.storage.from('story_assets').upload(audioFileName, Buffer.from(audioData.audioContent, 'base64'), { contentType: 'audio/mpeg' })
+                if (!upErr) {
+                    audioUrl = supabase.storage.from('story_assets').getPublicUrl(audioFileName).data.publicUrl
+                }
+            } else if (audioData.error) {
+                console.error("TTS Google Hatası:", audioData.error)
             }
+        } catch (ttsErr) {
+            console.error("TTS Kritik Bağlantı Hatası:", ttsErr)
         }
     }
 
