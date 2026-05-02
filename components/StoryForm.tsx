@@ -13,15 +13,14 @@ const AI_VOICES = [
   { id: 'tr-TR-Chirp3-HD-Algieba',      name: 'Cesur Şövalye',   desc: 'Güçlü ve kahramanvari' },
   { id: 'tr-TR-Chirp3-HD-Alnilam',      name: 'Yüce Kral',       desc: 'Otoriter ve onurlu' },
   { id: 'tr-TR-Chirp3-HD-Charon',       name: 'Heyecanlı Baba',  desc: 'Sürprizleri seven ve oyunbaz' },
+  { id: 'tr-TR-Chirp3-HD-Iapetus',      name: 'Orman Muhafızı',  desc: 'Derin ve koruyucu bir ses' },
   // — Hanımefendi Masalcılar —
   { id: 'tr-TR-Chirp3-HD-Aoede',        name: 'Bilge Anne',      desc: 'En şefkatli ve huzur veren' },
   { id: 'tr-TR-Chirp3-HD-Callirrhoe',   name: 'Masalcı Kadın',   desc: 'Akıcı ve merak uyandıran' },
   { id: 'tr-TR-Chirp3-HD-Despina',      name: 'Huzur Perisi',    desc: 'Yumuşak ve sakinleştirici' },
-  // — Kalan 4 Ses Dinleniyor... —
-  { id: 'tr-TR-Chirp3-HD-Leda',         name: 'Bekleniyor...',   desc: 'Yeni ses seçimi yapılacak' },
-  { id: 'tr-TR-Chirp3-HD-Cassiopeia',   name: 'Bekleniyor...',   desc: 'Yeni ses seçimi yapılacak' },
-  { id: 'tr-TR-Chirp3-HD-Vega',         name: 'Bekleniyor...',   desc: 'Yeni ses seçimi yapılacak' },
-  { id: 'tr-TR-Chirp3-HD-Capella',      name: 'Bekleniyor...',   desc: 'Yeni ses seçimi yapılacak' },
+  { id: 'tr-TR-Chirp3-HD-Fenrir',       name: 'Sihirli Peri',    desc: 'Genç, taze ve büyülü' },
+  { id: 'tr-TR-Chirp3-HD-Gacrux',       name: 'Gizemli Prenses',  desc: 'Zarif, mistik ve asil' },
+  { id: 'tr-TR-Chirp3-HD-Kore',         name: 'Gökkuşağı Kızı',   desc: 'Canlı, neşeli ve renkli' },
 ]
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {

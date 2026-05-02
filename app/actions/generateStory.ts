@@ -119,10 +119,14 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
             'tr-TR-Chirp3-HD-Algenib': 'Neşeli, hızlı, enerjik ve yerinde duramayan heyecanlı bir tavşan gibi oku.',
             'tr-TR-Chirp3-HD-Algieba': 'Güçlü, kararlı, kahramanvari ve yankılı bir sesle oku.',
             'tr-TR-Chirp3-HD-Alnilam': 'Otoriter, ağırbaşlı, onurlu ve saygın bir kral gibi oku.',
+            'tr-TR-Chirp3-HD-Charon': 'Heyecanlı, sürprizleri seven ve çocuklarıyla oyun oynayan bir baba gibi oku.',
+            'tr-TR-Chirp3-HD-Iapetus': 'Derin, yankılı, koruyucu ve doğanın gücünü hissettiren bir tonda, ağırbaşlı bir muhafız gibi oku.',
             'tr-TR-Chirp3-HD-Aoede': 'Sıcak, şefkatli, sevgi dolu ve huzurlu bir sesle masal anlatır gibi oku.',
             'tr-TR-Chirp3-HD-Callirrhoe': 'Akıcı, masalsı ve merak uyandıran bir anlatıcı tonuyla oku.',
-            'tr-TR-Chirp3-HD-Charon': 'Heyecanlı, sürprizleri seven ve çocuklarıyla oyun oynayan bir baba gibi oku.',
             'tr-TR-Chirp3-HD-Despina': 'Çok sakin, rahatlatıcı, adeta fısıltı gibi yumuşak bir sesle oku.',
+            'tr-TR-Chirp3-HD-Fenrir': 'Neşeli, hafif, genç ve enerjik bir tonda, sihirli bir dünyadan seslenir gibi oku.',
+            'tr-TR-Chirp3-HD-Gacrux': 'Mistik, zarif ve hafif yankılı bir sesle, bir prensesin zarafetiyle masal anlatır gibi oku.',
+            'tr-TR-Chirp3-HD-Kore': 'Canlı, renkli, çocuksu ve her cümlesinde neşe saçan bir sesle, hayat dolu bir tonda oku.',
         };
 
         const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
