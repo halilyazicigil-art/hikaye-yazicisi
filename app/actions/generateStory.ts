@@ -112,12 +112,32 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     let audioUrl = null
     if (voiceOption !== 'Sessiz' && elevenVoiceId) {
         console.log(`3. Adım: Ses üretiliyor (Model: ${elevenVoiceId})...`)
+
+        // Ses Karakterine Göre Okuma Talimatı (Style Instructions)
+        const VOICE_INSTRUCTIONS: Record<string, string> = {
+            'tr-TR-Chirp3-HD-Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
+            'tr-TR-Chirp3-HD-Algenib': 'Neşeli, hızlı, enerjik ve yerinde duramayan heyecanlı bir tavşan gibi oku.',
+            'tr-TR-Chirp3-HD-Algieba': 'Güçlü, kararlı, kahramanvari ve yankılı bir sesle oku.',
+            'tr-TR-Chirp3-HD-Alnilam': 'Otoriter, ağırbaşlı, onurlu ve saygın bir kral gibi oku.',
+            'tr-TR-Chirp3-HD-Aoede': 'Sıcak, şefkatli, sevgi dolu ve huzurlu bir sesle masal anlatır gibi oku.',
+            'tr-TR-Chirp3-HD-Callirrhoe': 'Akıcı, masalsı ve merak uyandıran bir anlatıcı tonuyla oku.',
+            'tr-TR-Chirp3-HD-Charon': 'Heyecanlı, sürprizleri seven ve çocuklarıyla oyun oynayan bir baba gibi oku.',
+            'tr-TR-Chirp3-HD-Despina': 'Çok sakin, rahatlatıcı, adeta fısıltı gibi yumuşak bir sesle oku.',
+        };
+
         const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                input: { text: pages.map(p => p.text).join(' ') },
-                voice: { languageCode: 'tr-TR', name: elevenVoiceId }, // elevenVoiceId artık tr-TR-Chirp3-HD-... formundadır
+                input: { 
+                    text: pages.map(p => p.text).join(' '),
+                    prompt: VOICE_INSTRUCTIONS[elevenVoiceId] || 'Sıcak ve masalsı bir tonda oku.'
+                },
+                voice: { 
+                    languageCode: 'tr-TR', 
+                    name: elevenVoiceId,
+                    modelName: 'gemini-3.1-flash-tts-preview'
+                },
                 audioConfig: { audioEncoding: 'MP3' }
             })
         })

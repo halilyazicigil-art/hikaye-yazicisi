@@ -7,21 +7,21 @@ import { createClient } from '@/utils/supabase/client'
 import { useEffect } from 'react'
 
 const AI_VOICES = [
-  // — Bilge Anlatıcılar —
+  // — Beyefendi Masalcılar —
+  { id: 'tr-TR-Chirp3-HD-Achird',       name: 'Bilge Dede',      desc: 'Tok, bilgece ve güven veren' },
+  { id: 'tr-TR-Chirp3-HD-Algenib',      name: 'Gezgin Tavşan',   desc: 'Neşeli ve yerinde duramayan' },
+  { id: 'tr-TR-Chirp3-HD-Algieba',      name: 'Cesur Şövalye',   desc: 'Güçlü ve kahramanvari' },
+  { id: 'tr-TR-Chirp3-HD-Alnilam',      name: 'Yüce Kral',       desc: 'Otoriter ve onurlu' },
+  { id: 'tr-TR-Chirp3-HD-Charon',       name: 'Heyecanlı Baba',  desc: 'Sürprizleri seven ve oyunbaz' },
+  // — Hanımefendi Masalcılar —
   { id: 'tr-TR-Chirp3-HD-Aoede',        name: 'Bilge Anne',      desc: 'En şefkatli ve huzur veren' },
-  { id: 'tr-TR-Chirp3-HD-Fenrir',       name: 'Bilge Dede',      desc: 'Güven veren ve tok ses' },
-  // — Sihirli Hanımlar —
-  { id: 'tr-TR-Chirp3-HD-Leda',         name: 'Peri Kızı',       desc: 'Neşeli ve büyülü' },
-  { id: 'tr-TR-Chirp3-HD-Cassiopeia',   name: 'Deniz Kızı',      desc: 'Yumuşak ve gizemli' },
-  { id: 'tr-TR-Chirp3-HD-Andromeda',    name: 'Uzay Prensesi',    desc: 'Mistik ve merak uyandıran' },
-  { id: 'tr-TR-Chirp3-HD-Vega',         name: 'Orman Perisi',    desc: 'Doğal ve akıcı' },
-  { id: 'tr-TR-Chirp3-HD-Capella',      name: 'Nota Hanım',      desc: 'Ritmik ve tatlı' },
-  { id: 'tr-TR-Chirp3-HD-Lyra',         name: 'Ay Kızı',         desc: 'Uyku öncesi için huzurlu' },
-  // — Sihirli Beyler —
-  { id: 'tr-TR-Chirp3-HD-Puck',         name: 'Gezgin Tavşan',   desc: 'Hızlı ve eğlenceli' },
-  { id: 'tr-TR-Chirp3-HD-Charon',       name: 'Cesur Şövalye',   desc: 'Güçlü ve kahramanvari' },
-  { id: 'tr-TR-Chirp3-HD-Oberon',        name: 'Yüce Kral',       desc: 'Otoriter ve onurlu' },
-  { id: 'tr-TR-Chirp3-HD-Atlas',         name: 'Dev Adam',        desc: 'Derin ve heybetli' },
+  { id: 'tr-TR-Chirp3-HD-Callirrhoe',   name: 'Masalcı Kadın',   desc: 'Akıcı ve merak uyandıran' },
+  { id: 'tr-TR-Chirp3-HD-Despina',      name: 'Huzur Perisi',    desc: 'Yumuşak ve sakinleştirici' },
+  // — Kalan 4 Ses Dinleniyor... —
+  { id: 'tr-TR-Chirp3-HD-Leda',         name: 'Bekleniyor...',   desc: 'Yeni ses seçimi yapılacak' },
+  { id: 'tr-TR-Chirp3-HD-Cassiopeia',   name: 'Bekleniyor...',   desc: 'Yeni ses seçimi yapılacak' },
+  { id: 'tr-TR-Chirp3-HD-Vega',         name: 'Bekleniyor...',   desc: 'Yeni ses seçimi yapılacak' },
+  { id: 'tr-TR-Chirp3-HD-Capella',      name: 'Bekleniyor...',   desc: 'Yeni ses seçimi yapılacak' },
 ]
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
