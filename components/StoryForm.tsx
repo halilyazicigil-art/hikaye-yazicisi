@@ -32,7 +32,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   const [openSection, setOpenSection] = useState<string | null>(null)
 
   // Form Data
-  const [voice, setVoice] = useState<string>('tr-TR-Chirp3-HD-Aoede') // Varsayılan: Zeynep (Chirp3-HD)
+  const [voice, setVoice] = useState<string>('Aoede') 
   const [voiceName, setVoiceName] = useState<string>('Bilge Anne')
   const [clonedVoices, setClonedVoices] = useState<any[]>([])
   const [isUploadingVoice, setIsUploadingVoice] = useState(false)

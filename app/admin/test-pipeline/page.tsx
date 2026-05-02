@@ -23,7 +23,7 @@ const VOICES = [
 export default function TestPipelinePage() {
   const [prompt, setPrompt] = useState('Küçük bir robot ve kedisi yıldızlara bakıyor')
   const [selectedStyle, setSelectedStyle] = useState('Sulu Boya')
-  const [selectedVoice, setSelectedVoice] = useState('tr-TR-Chirp3-HD-Iapetus')
+  const [selectedVoice, setSelectedVoice] = useState('Iapetus')
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<any>(null)
 
