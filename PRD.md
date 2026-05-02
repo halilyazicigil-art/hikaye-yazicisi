@@ -23,7 +23,7 @@
 - **Yaş Uyarlaması:** 3-5 yaş için daha basit kelimeler ve kısa cümleler; 6-12 yaş için daha zengin betimlemeler ve uzun hikaye örgüleri.
 
 ### 3.3. Görsel Üretimi (Illustrations)
-- **fal.ai Entegrasyonu:** Masalın her sayfası veya paragrafı için hikayeye uygun, çocuk dostu ve yumuşak hatlara sahip **"suluboya tarzı (watercolor style)"** anlık görsel oluşturma.
+- **Gemini Image Entegrasyonu:** Masalın her sayfası için karakter uyumlu, çocuk dostu ve yüksek kaliteli görseller üretimi.
 
 ### 3.4. Ses Sentezi (Voice Narration)
 - **ElevenLabs Entegrasyonu:** Metinden sese (TTS) dönüşüm. Ücretsiz kullanıcılar için profesyonel anlatıcı sesleri; Premium kullanıcılar için klonlanmış ebeveyn sesi.
@@ -36,4 +36,4 @@
 - **Frontend:** Next.js 15 (App Router), Tailwind CSS v3. Responsive ve mobil uyumlu tasarım.
 - **Backend & Veritabanı:** Supabase. Tüm veriler (kullanıcılar, profiller, masallar) Supabase PostgreSQL üzerinde tutulacak.
 - **Güvenlik:** Supabase Row Level Security (RLS) ile çocuk profillerine sadece ilgili ebeveynin erişebilmesi sağlanacak.
-- **Performans:** Görseller fal.ai üzerinden optimize edilerek getirilecek, metin üretiminde streaming (akış) kullanılarak bekleme süresi azaltılacak.
+- **Performans:** Görseller Gemini üzerinden optimize edilerek getirilecek, metin üretiminde streaming (akış) kullanılarak bekleme süresi azaltılacak.

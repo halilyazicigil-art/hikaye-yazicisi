@@ -87,8 +87,6 @@ Sistemin çalışması için gerekli olan tüm harici servis bağlantıları ve 
 - **Ses Sentezi (Vertex AI):** `gemini-3.1-flash-tts-preview`
 - **API Key (Gemini & TTS):** `AIzaSyBcKzTPDKcHRJKA3PMM9hp_sHHdssdwUxk`
 
-### C. Gelişmiş Görsel Motoru (Fal.ai - Yedek/Opsiyonel)
-- **API Key:** `94ba930b-46a5-4725-bb03-f2d27aba88e3:1dae85391ad53f13565be5b51cbba3cb`
 
 ---
 *Son Güncelleme: 02.05.2026 - MyStory Geliştirici Ekibi*
