@@ -7,23 +7,21 @@ import { createClient } from '@/utils/supabase/client'
 import { useEffect } from 'react'
 
 const AI_VOICES = [
-  // — Gerçekçi Sesler —
-  { id: 'tr-TR-Chirp3-HD-Aoede',        name: 'Zeynep (Studio)',  desc: 'Ultra gerçekçi ve şefkatli' },
-  { id: 'tr-TR-Chirp3-HD-Orus',         name: 'Can (Studio)',     desc: 'Profesyonel ve tok ses' },
-  { id: 'tr-TR-Chirp3-HD-Achernar',     name: 'Merve (HD)',       desc: 'Doğal ve akıcı' },
-  { id: 'tr-TR-Chirp3-HD-Algenib',      name: 'Kerem (HD)',       desc: 'Güven verici ve derin' },
-  // — Masal Karakterleri —
-  { id: 'tr-TR-Chirp3-HD-Zephyr',       name: 'Peri Kızı',       desc: 'Neşeli ve büyülü' },
-  { id: 'tr-TR-Chirp3-HD-Fenrir',       name: 'Şövalye',         desc: 'Kahramanvari ve güçlü' },
-  { id: 'tr-TR-Chirp3-HD-Puck',         name: 'Tavşan',          desc: 'Hızlı ve eğlenceli' },
-  { id: 'tr-TR-Chirp3-HD-Enceladus',    name: 'Dev',             desc: 'Gümbürdeyici ve heybetli' },
-  { id: 'tr-TR-Chirp3-HD-Algieba',      name: 'Aslan',           desc: 'Gururlu ve cesur' },
-  { id: 'tr-TR-Chirp3-HD-Charon',       name: 'Büyücü',          desc: 'Gizemli ve derin' },
-  { id: 'tr-TR-Chirp3-HD-Schedar',      name: 'Kral',            desc: 'Otoriter ve onurlu' },
-  { id: 'tr-TR-Chirp3-HD-Kore',         name: 'Ay Kızı',         desc: 'Huzurlu ve mistik' },
-  { id: 'tr-TR-Chirp3-HD-Despina',      name: 'Deniz Kızı',      desc: 'Tatlı ve dalgalı' },
-  { id: 'tr-TR-Chirp3-HD-Leda',         name: 'Kuğu',            desc: 'Zarif ve melodik' },
-  { id: 'tr-TR-Chirp3-HD-Sulafat',      name: 'Müzisyen',        desc: 'Ritmik ve akıcı' },
+  // — Bilge Anlatıcılar —
+  { id: 'tr-TR-Chirp3-HD-Aoede',        name: 'Bilge Anne',      desc: 'En şefkatli ve huzur veren' },
+  { id: 'tr-TR-Chirp3-HD-Fenrir',       name: 'Bilge Dede',      desc: 'Güven veren ve tok ses' },
+  // — Sihirli Hanımlar —
+  { id: 'tr-TR-Chirp3-HD-Leda',         name: 'Peri Kızı',       desc: 'Neşeli ve büyülü' },
+  { id: 'tr-TR-Chirp3-HD-Cassiopeia',   name: 'Deniz Kızı',      desc: 'Yumuşak ve gizemli' },
+  { id: 'tr-TR-Chirp3-HD-Andromeda',    name: 'Uzay Prensesi',    desc: 'Mistik ve merak uyandıran' },
+  { id: 'tr-TR-Chirp3-HD-Vega',         name: 'Orman Perisi',    desc: 'Doğal ve akıcı' },
+  { id: 'tr-TR-Chirp3-HD-Capella',      name: 'Nota Hanım',      desc: 'Ritmik ve tatlı' },
+  { id: 'tr-TR-Chirp3-HD-Lyra',         name: 'Ay Kızı',         desc: 'Uyku öncesi için huzurlu' },
+  // — Sihirli Beyler —
+  { id: 'tr-TR-Chirp3-HD-Puck',         name: 'Gezgin Tavşan',   desc: 'Hızlı ve eğlenceli' },
+  { id: 'tr-TR-Chirp3-HD-Charon',       name: 'Cesur Şövalye',   desc: 'Güçlü ve kahramanvari' },
+  { id: 'tr-TR-Chirp3-HD-Oberon',        name: 'Yüce Kral',       desc: 'Otoriter ve onurlu' },
+  { id: 'tr-TR-Chirp3-HD-Atlas',         name: 'Dev Adam',        desc: 'Derin ve heybetli' },
 ]
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
@@ -36,7 +34,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
   // Form Data
   const [voice, setVoice] = useState<string>('tr-TR-Chirp3-HD-Aoede') // Varsayılan: Zeynep (Chirp3-HD)
-  const [voiceName, setVoiceName] = useState<string>('Zeynep (Studio)')
+  const [voiceName, setVoiceName] = useState<string>('Bilge Anne')
   const [clonedVoices, setClonedVoices] = useState<any[]>([])
   const [isUploadingVoice, setIsUploadingVoice] = useState(false)
   const [showVoiceModal, setShowVoiceModal] = useState(false)
