@@ -30,7 +30,7 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
 
     // 1. FAZ: METİN
     console.log("1. Faz: Metin üretiliyor...")
-    const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:streamGenerateContent`, {
+    const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -41,8 +41,8 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
       })
     })
 
-    const aiDataRaw = await textResponse.json()
-    let storyJsonRaw = aiDataRaw.map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || '').join('')
+    const aiData = await textResponse.json()
+    let storyJsonRaw = aiData.candidates?.[0]?.content?.parts?.[0]?.text || ''
     
     // [ZIRHLI PARSER]
     storyJsonRaw = storyJsonRaw.replace(/```json/g, '').replace(/```/g, '').trim();

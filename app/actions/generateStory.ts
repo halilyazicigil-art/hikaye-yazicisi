@@ -109,7 +109,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
 
     // 1. ADIM: METİN ÜRETİMİ (Gemini 3 Flash Preview - Vertex AI)
     console.log("1. Adım: Masal metni ve karakter çapaları üretiliyor...")
-    const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:streamGenerateContent`, {
+    const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
