@@ -181,11 +181,14 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         console.log(`3. Adım: Ses üretiliyor (Model: ${elevenVoiceId})...`)
 
         try {
+            // Ses akıcılığı için kesme işaretlerini temizleyen filtre
+            const cleanedTextForAudio = pages.map(p => p.text).join(' ').replace(/'/g, '');
+
             const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    input: { text: pages.map(p => p.text).join(' ') },
+                    input: { text: cleanedTextForAudio },
                     voice: { 
                         languageCode: 'tr-TR', 
                         name: elevenVoiceId

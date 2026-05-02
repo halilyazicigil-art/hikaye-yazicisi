@@ -101,13 +101,13 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
       results.image.error = JSON.stringify(imageData)
     }
 
-    // 3. FAZ: SES (CHIRP HD - PROMPTSUZ)
+    // 3. FAZ: SES (CHIRP HD - PROMPTSUZ + FİLTRELİ)
     console.log("3. Faz: Test sesi üretiliyor...")
     const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        input: { text: storyData.text },
+        input: { text: storyData.text.replace(/'/g, '') },
         voice: { languageCode: 'tr-TR', name: voiceId },
         audioConfig: { audioEncoding: 'MP3' }
       })
