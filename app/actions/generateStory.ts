@@ -66,13 +66,74 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const vertexToken = await getVertexAccessToken()
     const projectId = "hikayeyazicisi"
 
+    // =====================================================================
+    // GÖRSEL STİL KÜTÜPHANESİ (Sabit Stiller)
+    // =====================================================================
+    const IMAGE_STYLE_MAP: Record<string, { prefix: string, suffix: string }> = {
+      'Sulu Boya': { 
+        prefix: 'High-quality children\'s storybook illustration, soft watercolor style, ', 
+        suffix: ', hand-painted textures, bleeding colors, magical atmosphere, no text, masterpiece.' 
+      },
+      '3D Pixar Stili': { 
+        prefix: 'Cute 3D render, Pixar and Disney animation style, high detail, ', 
+        suffix: ', bright vibrant colors, 8k resolution, cinematic lighting, no text.' 
+      },
+      'Pastel Düşler': { 
+        prefix: 'Dreamy pastel illustration, soft luminous lighting, ', 
+        suffix: ', magical sparkles, gentle colors, whimsical atmosphere, no text.' 
+      },
+      'Anime': { 
+        prefix: 'Studio Ghibli style anime illustration, hand-drawn look, ', 
+        suffix: ', lush backgrounds, emotional lighting, high quality, no text.' 
+      },
+      'Yağlı Boya': { 
+        prefix: 'Classic oil painting, visible brushstrokes, rich textures, ', 
+        suffix: ', warm lighting, artistic masterpiece, storybook feel, no text.' 
+      },
+      'Pop Art': { 
+        prefix: 'Vibrant Pop Art style, bold lines, comic book aesthetic, ', 
+        suffix: ', bright saturated colors, high contrast, modern look, no text.' 
+      },
+      'Çizgi Film': { 
+        prefix: 'Classic 2D cartoon style, clean lines, simple and bright, ', 
+        suffix: ', fun and friendly atmosphere, flat colors, no text.' 
+      },
+      'Vintage Retro': { 
+        prefix: 'Vintage 1950s storybook style, retro colors, nostalgic feel, ', 
+        suffix: ', grainy texture, classic illustration, no text.' 
+      }
+    }
+
+    const selectedStyle = theme.includes('Çizim Stili:') ? theme.split('Çizim Stili:')[1].split('.')[0].trim() : 'Sulu Boya'
+    const styleConfig = IMAGE_STYLE_MAP[selectedStyle] || IMAGE_STYLE_MAP['Sulu Boya']
+
     // 1. ADIM: METİN ÜRETİMİ (Gemini 3 Flash Preview - Vertex AI)
-    console.log("1. Adım: Masal metni üretiliyor (Gemini 3 Flash)...")
+    console.log("1. Adım: Masal metni ve karakter çapaları üretiliyor...")
     const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:streamGenerateContent`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: `Aşağıdaki kriterlere göre Türkçe bir çocuk masalı yaz. Masal tam 8-10 sahneden oluşmalı. JSON formatında 'title' ve 'scenes' (dizi, her eleman 'text' ve 'imagePrompt' içermeli) olarak dön. Konu: ${theme}, Karakter: ${hero}, Yaş: ${age}.` }] }],
+        contents: [{ role: 'user', parts: [{ text: `
+          Bir çocuk masalı yazarı ve görsel yönetmeni gibi davran. 
+          Aşağıdaki kriterlere göre Türkçe bir çocuk masalı yaz:
+          Çocuk Adı: ${childName}, Kahramanlar: ${hero}, Konu: ${theme}, Yaş: ${age}.
+
+          KURALLAR:
+          1. Masal tam 8-10 sahneden oluşmalı.
+          2. KAHRAMAN ÇAPASI: Hikayedeki en fazla 3 ana karakter için SABİT birer fiziksel tarif (İngilizce) oluştur. 
+             (Örn: "A small white rabbit with a blue vest and red hat"). Bu tarifi her sahnede AYNI kullan.
+          3. SAHNE TEMASI: Her sahne için sadece O AN ne olduğunu anlatan teknik bir görsel tarif (İngilizce) yaz. 
+             ASLA stil (watercolor vb.) kelimeleri kullanma! Sadece eylemi ve mekanı yaz.
+          
+          ÇIKTI FORMATI (JSON):
+          {
+            "title": "Masal Başlığı",
+            "characters": { "char1": "tarif", "char2": "tarif", "char3": "tarif" },
+            "scenes": [
+              { "text": "Türkçe masal metni...", "sceneDescription": "Sahneye ait ana tema (İngilizce)..." }
+            ]
+          }
+        ` }] }],
         generationConfig: { responseMimeType: "application/json" }
       })
     })
@@ -80,18 +141,22 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const aiDataRaw = await textResponse.json()
     let storyJsonRaw = aiDataRaw.map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || '').join('')
     const storyData = JSON.parse(storyJsonRaw)
-    const { title, scenes } = storyData
+    const { title, scenes, characters } = storyData
 
-    // 2. ADIM: GÖRSEL ÜRETİMİ (Nano Banana 2 - Vertex AI)
-    console.log("2. Adım: Görseller üretiliyor (Nano Banana 2)...")
+    // 2. ADIM: GÖRSEL ÜRETİMİ (SABİT STİL + KARAKTER ÇAPASI + SAHNE TEMASI)
+    console.log("2. Adım: Görseller 'Sihirli Birleştirme' ile üretiliyor...")
     const pages = []
     for (let i = 0; i < scenes.length; i++) {
         const scene = scenes[i]
+        
+        // Sabit Stil + Sahne Teması Birleşimi
+        const finalImagePrompt = `${styleConfig.prefix} ${scene.sceneDescription} ${styleConfig.suffix}`
+
         const imgResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: `High quality storybook illustration: ${scene.imagePrompt}. Style: pastel colors, magical atmosphere, no text.` }] }]
+                contents: [{ role: 'user', parts: [{ text: finalImagePrompt }] }]
             })
         })
         const imgData = await imgResponse.json()
