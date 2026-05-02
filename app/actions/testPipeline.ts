@@ -43,8 +43,7 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: finalPrompt }] }],
-            generationConfig: { responseMimeType: "image/png" }
+            contents: [{ parts: [{ text: finalPrompt }] }]
         })
     });
 
@@ -63,7 +62,14 @@ async function generateAudio(text: string, voiceId: string, apiKey: string) {
         body: JSON.stringify({
             contents: [{ parts: [{ text: text }] }],
             generationConfig: { 
-                audioConfig: { voiceId: voiceId }
+                responseModalities: ["AUDIO"],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: {
+                            voiceName: voiceId
+                        }
+                    }
+                }
             }
         })
     });
@@ -78,9 +84,6 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
   const supabase = await createClient();
 
   try {
-    // ---------------------------------------------------------
-    // FAZ 1: METİN
-    // ---------------------------------------------------------
     const textResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -93,17 +96,11 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
     const textData = await textResponse.json();
     const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
-    // ---------------------------------------------------------
-    // FAZ 2: GÖRSEL
-    // ---------------------------------------------------------
     const base64Image = await generateImage(storyData.visualHook, storyData.characters, style, apiKey);
     const fileName = `test_${Date.now()}.png`;
     await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(base64Image, 'base64'), { contentType: 'image/png' });
     const { data: { publicUrl: imageUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
 
-    // ---------------------------------------------------------
-    // FAZ 3: SES
-    // ---------------------------------------------------------
     const base64Audio = await generateAudio(storyData.text, voiceId, apiKey);
     const audioFileName = `test_audio_${Date.now()}.mp3`;
     await supabase.storage.from('story_assets').upload(`audio/${audioFileName}`, Buffer.from(base64Audio, 'base64'), { contentType: 'audio/mpeg' });

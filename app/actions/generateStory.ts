@@ -4,7 +4,6 @@ import { createClient } from '@/utils/supabase/server'
 
 /**
  * 🛡️ ZIRHLI PARSER (Manifesto 4)
- * Gemini'den gelen yanıtı temizler ve JSON'a dönüştürür.
  */
 function armoredParser(text: string) {
     try {
@@ -34,7 +33,6 @@ function voiceIdFixer(voiceId: string): string {
 
 /**
  * 🎨 GÖRSEL MOTORU (FAZ 2)
- * Sihirli Birleştirme 2.0 formülünü uygular.
  */
 async function generateImage(hook: string, characters: any, style: string, apiKey: string) {
     const stylePrefixMap: Record<string, string> = {
@@ -51,7 +49,6 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
         'Pop Art': ". bold lines, bright colors, comic book aesthetic, dynamic"
     };
 
-    // Karakter Mühürleme (Character Sealing) - Manifesto 4.C
     const charAnchors = Object.entries(characters)
         .map(([name, desc]) => `${name}: ${desc}`)
         .join(". ");
@@ -62,12 +59,11 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: finalPrompt }] }],
-            generationConfig: { responseMimeType: "image/png" }
+            contents: [{ parts: [{ text: finalPrompt }] }]
         })
     });
 
-    if (!response.ok) throw new Error(`Görsel API hatası: ${response.statusText}`);
+    if (!response.ok) throw new Error(`Görsel API hatası: ${response.status}`);
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
@@ -84,12 +80,19 @@ async function generateAudio(text: string, voiceId: string, apiKey: string) {
         body: JSON.stringify({
             contents: [{ parts: [{ text: text }] }],
             generationConfig: { 
-                audioConfig: { voiceId: shortId }
+                responseModalities: ["AUDIO"],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: {
+                            voiceName: shortId
+                        }
+                    }
+                }
             }
         })
     });
 
-    if (!response.ok) throw new Error(`Ses API hatası: ${response.statusText}`);
+    if (!response.ok) throw new Error(`Ses API hatası: ${response.status}`);
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
@@ -110,7 +113,6 @@ export async function generateStoryAction(formData: {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Oturum açılmadı.");
 
-        // Profil bul veya varsayılan oluştur
         let { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).limit(1).single();
         if (!profile) {
             const { data: newProfile, error: profErr } = await supabase.from('profiles').insert({
@@ -123,7 +125,7 @@ export async function generateStoryAction(formData: {
         }
 
         // ---------------------------------------------------------
-        // FAZ 1: METİN ÜRETİMİ
+        // FAZ 1: METİN
         // ---------------------------------------------------------
         const systemPrompt = `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. DİL: Türkçe.`;
         const userPrompt = `Konu: ${formData.theme}, Kahraman: ${formData.hero}, Yaş: ${formData.age}, Çocuk Adı: ${formData.childName}`;
@@ -142,28 +144,27 @@ export async function generateStoryAction(formData: {
         const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
         // ---------------------------------------------------------
-        // FAZ 2: GÖRSEL ÜRETİMİ
+        // FAZ 2: GÖRSEL
         // ---------------------------------------------------------
         const pagesWithImages = [];
         for (const scene of storyData.scenes) {
             try {
                 const base64Image = await generateImage(scene.visualHook, storyData.characters, formData.style, apiKey);
                 const fileName = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-                const { error: uploadErr } = await supabase.storage
+                await supabase.storage
                     .from('story_assets')
                     .upload(`images/${fileName}`, Buffer.from(base64Image, 'base64'), { contentType: 'image/png' });
 
-                if (uploadErr) throw uploadErr;
                 const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
                 pagesWithImages.push({ text: scene.text, image_url: publicUrl });
             } catch (imgErr) {
-                console.error("Görsel hatası (Pas geçiliyor):", imgErr);
+                console.error("Görsel hatası:", imgErr);
                 pagesWithImages.push({ text: scene.text, image_url: '' });
             }
         }
 
         // ---------------------------------------------------------
-        // FAZ 3: SES ÜRETİMİ
+        // FAZ 3: SES
         // ---------------------------------------------------------
         let audioUrl = '';
         try {
@@ -172,11 +173,10 @@ export async function generateStoryAction(formData: {
             const base64Audio = await generateAudio(fullText, voiceId, apiKey);
             
             const audioFileName = `audio_${Date.now()}.mp3`;
-            const { error: audioErr } = await supabase.storage
+            await supabase.storage
                 .from('story_assets')
                 .upload(`audio/${audioFileName}`, Buffer.from(base64Audio, 'base64'), { contentType: 'audio/mpeg' });
 
-            if (audioErr) throw audioErr;
             const { data: { publicUrl: aUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
             audioUrl = aUrl;
         } catch (audErr) {
@@ -189,7 +189,7 @@ export async function generateStoryAction(formData: {
         const { data: savedStory, error: dbErr } = await supabase.from('stories').insert({
             profile_id: profile!.id,
             title: storyData.title,
-            content_json: pagesWithImages, // Sayfalar burada saklanıyor
+            content_json: pagesWithImages,
             image_url: pagesWithImages[0]?.image_url || '',
             audio_url: audioUrl
         }).select().single();
