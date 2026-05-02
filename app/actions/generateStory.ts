@@ -145,9 +145,19 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const storyData = JSON.parse(storyJsonRaw)
     const { title, scenes, characters } = storyData
 
-    // Karakter Çapalarını (Anchor) Birleştir (Object.values kullanarak)
-    const characterAnchors = characters ? Object.values(characters).join('. ') : '';
-    console.log(`>>> KARAKTER ÇAPALARI (ANCHORS): ${characterAnchors}`);
+    // [TEŞHİS] Gemini'den gelen karakter verisini denetle
+    console.log(">>> [HATA AYIKLAMA] Gelen Karakter Verisi:", JSON.stringify(characters, null, 2));
+
+    // Karakter Çapalarını (Anchor) Birleştir (Daha hataya dayanıklı hale getirildi)
+    let characterAnchors = "";
+    if (characters) {
+        if (Array.isArray(characters)) {
+            characterAnchors = characters.map((c: any) => `${c.name}: ${c.description || c.physicalDescription}`).join('. ');
+        } else if (typeof characters === 'object') {
+            characterAnchors = Object.values(characters).join('. ');
+        }
+    }
+    console.log(`>>> [TEŞHİS] Final Karakter Çapaları: ${characterAnchors || "BOŞ! (HATA BURADA OLABİLİR)"}`);
 
     // 2. ADIM: GÖRSEL ÜRETİMİ (SİHİRLİ BİRLEŞTİRME 2.0)
     console.log("2. Adım: Görseller 'Sihirli Birleştirme 2.0' ile üretiliyor...")
@@ -156,8 +166,8 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         const scene = scenes[i]
         
         // FORMÜL: Stil Prefix + Karakter Kimlikleri + Sayfanın Vurucu Aksiyonu + Stil Suffix
-        const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${scene.sceneDescription}. ${styleConfig.suffix}`;
-        console.log(`>>> SAYFA ${i+1} FINAL PROMPT: ${finalImagePrompt}`);
+        const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${scene.sceneDescription || scene.visualHook}. ${styleConfig.suffix}`;
+        console.log(`>>> [PROMPT DENETİMİ] Sayfa ${i+1}: ${finalImagePrompt}`);
 
         const imgResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
             method: 'POST',
@@ -171,7 +181,9 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         
         let publicUrl = ''
         if (b64) {
-            const fileName = `story_${Date.now()}_${i}.png`
+            // Çakışmayı engellemek için benzersiz ID
+            const uniqueId = Math.random().toString(36).substring(7);
+            const fileName = `story_${Date.now()}_${uniqueId}_${i}.png`
             const { error: upErr } = await supabase.storage.from('story_assets').upload(fileName, Buffer.from(b64, 'base64'), { contentType: 'image/png' })
             if (!upErr) {
                 publicUrl = supabase.storage.from('story_assets').getPublicUrl(fileName).data.publicUrl

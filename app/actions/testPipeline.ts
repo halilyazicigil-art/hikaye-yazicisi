@@ -78,14 +78,24 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
     results.text.content = storyData.text
     results.text.status = 'SUCCESS'
 
+    // [TEŞHİS] Gemini'den gelen karakter verisini denetle
+    console.log(">>> [HATA AYIKLAMA TEST] Gelen Karakter Verisi:", JSON.stringify(storyData.characters, null, 2));
+
     // Karakter Çapalarını (Anchor) Birleştir
-    const characterAnchors = storyData.characters ? Object.values(storyData.characters).join('. ') : '';
-    console.log(`>>> TEST KARAKTER ÇAPALARI: ${characterAnchors}`);
+    let characterAnchors = "";
+    if (storyData.characters) {
+        if (Array.isArray(storyData.characters)) {
+            characterAnchors = storyData.characters.map((c: any) => `${c.name}: ${c.description || c.physicalDescription}`).join('. ');
+        } else if (typeof storyData.characters === 'object') {
+            characterAnchors = Object.values(storyData.characters).join('. ');
+        }
+    }
+    console.log(`>>> [TEŞHİS TEST] Final Karakter Çapaları: ${characterAnchors || "BOŞ! (HATA BURADA OLABİLİR)"}`);
 
     // 2. FAZ: GÖRSEL (SİHİRLİ BİRLEŞTİRME 2.0)
     console.log("2. Faz: Test görseli üretiliyor...")
-    const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${storyData.sceneDescription}. ${styleConfig.suffix}`;
-    console.log(`>>> TEST FINAL PROMPT: ${finalImagePrompt}`);
+    const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${storyData.sceneDescription || storyData.visualHook}. ${styleConfig.suffix}`;
+    console.log(`>>> [PROMPT DENETİMİ TEST]: ${finalImagePrompt}`);
     const imageResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
