@@ -51,21 +51,6 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
     'Vintage Retro': { prefix: 'Vintage 1950s storybook style, retro colors, nostalgic feel, ', suffix: ', grainy texture, classic illustration, no text.' }
   }
 
-  const VOICE_INSTRUCTIONS: Record<string, string> = {
-    'tr-TR-Chirp3-HD-Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
-    'tr-TR-Chirp3-HD-Algenib': 'Neşeli, hızlı, enerjik ve yerinde duramayan heyecanlı bir tavşan gibi oku.',
-    'tr-TR-Chirp3-HD-Algieba': 'Güçlü, kararlı, kahramanvari ve yankılı bir sesle oku.',
-    'tr-TR-Chirp3-HD-Alnilam': 'Otoriter, ağırbaşlı, onurlu ve saygın bir kral gibi oku.',
-    'tr-TR-Chirp3-HD-Charon': 'Heyecanlı, sürprizleri seven ve çocuklarıyla oyun oynayan bir baba gibi oku.',
-    'tr-TR-Chirp3-HD-Iapetus': 'Derin, yankılı, koruyucu ve doğanın gücünü hissettiren bir tonda, ağırbaşlı bir muhafız gibi oku.',
-    'tr-TR-Chirp3-HD-Aoede': 'Sıcak, şefkatli, sevgi dolu ve huzurlu bir sesle masal anlatır gibi oku.',
-    'tr-TR-Chirp3-HD-Callirrhoe': 'Akıcı, masalsı ve merak uyandıran bir anlatıcı tonuyla oku.',
-    'tr-TR-Chirp3-HD-Despina': 'Çok sakin, rahatlatıcı, adeta fısıltı gibi yumuşak bir sesle oku.',
-    'tr-TR-Chirp3-HD-Fenrir': 'Neşeli, hafif, genç ve enerjik bir tonda, sihirli bir dünyadan seslenir gibi oku.',
-    'tr-TR-Chirp3-HD-Gacrux': 'Mistik, zarif ve hafif yankılı bir sesle, bir prensesin zarafetiyle masal anlatır gibi oku.',
-    'tr-TR-Chirp3-HD-Kore': 'Canlı, renkli, çocuksu ve her cümlesinde neşe saçan bir sesle, hayat dolu bir tonda oku.',
-  };
-
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -116,13 +101,13 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
       results.image.error = JSON.stringify(imageData)
     }
 
-    // 3. FAZ: SES (SABİT TALİMAT + CHIRP HD)
+    // 3. FAZ: SES (CHIRP HD - PROMPTSUZ)
     console.log("3. Faz: Test sesi üretiliyor...")
     const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        input: { text: storyData.text, prompt: VOICE_INSTRUCTIONS[voiceId] || 'Sıcak bir tonla oku.' },
+        input: { text: storyData.text },
         voice: { languageCode: 'tr-TR', name: voiceId },
         audioConfig: { audioEncoding: 'MP3' }
       })

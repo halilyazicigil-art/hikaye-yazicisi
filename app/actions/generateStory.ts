@@ -180,31 +180,12 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     if (voiceOption !== 'Sessiz' && elevenVoiceId) {
         console.log(`3. Adım: Ses üretiliyor (Model: ${elevenVoiceId})...`)
 
-        // Ses Karakterine Göre Okuma Talimatı (Style Instructions)
-        const VOICE_INSTRUCTIONS: Record<string, string> = {
-            'tr-TR-Chirp3-HD-Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
-            'tr-TR-Chirp3-HD-Algenib': 'Neşeli, hızlı, enerjik ve yerinde duramayan heyecanlı bir tavşan gibi oku.',
-            'tr-TR-Chirp3-HD-Algieba': 'Güçlü, kararlı, kahramanvari ve yankılı bir sesle oku.',
-            'tr-TR-Chirp3-HD-Alnilam': 'Otoriter, ağırbaşlı, onurlu ve saygın bir kral gibi oku.',
-            'tr-TR-Chirp3-HD-Charon': 'Heyecanlı, sürprizleri seven ve çocuklarıyla oyun oynayan bir baba gibi oku.',
-            'tr-TR-Chirp3-HD-Iapetus': 'Derin, yankılı, koruyucu ve doğanın gücünü hissettiren bir tonda, ağırbaşlı bir muhafız gibi oku.',
-            'tr-TR-Chirp3-HD-Aoede': 'Sıcak, şefkatli, sevgi dolu ve huzurlu bir sesle masal anlatır gibi oku.',
-            'tr-TR-Chirp3-HD-Callirrhoe': 'Akıcı, masalsı ve merak uyandıran bir anlatıcı tonuyla oku.',
-            'tr-TR-Chirp3-HD-Despina': 'Çok sakin, rahatlatıcı, adeta fısıltı gibi yumuşak bir sesle oku.',
-            'tr-TR-Chirp3-HD-Fenrir': 'Neşeli, hafif, genç ve enerjik bir tonda, sihirli bir dünyadan seslenir gibi oku.',
-            'tr-TR-Chirp3-HD-Gacrux': 'Mistik, zarif ve hafif yankılı bir sesle, bir prensesin zarafetiyle masal anlatır gibi oku.',
-            'tr-TR-Chirp3-HD-Kore': 'Canlı, renkli, çocuksu ve her cümlesinde neşe saçan bir sesle, hayat dolu bir tonda oku.',
-        };
-
         try {
             const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    input: { 
-                        text: pages.map(p => p.text).join(' '),
-                        prompt: VOICE_INSTRUCTIONS[elevenVoiceId] || 'Sıcak ve masalsı bir tonda oku.'
-                    },
+                    input: { text: pages.map(p => p.text).join(' ') },
                     voice: { 
                         languageCode: 'tr-TR', 
                         name: elevenVoiceId
@@ -213,7 +194,6 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
                 })
             })
             const audioData = await audioResponse.json()
-            console.log("TTS Yanıt Özeti:", audioData.error ? "HATA VAR" : "BAŞARILI")
 
             if (audioData.audioContent) {
                 const audioFileName = `voice_${Date.now()}.mp3`
