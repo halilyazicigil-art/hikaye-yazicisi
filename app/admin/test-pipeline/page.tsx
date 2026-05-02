@@ -6,18 +6,18 @@ import Link from 'next/link'
 
 const STYLES = ['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Anime', 'Yağlı Boya', 'Pop Art', 'Çizgi Film', 'Vintage Retro']
 const VOICES = [
-  { id: 'tr-TR-Chirp3-HD-Achird', name: 'Bilge Dede' },
-  { id: 'tr-TR-Chirp3-HD-Algenib', name: 'Gezgin Tavşan' },
-  { id: 'tr-TR-Chirp3-HD-Algieba', name: 'Cesur Şövalye' },
-  { id: 'tr-TR-Chirp3-HD-Alnilam', name: 'Yüce Kral' },
-  { id: 'tr-TR-Chirp3-HD-Charon', name: 'Heyecanlı Baba' },
-  { id: 'tr-TR-Chirp3-HD-Iapetus', name: 'Orman Muhafızı' },
-  { id: 'tr-TR-Chirp3-HD-Aoede', name: 'Bilge Anne' },
-  { id: 'tr-TR-Chirp3-HD-Callirrhoe', name: 'Masalcı Kadın' },
-  { id: 'tr-TR-Chirp3-HD-Despina', name: 'Huzur Perisi' },
-  { id: 'tr-TR-Chirp3-HD-Fenrir', name: 'Sihirli Peri' },
-  { id: 'tr-TR-Chirp3-HD-Gacrux', name: 'Gizemli Prenses' },
-  { id: 'tr-TR-Chirp3-HD-Kore', name: 'Gökkuşağı Kızı' },
+  { id: 'Achird', name: 'Bilge Dede' },
+  { id: 'Algenib', name: 'Gezgin Tavşan' },
+  { id: 'Algieba', name: 'Cesur Şövalye' },
+  { id: 'Alnilam', name: 'Yüce Kral' },
+  { id: 'Charon', name: 'Heyecanlı Baba' },
+  { id: 'Iapetus', name: 'Orman Muhafızı' },
+  { id: 'Aoede', name: 'Bilge Anne' },
+  { id: 'Callirrhoe', name: 'Masalcı Kadın' },
+  { id: 'Despina', name: 'Huzur Perisi' },
+  { id: 'Fenrir', name: 'Sihirli Peri' },
+  { id: 'Gacrux', name: 'Gizemli Prenses' },
+  { id: 'Kore', name: 'Gökkuşağı Kızı' },
 ]
 
 export default function TestPipelinePage() {

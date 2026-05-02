@@ -8,19 +8,19 @@ import { useEffect } from 'react'
 
 const AI_VOICES = [
   // — Beyefendi Masalcılar —
-  { id: 'tr-TR-Chirp3-HD-Achird',       name: 'Bilge Dede',      desc: 'Tok, bilgece ve güven veren' },
-  { id: 'tr-TR-Chirp3-HD-Algenib',      name: 'Gezgin Tavşan',   desc: 'Neşeli ve yerinde duramayan' },
-  { id: 'tr-TR-Chirp3-HD-Algieba',      name: 'Cesur Şövalye',   desc: 'Güçlü ve kahramanvari' },
-  { id: 'tr-TR-Chirp3-HD-Alnilam',      name: 'Yüce Kral',       desc: 'Otoriter ve onurlu' },
-  { id: 'tr-TR-Chirp3-HD-Charon',       name: 'Heyecanlı Baba',  desc: 'Sürprizleri seven ve oyunbaz' },
-  { id: 'tr-TR-Chirp3-HD-Iapetus',      name: 'Orman Muhafızı',  desc: 'Derin ve koruyucu bir ses' },
+  { id: 'Achird',       name: 'Bilge Dede',      desc: 'Tok, bilgece ve güven veren' },
+  { id: 'Algenib',      name: 'Gezgin Tavşan',   desc: 'Neşeli ve yerinde duramayan' },
+  { id: 'Algieba',      name: 'Cesur Şövalye',   desc: 'Güçlü ve kahramanvari' },
+  { id: 'Alnilam',      name: 'Yüce Kral',       desc: 'Otoriter ve onurlu' },
+  { id: 'Charon',       name: 'Heyecanlı Baba',  desc: 'Sürprizleri seven ve oyunbaz' },
+  { id: 'Iapetus',      name: 'Orman Muhafızı',  desc: 'Derin ve koruyucu bir ses' },
   // — Hanımefendi Masalcılar —
-  { id: 'tr-TR-Chirp3-HD-Aoede',        name: 'Bilge Anne',      desc: 'En şefkatli ve huzur veren' },
-  { id: 'tr-TR-Chirp3-HD-Callirrhoe',   name: 'Masalcı Kadın',   desc: 'Akıcı ve merak uyandıran' },
-  { id: 'tr-TR-Chirp3-HD-Despina',      name: 'Huzur Perisi',    desc: 'Yumuşak ve sakinleştirici' },
-  { id: 'tr-TR-Chirp3-HD-Fenrir',       name: 'Sihirli Peri',    desc: 'Genç, taze ve büyülü' },
-  { id: 'tr-TR-Chirp3-HD-Gacrux',       name: 'Gizemli Prenses',  desc: 'Zarif, mistik ve asil' },
-  { id: 'tr-TR-Chirp3-HD-Kore',         name: 'Gökkuşağı Kızı',   desc: 'Canlı, neşeli ve renkli' },
+  { id: 'Aoede',        name: 'Bilge Anne',      desc: 'En şefkatli ve huzur veren' },
+  { id: 'Callirrhoe',   name: 'Masalcı Kadın',   desc: 'Akıcı ve merak uyandıran' },
+  { id: 'Despina',      name: 'Huzur Perisi',    desc: 'Yumuşak ve sakinleştirici' },
+  { id: 'Fenrir',       name: 'Sihirli Peri',    desc: 'Genç, taze ve büyülü' },
+  { id: 'Gacrux',       name: 'Gizemli Prenses',  desc: 'Zarif, mistik ve asil' },
+  { id: 'Kore',         name: 'Gökkuşağı Kızı',   desc: 'Canlı, neşeli ve renkli' },
 ]
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {

@@ -101,15 +101,42 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
       results.image.error = JSON.stringify(imageData)
     }
 
-    // 3. FAZ: SES (CHIRP HD - PROMPTSUZ + FİLTRELİ)
-    console.log(`>>> TEST LOG: Google TTS'e gönderilen GERÇEK SES ID: ${voiceId}`);
+    // 3. FAZ: SES (Gemini 3.1 Flash TTS - Style Instructions Destekli)
+    console.log(`>>> TEST LOG: Google Gemini-TTS'e gönderilen GERÇEK SES: ${voiceId}`);
+
+    const VOICE_INSTRUCTIONS: Record<string, string> = {
+      'Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
+      'Algenib': 'Neşeli, hızlı, enerjik ve yerinde duramayan heyecanlı bir tavşan gibi oku.',
+      'Algieba': 'Güçlü, kararlı, kahramanvari ve yankılı bir sesle oku.',
+      'Alnilam': 'Otoriter, ağırbaşlı, onurlu ve saygın bir kral gibi oku.',
+      'Charon': 'Heyecanlı, sürprizleri seven ve çocuklarıyla oyun oynayan bir baba gibi oku.',
+      'Iapetus': 'Derin, yankılı, koruyucu ve doğanın gücünü hissettiren bir tonda, ağırbaşlı bir muhafız gibi oku.',
+      'Aoede': 'Sıcak, şefkatli, sevgi dolu ve huzurlu bir sesle masal anlatır gibi oku.',
+      'Callirrhoe': 'Akıcı, masalsı ve merak uyandıran bir anlatıcı tonuyla oku.',
+      'Despina': 'Çok sakin, rahatlatıcı, adeta fısıltı gibi yumuşak bir sesle oku.',
+      'Fenrir': 'Neşeli, hafif, genç ve enerjik bir tonda, sihirli bir dünyadan seslenir gibi oku.',
+      'Gacrux': 'Mistik, zarif ve hafif yankılı bir sesle, bir prensesin zarafetiyle masal anlatır gibi oku.',
+      'Kore': 'Canlı, renkli, çocuksu ve her cümlesinde neşe saçan bir sesle, hayat dolu bir tonda oku.',
+    };
+
     const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        input: { text: (storyData?.text || '').replace(/'/g, '') },
-        voice: { languageCode: 'tr-TR', name: voiceId },
-        audioConfig: { audioEncoding: 'MP3' }
+        input: { 
+          text: (storyData?.text || '').replace(/'/g, ''),
+          prompt: VOICE_INSTRUCTIONS[voiceId] || 'Sıcak ve masalsı bir tonda oku.'
+        },
+        voice: { 
+          languageCode: 'tr-tr', 
+          name: voiceId,
+          modelName: 'gemini-3.1-flash-tts-preview'
+        },
+        audioConfig: { 
+          audioEncoding: 'MP3',
+          pitch: 0,
+          speakingRate: 1
+        }
       })
     })
     const audioData = await audioResponse.json()

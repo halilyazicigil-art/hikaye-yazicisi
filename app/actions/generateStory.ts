@@ -175,26 +175,50 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         pages.push({ text: scene.text, image_url: publicUrl })
     }
 
-    // 3. ADIM: SES ÜRETİMİ (Flash TTS / Chirp HD - Vertex AI)
+    // 3. ADIM: SES ÜRETİMİ (Gemini 3.1 Flash TTS - Style Instructions Destekli)
     let audioUrl = null
     if (voiceOption !== 'Sessiz' && elevenVoiceId) {
-        console.log(`3. Adım: Ses üretiliyor (Model: ${elevenVoiceId})...`)
+        console.log(`3. Adım: Ses üretiliyor (Model: gemini-3.1-flash-tts-preview, Ses: ${elevenVoiceId})...`)
+
+        // 12 Sihirli Masalcı Okuma Talimatları (Efsanevi Liste)
+        const VOICE_INSTRUCTIONS: Record<string, string> = {
+            'Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
+            'Algenib': 'Neşeli, hızlı, enerjik ve yerinde duramayan heyecanlı bir tavşan gibi oku.',
+            'Algieba': 'Güçlü, kararlı, kahramanvari ve yankılı bir sesle oku.',
+            'Alnilam': 'Otoriter, ağırbaşlı, onurlu ve saygın bir kral gibi oku.',
+            'Charon': 'Heyecanlı, sürprizleri seven ve çocuklarıyla oyun oynayan bir baba gibi oku.',
+            'Iapetus': 'Derin, yankılı, koruyucu ve doğanın gücünü hissettiren bir tonda, ağırbaşlı bir muhafız gibi oku.',
+            'Aoede': 'Sıcak, şefkatli, sevgi dolu ve huzurlu bir sesle masal anlatır gibi oku.',
+            'Callirrhoe': 'Akıcı, masalsı ve merak uyandıran bir anlatıcı tonuyla oku.',
+            'Despina': 'Çok sakin, rahatlatıcı, adeta fısıltı gibi yumuşak bir sesle oku.',
+            'Fenrir': 'Neşeli, hafif, genç ve enerjik bir tonda, sihirli bir dünyadan seslenir gibi oku.',
+            'Gacrux': 'Mistik, zarif ve hafif yankılı bir sesle, bir prensesin zarafetiyle masal anlatır gibi oku.',
+            'Kore': 'Canlı, renkli, çocuksu ve her cümlesinde neşe saçan bir sesle, hayat dolu bir tonda oku.',
+        };
 
         try {
             // Ses akıcılığı için kesme işaretlerini temizleyen filtre
             const cleanedTextForAudio = (pages.map(p => p.text).join(' ') || '').replace(/'/g, '');
-            console.log(`>>> KRİTİK LOG: Google TTS'e gönderilen GERÇEK SES ID: ${elevenVoiceId}`);
+            console.log(`>>> KRİTİK LOG: Google Gemini-TTS'e gönderilen GERÇEK SES: ${elevenVoiceId}`);
 
             const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    input: { text: cleanedTextForAudio },
-                    voice: { 
-                        languageCode: 'tr-TR', 
-                        name: elevenVoiceId
+                    input: { 
+                        text: cleanedTextForAudio,
+                        prompt: VOICE_INSTRUCTIONS[elevenVoiceId] || 'Sıcak ve masalsı bir tonda oku.'
                     },
-                    audioConfig: { audioEncoding: 'MP3' }
+                    voice: { 
+                        languageCode: 'tr-tr', 
+                        name: elevenVoiceId,
+                        modelName: 'gemini-3.1-flash-tts-preview'
+                    },
+                    audioConfig: { 
+                        audioEncoding: 'MP3',
+                        pitch: 0,
+                        speakingRate: 1
+                    }
                 })
             })
             const audioData = await audioResponse.json()
