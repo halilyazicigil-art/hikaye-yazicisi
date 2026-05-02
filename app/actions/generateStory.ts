@@ -182,7 +182,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
 
         try {
             // Ses akıcılığı için kesme işaretlerini temizleyen filtre
-            const cleanedTextForAudio = pages.map(p => p.text).join(' ').replace(/'/g, '');
+            const cleanedTextForAudio = (pages.map(p => p.text).join(' ') || '').replace(/'/g, '');
             console.log(`>>> KRİTİK LOG: Google TTS'e gönderilen GERÇEK SES ID: ${elevenVoiceId}`);
 
             const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {

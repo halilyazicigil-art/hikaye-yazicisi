@@ -107,7 +107,7 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        input: { text: storyData.text.replace(/'/g, '') },
+        input: { text: (storyData?.text || '').replace(/'/g, '') },
         voice: { languageCode: 'tr-TR', name: voiceId },
         audioConfig: { audioEncoding: 'MP3' }
       })
