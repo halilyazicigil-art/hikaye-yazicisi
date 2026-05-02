@@ -1,101 +1,73 @@
-'use server'
+import { supabase } from '@/lib/supabase'
 
-import { createClient } from '@/utils/supabase/server'
-import { createSign } from 'crypto'
-
-async function getVertexToken(): Promise<string> {
-  const privateKey = (process.env.GOOGLE_SA_PRIVATE_KEY || '').replace(/\\n/g, '\n')
-  const clientEmail = process.env.GOOGLE_SA_CLIENT_EMAIL || ''
-
-  const now = Math.floor(Date.now() / 1000)
-  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url')
-  const payload = Buffer.from(JSON.stringify({
-    iss: clientEmail,
-    scope: 'https://www.googleapis.com/auth/cloud-platform',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now
-  })).toString('base64url')
-
-  const signingInput = `${header}.${payload}`
-  const sign = createSign('RSA-SHA256')
-  sign.update(signingInput)
-  const signature = sign.sign(privateKey, 'base64url')
-  const jwt = `${signingInput}.${signature}`
-
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
-  })
-  const tokenData = await tokenRes.json()
-  return tokenData.access_token
+interface TestResults {
+  text: { status: 'PENDING' | 'SUCCESS' | 'ERROR', content?: string, error?: string }
+  image: { status: 'PENDING' | 'SUCCESS' | 'ERROR', url?: string, error?: string }
+  audio: { status: 'PENDING' | 'SUCCESS' | 'ERROR', url?: string, error?: string }
 }
 
-export async function testPipeline(testPrompt: string = "Küçük tavşan ve yaşlı kaplumbağa yarışıyor", style: string = "Sulu Boya", voiceId: string = "tr-TR-Chirp3-HD-Iapetus") {
-  const results = {
-    text: { status: 'PENDING', content: '', error: null },
-    image: { status: 'PENDING', url: '', error: null },
-    audio: { status: 'PENDING', url: '', error: null },
-    savedId: null as string | null
-  }
-
-  const IMAGE_STYLE_MAP: Record<string, { prefix: string, suffix: string }> = {
-    'Sulu Boya': { prefix: 'High-quality children\'s storybook illustration, soft watercolor style, ', suffix: ', hand-painted textures, bleeding colors, magical atmosphere, no text, masterpiece.' },
-    '3D Pixar Stili': { prefix: 'Cute 3D render, Pixar and Disney animation style, high detail, ', suffix: ', bright vibrant colors, 8k resolution, cinematic lighting, no text.' },
-    'Pastel Düşler': { prefix: 'Dreamy pastel illustration, soft luminous lighting, ', suffix: ', magical sparkles, gentle colors, whimsical atmosphere, no text.' },
-    'Anime': { prefix: 'Studio Ghibli style anime illustration, hand-drawn look, ', suffix: ', lush backgrounds, emotional lighting, high quality, no text.' },
-    'Yağlı Boya': { prefix: 'Classic oil painting, visible brushstrokes, rich textures, ', suffix: ', warm lighting, artistic masterpiece, storybook feel, no text.' },
-    'Pop Art': { prefix: 'Vibrant Pop Art style, bold lines, comic book aesthetic, ', suffix: ', bright saturated colors, high contrast, modern look, no text.' },
-    'Çizgi Film': { prefix: 'Classic 2D cartoon style, clean lines, simple and bright, ', suffix: ', fun and friendly atmosphere, flat colors, no text.' },
-    'Vintage Retro': { prefix: 'Vintage 1950s storybook style, retro colors, nostalgic feel, ', suffix: ', grainy texture, classic illustration, no text.' }
+export async function testPipelineAction(prompt: string, style: string, voiceId: string) {
+  const results: TestResults = {
+    text: { status: 'PENDING' },
+    image: { status: 'PENDING' },
+    audio: { status: 'PENDING' }
   }
 
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    const token = await getVertexToken()
-    const projectId = "hikayeyazicisi"
-    const styleConfig = IMAGE_STYLE_MAP[style] || IMAGE_STYLE_MAP['Sulu Boya']
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
+    const vertexToken = process.env.GOOGLE_VERTEX_ACCESS_TOKEN // Veya uygun token çevresel değişkeni
+    
+    // Geçici çözüm: GCP Token alımı (Eğer service account yüklüyse)
+    // Burada token'ın hazır olduğunu varsayıyoruz.
+    const token = vertexToken 
 
-    // 1. FAZ: METİN VE KARAKTER ÇAPASI
-    console.log("1. Faz: Test metni ve karakter çapaları üretiliyor...")
+    const styleMap: Record<string, any> = {
+      'Sulu Boya': { prefix: 'A beautiful watercolor illustration of', suffix: 'soft edges, dreamlike colors, children book style' },
+      '3D Pixar': { prefix: 'A high-detail 3D render in Pixar style of', suffix: 'vibrant colors, cute characters, cinematic lighting' },
+      'Karakalem': { prefix: 'A professional pencil sketch of', suffix: 'detailed shading, hand-drawn, artistic' }
+    }
+    const styleConfig = styleMap[style] || styleMap['Sulu Boya']
+
+    // 1. FAZ: METİN
+    console.log("1. Faz: Metin üretiliyor...")
     const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:streamGenerateContent`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: `Aşağıdaki test konusu için tek sahneli bir masal parçası yaz. 
-          Konu: ${testPrompt}. 
-          KURALLAR: Karakterler için sabit birer fiziksel tarif oluştur (Character Anchor) ve sahneyi teknik olarak tarif et (Scene Description).
-          ÇIKTI: JSON formatında 'text' ve 'sceneDescription' olarak dön.` }] }],
+        contents: [{ role: 'user', parts: [{ text: `Aşağıdaki konuyla ilgili tek sayfalık bir çocuk masalı ve karakter tarifi yaz. 
+          Konu: ${prompt} 
+          ÇIKTI: JSON formatında 'text', 'characters' (object) ve 'visualHook' (string) olarak dön.` }] }],
         generationConfig: { responseMimeType: "application/json" }
       })
     })
 
     const aiDataRaw = await textResponse.json()
-    const storyJsonRaw = aiDataRaw.map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || '').join('')
+    let storyJsonRaw = aiDataRaw.map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || '').join('')
+    
+    // [ZIRHLI PARSER]
+    storyJsonRaw = storyJsonRaw.replace(/```json/g, '').replace(/```/g, '').trim();
+    console.log(">>> [TEST ZIRHLI PARSER] Temizlenmiş JSON:", storyJsonRaw);
+
     const storyData = JSON.parse(storyJsonRaw)
-    results.text.content = storyData.text
+    results.text.content = storyData.text || "Metin bulunamadı"
     results.text.status = 'SUCCESS'
 
-    // [TEŞHİS] Gemini'den gelen karakter verisini denetle
-    console.log(">>> [HATA AYIKLAMA TEST] Gelen Karakter Verisi:", JSON.stringify(storyData.characters, null, 2));
-
-    // Karakter Çapalarını (Anchor) Birleştir
+    // Karakter Çapalarını (Anchor) Birleştir (Maksimum Esneklik)
     let characterAnchors = "";
     if (storyData.characters) {
-        if (Array.isArray(storyData.characters)) {
-            characterAnchors = storyData.characters.map((c: any) => `${c.name}: ${c.description || c.physicalDescription}`).join('. ');
-        } else if (typeof storyData.characters === 'object') {
-            characterAnchors = Object.values(storyData.characters).join('. ');
-        }
+        const charValues = Array.isArray(storyData.characters) 
+            ? storyData.characters.map((c: any) => `${c.name}: ${c.description || c.physicalDescription || c.physical_appearance || JSON.stringify(c)}`)
+            : Object.values(storyData.characters).map((v: any) => typeof v === 'string' ? v : (v.description || v.physicalDescription || JSON.stringify(v)));
+        characterAnchors = charValues.join('. ');
     }
-    console.log(`>>> [TEŞHİS TEST] Final Karakter Çapaları: ${characterAnchors || "BOŞ! (HATA BURADA OLABİLİR)"}`);
+    console.log(`>>> [TEŞHİS TEST] Mühürlenen Karakter Çapaları: ${characterAnchors}`);
 
     // 2. FAZ: GÖRSEL (SİHİRLİ BİRLEŞTİRME 2.0)
     console.log("2. Faz: Test görseli üretiliyor...")
-    const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${storyData.sceneDescription || storyData.visualHook}. ${styleConfig.suffix}`;
-    console.log(`>>> [PROMPT DENETİMİ TEST]: ${finalImagePrompt}`);
+    const hook = storyData.visualHook || storyData.sceneDescription || storyData.visual_description || "A beautiful scene";
+    const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${hook}. ${styleConfig.suffix}`;
+    console.log(`>>> [PROMPT TEST]: ${finalImagePrompt}`);
+
     const imageResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -104,20 +76,21 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
     const imageData = await imageResponse.json()
     const b64 = imageData.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data
     
-    let publicImageUrl = ''
     if (b64) {
-      const fileName = `test_story_${Date.now()}.png`
+      const uniqueId = Math.random().toString(36).substring(7);
+      const fileName = `test_story_${Date.now()}_${uniqueId}.png`
       await supabase.storage.from('story_assets').upload(fileName, Buffer.from(b64, 'base64'), { contentType: 'image/png' })
-      publicImageUrl = supabase.storage.from('story_assets').getPublicUrl(fileName).data.publicUrl
+      const publicImageUrl = supabase.storage.from('story_assets').getPublicUrl(fileName).data.publicUrl
       results.image.url = publicImageUrl
       results.image.status = 'SUCCESS'
     } else {
-      results.image.status = 'FAILED'
+      results.image.status = 'ERROR'
       results.image.error = JSON.stringify(imageData)
     }
 
-    // 3. FAZ: SES (Gemini 3.1 Flash TTS - Style Instructions Destekli)
-    console.log(`>>> TEST LOG: Google Gemini-TTS'e gönderilen GERÇEK SES: ${voiceId}`);
+    // 3. FAZ: SES (Gemini 3.1 Flash TTS)
+    const finalVoiceId = voiceId.includes('-') ? voiceId.split('-').pop() : voiceId;
+    console.log(`3. Faz: Ses üretiliyor (Final ID: ${finalVoiceId})...`);
 
     const VOICE_INSTRUCTIONS: Record<string, string> = {
       'Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
@@ -139,52 +112,37 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         input: { 
-          text: storyData?.text || '',
-          prompt: VOICE_INSTRUCTIONS[voiceId] || 'Sıcak ve masalsı bir tonda oku.'
+          text: storyData.text || '',
+          prompt: VOICE_INSTRUCTIONS[finalVoiceId as string] || 'Sıcak ve masalsı bir tonda oku.'
         },
         voice: { 
           languageCode: 'tr-tr', 
-          name: voiceId,
+          name: finalVoiceId,
           modelName: 'gemini-3.1-flash-tts-preview'
         },
-        audioConfig: { 
-          audioEncoding: 'MP3',
-          pitch: 0,
-          speakingRate: 1
-        }
+        audioConfig: { audioEncoding: 'MP3' }
       })
     })
     const audioData = await audioResponse.json()
-    
-    let publicAudioUrl = ''
-    if (audioData.audioContent) {
-      const audioFileName = `test_voice_${Date.now()}.mp3`
-      await supabase.storage.from('story_assets').upload(audioFileName, Buffer.from(audioData.audioContent, 'base64'), { contentType: 'audio/mpeg' })
-      publicAudioUrl = supabase.storage.from('story_assets').getPublicUrl(audioFileName).data.publicUrl
-      results.audio.url = publicAudioUrl
+    const audioB64 = audioData.audioContent
+
+    if (audioB64) {
+      const fileName = `test_audio_${Date.now()}.mp3`
+      await supabase.storage.from('story_assets').upload(fileName, Buffer.from(audioB64, 'base64'), { contentType: 'audio/mpeg' })
+      results.audio.url = supabase.storage.from('story_assets').getPublicUrl(fileName).data.publicUrl
       results.audio.status = 'SUCCESS'
     } else {
-      results.audio.status = 'FAILED'
-      results.audio.error = audioData.error?.message || JSON.stringify(audioData)
+      results.audio.status = 'ERROR'
+      results.audio.error = JSON.stringify(audioData)
     }
 
-    // 4. FAZ: KÜTÜPHANEYE KAYDET
-    if (user && results.text.status === 'SUCCESS') {
-        const { data: savedStory } = await supabase.from('stories').insert({
-            user_id: user.id,
-            title: `[SİSTEM TESTİ] ${testPrompt.substring(0, 20)}...`,
-            content_json: [storyData.text],
-            pages: [{ text: storyData.text, image_url: publicImageUrl }],
-            image_url: publicImageUrl,
-            audio_url: publicAudioUrl
-        }).select().single()
-        results.savedId = savedStory?.id
-    }
-
+    return results
   } catch (error: any) {
-    console.error("Pipeline Hatası:", error)
-    if (results.text.status === 'PENDING') results.text.status = 'FAILED'
+    console.error("Test Hattı Hatası:", error)
+    return {
+      text: { status: 'ERROR', error: error.message },
+      image: { status: 'ERROR', error: error.message },
+      audio: { status: 'ERROR', error: error.message }
+    }
   }
-
-  return results
 }

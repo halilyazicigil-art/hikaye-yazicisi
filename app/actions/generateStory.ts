@@ -142,32 +142,36 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
 
     const aiDataRaw = await textResponse.json()
     let storyJsonRaw = aiDataRaw.map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || '').join('')
+    
+    // [ZIRHLI PARSER] Markdown bloklarını temizle
+    storyJsonRaw = storyJsonRaw.replace(/```json/g, '').replace(/```/g, '').trim();
+    console.log(">>> [ZIRHLI PARSER] Temizlenmiş JSON:", storyJsonRaw);
+
     const storyData = JSON.parse(storyJsonRaw)
-    const { title, scenes, characters } = storyData
+    const { title } = storyData
+    // Esnek alan erişimi: 'scenes' veya 'scenery' veya 'pages'
+    const scenes = storyData.scenes || storyData.pages || storyData.scenery || [];
+    const characters = storyData.characters || storyData.main_characters || {};
 
-    // [TEŞHİS] Gemini'den gelen karakter verisini denetle
-    console.log(">>> [HATA AYIKLAMA] Gelen Karakter Verisi:", JSON.stringify(characters, null, 2));
-
-    // Karakter Çapalarını (Anchor) Birleştir (Daha hataya dayanıklı hale getirildi)
+    // Karakter Çapalarını (Anchor) Birleştir (Maksimum Esneklik)
     let characterAnchors = "";
     if (characters) {
-        if (Array.isArray(characters)) {
-            characterAnchors = characters.map((c: any) => `${c.name}: ${c.description || c.physicalDescription}`).join('. ');
-        } else if (typeof characters === 'object') {
-            characterAnchors = Object.values(characters).join('. ');
-        }
+        const charValues = Array.isArray(characters) 
+            ? characters.map((c: any) => c.description || c.physicalDescription || c.physical_appearance || c.text || JSON.stringify(c))
+            : Object.values(characters).map((v: any) => typeof v === 'string' ? v : (v.description || v.physicalDescription || JSON.stringify(v)));
+        characterAnchors = charValues.join('. ');
     }
-    console.log(`>>> [TEŞHİS] Final Karakter Çapaları: ${characterAnchors || "BOŞ! (HATA BURADA OLABİLİR)"}`);
+    console.log(`>>> [TEŞHİS] Mühürlenen Karakter Çapaları: ${characterAnchors}`);
 
     // 2. ADIM: GÖRSEL ÜRETİMİ (SİHİRLİ BİRLEŞTİRME 2.0)
-    console.log("2. Adım: Görseller 'Sihirli Birleştirme 2.0' ile üretiliyor...")
+    console.log("2. Adım: Görseller üretiliyor...")
     const pages = []
     for (let i = 0; i < scenes.length; i++) {
         const scene = scenes[i]
+        const hook = scene.visualHook || scene.sceneDescription || scene.visual_description || "A beautiful scene";
         
-        // FORMÜL: Stil Prefix + Karakter Kimlikleri + Sayfanın Vurucu Aksiyonu + Stil Suffix
-        const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${scene.sceneDescription || scene.visualHook}. ${styleConfig.suffix}`;
-        console.log(`>>> [PROMPT DENETİMİ] Sayfa ${i+1}: ${finalImagePrompt}`);
+        const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${hook}. ${styleConfig.suffix}`;
+        console.log(`>>> [PROMPT] Sayfa ${i+1}: ${finalImagePrompt}`);
 
         const imgResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
             method: 'POST',
@@ -181,7 +185,6 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         
         let publicUrl = ''
         if (b64) {
-            // Çakışmayı engellemek için benzersiz ID
             const uniqueId = Math.random().toString(36).substring(7);
             const fileName = `story_${Date.now()}_${uniqueId}_${i}.png`
             const { error: upErr } = await supabase.storage.from('story_assets').upload(fileName, Buffer.from(b64, 'base64'), { contentType: 'image/png' })
@@ -192,12 +195,13 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         pages.push({ text: scene.text, image_url: publicUrl })
     }
 
-    // 3. ADIM: SES ÜRETİMİ (Gemini 3.1 Flash TTS - Style Instructions Destekli)
+    // 3. ADIM: SES ÜRETİMİ (Gemini 3.1 Flash TTS)
     let audioUrl = null
     if (voiceOption !== 'Sessiz' && elevenVoiceId) {
-        console.log(`3. Adım: Ses üretiliyor (Model: gemini-3.1-flash-tts-preview, Ses: ${elevenVoiceId})...`)
+        // [OTOMATİK DÜZELTİCİ] Eğer uzun ID gelirse (tr-TR-Chirp3-HD-Aoede), son parçayı al (Aoede)
+        const finalVoiceId = elevenVoiceId.includes('-') ? elevenVoiceId.split('-').pop() : elevenVoiceId;
+        console.log(`3. Adım: Ses üretiliyor (Final ID: ${finalVoiceId})...`);
 
-        // 12 Sihirli Masalcı Okuma Talimatları (Efsanevi Liste)
         const VOICE_INSTRUCTIONS: Record<string, string> = {
             'Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
             'Algenib': 'Neşeli, hızlı, enerjik ve yerinde duramayan heyecanlı bir tavşan gibi oku.',
@@ -215,19 +219,17 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
 
         try {
             const rawTextForAudio = pages.map(p => p.text).join(' ');
-            console.log(`>>> KRİTİK LOG: Google Gemini-TTS'e gönderilen GERÇEK SES: ${elevenVoiceId}`);
-
             const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     input: { 
                         text: rawTextForAudio,
-                        prompt: VOICE_INSTRUCTIONS[elevenVoiceId] || 'Sıcak ve masalsı bir tonda oku.'
+                        prompt: VOICE_INSTRUCTIONS[finalVoiceId as string] || 'Sıcak ve masalsı bir tonda oku.'
                     },
                     voice: { 
                         languageCode: 'tr-tr', 
-                        name: elevenVoiceId,
+                        name: finalVoiceId,
                         modelName: 'gemini-3.1-flash-tts-preview'
                     },
                     audioConfig: { 
