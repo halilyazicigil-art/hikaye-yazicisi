@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { testPipeline } from '@/app/actions/testPipeline'
+import { testPipelineAction } from '@/app/actions/testPipeline'
 import Link from 'next/link'
 
 const STYLES = ['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Anime', 'Yağlı Boya', 'Pop Art', 'Çizgi Film', 'Vintage Retro']
@@ -30,7 +30,7 @@ export default function TestPipelinePage() {
   const handleTest = async () => {
     setLoading(true)
     try {
-      const data = await testPipeline(prompt, selectedStyle, selectedVoice)
+      const data = await testPipelineAction(prompt, selectedStyle, selectedVoice)
       setResults(data)
     } catch (error) {
       console.error(error)
