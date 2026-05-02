@@ -1,5 +1,12 @@
 # KURAL SETİ
 
+### 📊 Güncel Sistem Model Envanteri (2026)
+| Bileşen | Kullanılan Model | Sürüm (ID) | Kullanım Amacı |
+| :--- | :--- | :--- | :--- |
+| **Metin** | Gemini 3 Flash | `gemini-3-flash-preview` | Masal kurgusu, karakter çapaları ve sahne tarifleri. |
+| **Görsel** | Gemini 3.1 Flash Image | `gemini-3.1-flash-image-preview` | Karakter ve sahne çizimleri (Nano Banana 2). |
+| **Ses** | Gemini 3.1 Flash TTS | `gemini-3.1-flash-tts-preview` | Style Instructions destekli karakter seslendirme. |
+
 Bu proje boyunca uyulması gereken temel çalışma prensipleridir:
 
 1. **Disiplinli Analiz:** "Kural Seti"ne bağlı kalarak sorunu bul denildiğinde, bu dosyadaki tüm maddelere eksiksiz uyulacaktır.
