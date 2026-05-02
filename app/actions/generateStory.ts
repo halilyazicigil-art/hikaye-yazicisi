@@ -1,162 +1,107 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-import { createSign } from 'crypto'
+
+/**
+ * ZIRHLI PARSER (Armored Parser)
+ * Gemini'den gelen yanıtı temizleyip saf JSON'a dönüştürür.
+ */
+function armoredParser(text: string) {
+    try {
+        console.log(">>> [ZIRHLI PARSER] Gelen Ham Metin Uzunluğu:", text.length);
+        
+        // JSON bloğunu cımbızla çek (```json ... ``` veya sadece { ... })
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("Metin içinde geçerli bir JSON bloğu bulunamadı.");
+        
+        const cleanedJson = jsonMatch[0].trim();
+        console.log(">>> [ZIRHLI PARSER] Temizlenmiş JSON Blok Başı:", cleanedJson.substring(0, 50));
+        
+        return JSON.parse(cleanedJson);
+    } catch (err) {
+        console.error(">>> [ZIRHLI PARSER] HATA:", err);
+        throw new Error("Üretilen hikaye verisi okunabilir formatta değil (JSON Parse Error).");
+    }
+}
 
 export async function generateStoryAction(formData: {
-    prompt: string;
-    genre: string;
-    imageStyle: string;
-    ageGroup: string;
-    characters: string[];
-    educationalValue: string;
+    hero: string;
+    theme: string;
     voiceOption: string;
-    elevenVoiceId: string;
+    elevenVoiceId?: string;
     childName: string;
     age: string;
 }) {
-    const { prompt, genre, imageStyle, ageGroup, characters: charactersInput, educationalValue, voiceOption, elevenVoiceId, childName, age } = formData
+    try {
+        const { theme, age, hero } = formData
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error("Oturum açmanız gerekiyor.")
 
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+        const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
+        const vertexToken = process.env.GOOGLE_VERTEX_ACCESS_TOKEN 
 
-    if (!user) throw new Error("Oturum açmanız gerekiyor.")
+        // ---------------------------------------------------------
+        // FAZ 1: METİN ÜRETİMİ (Zırhlı Metin Motoru)
+        // ---------------------------------------------------------
+        console.log(">>> [FAZ 1] Masal metni üretiliyor...");
 
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
-    const vertexToken = process.env.GOOGLE_VERTEX_ACCESS_TOKEN 
+        const textPrompt = `
+            Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. 
+            ÇIKTI FORMATI SADECE JSON OLMALIDIR. Markdown etiketleri kullanma.
+            
+            Gereksinimler:
+            1. 'title': Masalın başlığı.
+            2. 'characters': Masaldaki ana karakterlerin fiziksel tariflerini içeren bir obje. (Örn: {"Aslan": "Sarı yeleli, büyük pençeli sevimli bir aslan"})
+            3. 'scenes': 8-10 adet sahne içeren bir dizi. Her sahne şunları içermelidir:
+               - 'text': O sayfada okunacak masal metni.
+               - 'visualHook': O sahneyi çizecek yapay zekaya yönelik görsel betimleme.
+            
+            Konu: ${theme}
+            Yaş Grubu: ${age}
+            Ana Kahraman: ${hero}
+        `;
 
-    // STİL KONFİGÜRASYONU
-    const styleMap: Record<string, { prefix: string, suffix: string }> = {
-        'Sulu Boya': { 
-            prefix: 'A professional children\'s book watercolor illustration of', 
-            suffix: 'soft pastel colors, dreamlike atmosphere, high quality, detailed' 
-        },
-        '3D Pixar Stili': { 
-            prefix: 'A high-quality 3D Disney Pixar style animation frame of', 
-            suffix: 'vibrant colors, cute character designs, cinematic lighting, 8k render' 
-        },
-        'Yağlı Boya': { 
-            prefix: 'A classic oil painting style illustration of', 
-            suffix: 'rich textures, artistic brushstrokes, warm lighting, timeless' 
-        },
-        'Pop Art': { 
-            prefix: 'A vibrant Pop Art style illustration of', 
-            suffix: 'bold lines, bright colors, comic book aesthetic, dynamic' 
-        }
-    }
-    const styleConfig = styleMap[imageStyle] || styleMap['Sulu Boya']
-
-    // 1. ADIM: METİN ÜRETİMİ (Vertex AI - Stream Yapısı)
-    console.log("1. Adım: Masal üretiliyor (Vertex AI Stream)...")
-    const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:streamGenerateContent`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. 
-            ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. 
-            Konu: ${prompt} 
-            Tür: ${genre} 
-            Yaş: ${ageGroup} 
-            Karakterler: ${charactersInput} 
-            Eğitici Değer: ${educationalValue}` }] }],
-            generationConfig: { responseMimeType: "application/json" }
-        })
-    })
-
-    const aiDataRaw = await textResponse.json()
-    let storyJsonRaw = aiDataRaw.map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || '').join('')
-    
-    // JSON Temizliği (Markdown blokları varsa)
-    storyJsonRaw = storyJsonRaw.replace(/```json/g, '').replace(/```/g, '').trim();
-    const storyData = JSON.parse(storyJsonRaw)
-    const { scenes, characters } = storyData
-
-    // Karakter Çapalarını (Anchor) Birleştir
-    const characterAnchors = characters ? Object.values(characters).join('. ') : '';
-    console.log(`>>> [KARAKTER ÇAPALARI]: ${characterAnchors}`);
-
-    // 2. ADIM: GÖRSEL ÜRETİMİ (SİHİRLİ BİRLEŞTİRME 2.0)
-    console.log("2. Adım: Görseller üretiliyor...")
-    const pages = []
-    for (let i = 0; i < scenes.length; i++) {
-        const scene = scenes[i]
-        const hook = scene.visualHook || scene.sceneDescription || "A beautiful scene";
-        
-        // FORMÜL: Stil Prefix + Karakter Kimlikleri + Sayfanın Vurucu Aksiyonu + Stil Suffix
-        const finalImagePrompt = `${styleConfig.prefix} ${characterAnchors}. Scenario: ${hook}. ${styleConfig.suffix}`;
-        console.log(`>>> [SAYFA ${i+1} PROMPT]: ${finalImagePrompt}`);
-
-        const imgResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
+        const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: finalImagePrompt }] }]
+                contents: [{ role: 'user', parts: [{ text: textPrompt }] }],
+                generationConfig: { responseMimeType: "application/json" }
             })
         })
-        const imgData = await imgResponse.json()
-        const b64 = imgData.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data
+
+        const aiData = await textResponse.json()
+        const rawText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
         
-        let publicUrl = ''
-        if (b64) {
-            const fileName = `story_${Date.now()}_${i}.png`
-            const { error: upErr } = await supabase.storage.from('story_assets').upload(fileName, Buffer.from(b64, 'base64'), { contentType: 'image/png' })
-            if (!upErr) {
-                publicUrl = supabase.storage.from('story_assets').getPublicUrl(fileName).data.publicUrl
-            }
-        }
-        pages.push({ text: scene.text, image_url: publicUrl })
+        // Zırhlı Parser ile JSON'u kurtar
+        const storyData = armoredParser(rawText);
+        const { title, scenes, characters } = storyData;
+
+        console.log(">>> [FAZ 1 BAŞARILI] Masal Başlığı:", title);
+
+        // ---------------------------------------------------------
+        // FAZ 2 & 3: HENÜZ KURULMADI (Placeholder)
+        // ---------------------------------------------------------
+        const pages = scenes.map((s: any) => ({ text: s.text, image_url: '' }));
+        const audioUrl = null;
+
+        // Geçici Kayıt (Test için)
+        const { data: savedStory, error: dbErr } = await supabase.from('stories').insert({
+            user_id: user.id,
+            title: title,
+            content: JSON.stringify(storyData),
+            pages: pages,
+            audio_url: audioUrl,
+            image_style: 'Faz 1 Test'
+        }).select().single()
+
+        if (dbErr) throw dbErr;
+
+        return { success: true, id: savedStory.id }
+
+    } catch (error: any) {
+        console.error(">>> [STORY ACTION HATA]:", error.message);
+        return { success: false, error: error.message }
     }
-
-    // 3. ADIM: SES ÜRETİMİ (Gemini 3.1 Flash TTS)
-    let audioUrl = null
-    if (voiceOption !== 'Sessiz' && elevenVoiceId) {
-        const finalVoiceId = elevenVoiceId.includes('-') ? elevenVoiceId.split('-').pop() : elevenVoiceId;
-        console.log(`3. Adım: Ses üretiliyor (Final ID: ${finalVoiceId})...`);
-
-        const VOICE_INSTRUCTIONS: Record<string, string> = {
-            'Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
-            'Algenib': 'Neşeli, hızlı, enerjik ve yerinde duramayan heyecanlı bir tavşan gibi oku.',
-            'Algieba': 'Güçlü, kararlı, kahramanvari ve yankılı bir sesle oku.',
-            'Alnilam': 'Otoriter, ağırbaşlı, onurlu ve saygın bir kral gibi oku.',
-            'Charon': 'Heyecanlı, sürprizleri seven ve çocuklarıyla oyun oynayan bir baba gibi oku.',
-            'Iapetus': 'Derin, yankılı, koruyucu ve doğanın gücünü hissettiren bir tonda, ağırbaşlı bir muhafız gibi oku.',
-            'Aoede': 'Sıcak, şefkatli, sevgi dolu ve huzurlu bir sesle masal anlatır gibi oku.',
-            'Callirrhoe': 'Akıcı, masalsı ve merak uyandıran bir anlatıcı tonuyla oku.',
-            'Despina': 'Çok sakin, rahatlatıcı, adeta fısıltı gibi yumuşak bir sesle oku.',
-            'Fenrir': 'Neşeli, hafif, genç ve enerjik bir tonda, sihirli bir dünyadan seslenir gibi oku.',
-            'Gacrux': 'Mistik, zarif ve hafif yankılı bir sesle, bir prensesin zarafetiyle masal anlatır gibi oku.',
-            'Kore': 'Canlı, renkli, çocuksu ve her cümlesinde neşe saçan bir sesle, hayat dolu bir tonda oku.',
-        };
-
-        const rawTextForAudio = pages.map(p => p.text).join(' ');
-        const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                input: { 
-                    text: rawTextForAudio,
-                    prompt: VOICE_INSTRUCTIONS[finalVoiceId as string] || 'Sıcak ve masalsı bir tonda oku.'
-                },
-                voice: { languageCode: 'tr-tr', name: finalVoiceId, modelName: 'gemini-3.1-flash-tts-preview' },
-                audioConfig: { audioEncoding: 'MP3' }
-            })
-        })
-        const audioData = await audioResponse.json()
-        if (audioData.audioContent) {
-            const audioFileName = `story_audio_${Date.now()}.mp3`
-            await supabase.storage.from('story_assets').upload(audioFileName, Buffer.from(audioData.audioContent, 'base64'), { contentType: 'audio/mpeg' })
-            audioUrl = supabase.storage.from('story_assets').getPublicUrl(audioFileName).data.publicUrl
-        }
-    }
-
-    const { data: savedStory } = await supabase.from('stories').insert({
-        user_id: user.id,
-        title: storyData.title,
-        content: storyJsonRaw,
-        pages: pages,
-        audio_url: audioUrl,
-        image_style: imageStyle
-    }).select().single()
-
-    return savedStory
 }

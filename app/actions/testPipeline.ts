@@ -8,6 +8,15 @@ interface TestResults {
   audio: { status: 'PENDING' | 'SUCCESS' | 'ERROR', url?: string, error?: string }
 }
 
+/**
+ * ZIRHLI PARSER
+ */
+function armoredParser(text: string) {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("JSON bulunamadı.");
+    return JSON.parse(jsonMatch[0].trim());
+}
+
 export async function testPipelineAction(prompt: string, style: string, voiceId: string) {
   const results: TestResults = {
     text: { status: 'PENDING' },
@@ -16,20 +25,15 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
   }
 
   try {
-    const supabase = await createClient()
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
     const vertexToken = process.env.GOOGLE_VERTEX_ACCESS_TOKEN 
 
-    // STİL
-    const styleMap: Record<string, any> = {
-      'Sulu Boya': { prefix: 'A professional children\'s book watercolor illustration of', suffix: 'soft pastel colors, dreamlike atmosphere' },
-      '3D Pixar Stili': { prefix: 'A high-quality 3D Disney Pixar style animation frame of', suffix: 'vibrant colors, cute character designs, cinematic lighting' }
-    }
-    const styleConfig = styleMap[style] || styleMap['Sulu Boya']
-
-    // 1. FAZ: METİN (Stream)
-    console.log("1. Faz: Metin üretiliyor (Test Stream)...")
-    const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:streamGenerateContent`, {
+    // ---------------------------------------------------------
+    // FAZ 1: METİN TESTİ
+    // ---------------------------------------------------------
+    console.log(">>> [TEST - FAZ 1] Metin üretiliyor...");
+    
+    const textResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -38,86 +42,21 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
       })
     })
 
-    const aiDataRaw = await textResponse.json()
-    let storyJsonRaw = aiDataRaw.map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || '').join('')
-    storyJsonRaw = storyJsonRaw.replace(/```json/g, '').replace(/```/g, '').trim();
+    const aiData = await textResponse.json()
+    const rawText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
     
-    const storyData = JSON.parse(storyJsonRaw)
-    results.text.content = storyData.text
-    results.text.status = 'SUCCESS'
+    const storyData = armoredParser(rawText);
+    results.text.content = JSON.stringify(storyData, null, 2);
+    results.text.status = 'SUCCESS';
 
-    // Karakter Çapaları
-    const characterAnchors = storyData.characters ? Object.values(storyData.characters).join('. ') : '';
+    console.log(">>> [TEST - FAZ 1 BAŞARILI]");
 
-    // 2. FAZ: GÖRSEL
-    console.log("2. Faz: Görsel üretiliyor...")
-    const hook = storyData.visualHook || "A beautiful scene";
-    const finalImagePrompt = `${styleConfig.prefix} ${characterAnchors}. Scenario: ${hook}. ${styleConfig.suffix}`;
-
-    const imageResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: finalImagePrompt }] }] })
-    })
-    const imageData = await imageResponse.json()
-    const b64 = imageData.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data
-    
-    if (b64) {
-      const fileName = `test_story_${Date.now()}.png`
-      await supabase.storage.from('story_assets').upload(fileName, Buffer.from(b64, 'base64'), { contentType: 'image/png' })
-      results.image.url = supabase.storage.from('story_assets').getPublicUrl(fileName).data.publicUrl
-      results.image.status = 'SUCCESS'
-    } else {
-      results.image.status = 'ERROR'
-      results.image.error = JSON.stringify(imageData)
-    }
-
-    // 3. FAZ: SES
-    const finalVoiceId = voiceId.includes('-') ? voiceId.split('-').pop() : voiceId;
-    const VOICE_INSTRUCTIONS: Record<string, string> = {
-      'Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
-      'Algenib': 'Neşeli, hızlı, enerjik ve yerinde duramayan heyecanlı bir tavşan gibi oku.',
-      'Algieba': 'Güçlü, kararlı, kahramanvari ve yankılı bir sesle oku.',
-      'Alnilam': 'Otoriter, ağırbaşlı, onurlu ve saygın bir kral gibi oku.',
-      'Charon': 'Heyecanlı, sürprizleri seven ve çocuklarıyla oyun oynayan bir baba gibi oku.',
-      'Iapetus': 'Derin, yankılı, koruyucu ve doğanın gücünü hissettiren bir tonda, ağırbaşlı bir muhafız gibi oku.',
-      'Aoede': 'Sıcak, şefkatli, sevgi dolu ve huzurlu bir sesle masal anlatır gibi oku.',
-      'Callirrhoe': 'Akıcı, masalsı ve merak uyandıran bir anlatıcı tonuyla oku.',
-      'Despina': 'Çok sakin, rahatlatıcı, adeta fısıltı gibi yumuşak bir sesle oku.',
-      'Fenrir': 'Neşeli, hafif, genç ve enerjik bir tonda, sihirli bir dünyadan seslenir gibi oku.',
-      'Gacrux': 'Mistik, zarif ve hafif yankılı bir sesle, bir prensesin zarafetiyle masal anlatır gibi oku.',
-      'Kore': 'Canlı, renkli, çocuksu ve her cümlesinde neşe saçan bir sesle, hayat dolu bir tonda oku.',
-    };
-
-    const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        input: { 
-          text: storyData.text || '',
-          prompt: VOICE_INSTRUCTIONS[finalVoiceId as string] || 'Sıcak ve masalsı bir tonda oku.'
-        },
-        voice: { languageCode: 'tr-tr', name: finalVoiceId, modelName: 'gemini-3.1-flash-tts-preview' },
-        audioConfig: { audioEncoding: 'MP3' }
-      })
-    })
-    const audioData = await audioResponse.json()
-    if (audioData.audioContent) {
-      const fileName = `test_audio_${Date.now()}.mp3`
-      await supabase.storage.from('story_assets').upload(fileName, Buffer.from(audioData.audioContent, 'base64'), { contentType: 'audio/mpeg' })
-      results.audio.url = supabase.storage.from('story_assets').getPublicUrl(fileName).data.publicUrl
-      results.audio.status = 'SUCCESS'
-    } else {
-      results.audio.status = 'ERROR'
-      results.audio.error = JSON.stringify(audioData)
-    }
-
+    // Faz 2 ve 3 PENDING olarak dönecek (Henüz inşa edilmedi)
     return results
+
   } catch (error: any) {
-    return {
-      text: { status: 'ERROR', error: error.message },
-      image: { status: 'ERROR', error: error.message },
-      audio: { status: 'ERROR', error: error.message }
-    }
+    results.text.status = 'ERROR';
+    results.text.error = error.message;
+    return results;
   }
 }
