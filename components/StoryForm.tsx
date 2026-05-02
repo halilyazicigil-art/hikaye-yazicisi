@@ -132,7 +132,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         theme: fullTheme,
         age: ageGroup, // Artık string olarak gönderiliyor (0-1, 1-2 vb.)
         voiceOption: voice === 'Sessiz' ? 'Sessiz' : 'AI',
-        elevenVoiceId: voice !== 'Sessiz' ? voice : undefined
+        elevenVoiceId: voice !== 'Sessiz' ? voice : undefined,
+        style: imageStyle
       })
       
       if (response.success) {

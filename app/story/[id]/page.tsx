@@ -66,10 +66,10 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
         {/* Story Player */}
         <StoryPlayer
           title={story.title}
-          content={story.content_json}
+          content={[]}
           imageUrl={story.image_url}
           audioUrl={story.audio_url}
-          pages={story.pages}
+          pages={story.content_json}
         />
 
         {/* Alt bilgi */}
