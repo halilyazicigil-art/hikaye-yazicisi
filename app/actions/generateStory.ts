@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '../../utils/supabase/server'
 import { createSign } from 'crypto'
 
 // =====================================================================
@@ -198,7 +198,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     // 3. ADIM: SES ÜRETİMİ (Gemini 3.1 Flash TTS)
     let audioUrl = null
     if (voiceOption !== 'Sessiz' && elevenVoiceId) {
-        // [OTOMATİK DÜZELTİCİ] Eğer uzun ID gelirse (tr-TR-Chirp3-HD-Aoede), son parçayı al (Aoede)
+        // [OTOMATİK DÜZELTİCİ] Eğer uzun ID gelirse, son parçayı al (Aoede gibi)
         const finalVoiceId = elevenVoiceId.includes('-') ? elevenVoiceId.split('-').pop() : elevenVoiceId;
         console.log(`3. Adım: Ses üretiliyor (Final ID: ${finalVoiceId})...`);
 

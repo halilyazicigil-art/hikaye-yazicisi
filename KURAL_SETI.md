@@ -18,6 +18,14 @@ Bu proje boyunca uyulması gereken temel çalışma prensipleridir:
 
 ---
 
+### 🎙️ 12 SİHİRLİ MASALCI (SES ID ENVENTERİ)
+Tüm ses ID'leri Google Gemini TTS uyumu için **Kısa Format** (Persona İsmi) olarak mühürlenmiştir:
+
+- **Beyefendiler:** `Achird` (Bilge Dede), `Algenib` (Gezgin Tavşan), `Algieba` (Cesur Şövalye), `Alnilam` (Yüce Kral), `Charon` (Heyecanlı Baba), `Iapetus` (Orman Muhafızı)
+- **Hanımefendiler:** `Aoede` (Bilge Anne), `Callirrhoe` (Masalcı Kadın), `Despina` (Huzur Perisi), `Fenrir` (Sihirli Peri), `Gacrux` (Gizemli Prenses), `Kore` (Gökkuşağı Kızı)
+
+---
+
 ## 💾 VERSİYON VE YEDEK GEÇMİŞİ
 
 | Tarih | Yedek İsmi (Commit Message) | Açıklama |

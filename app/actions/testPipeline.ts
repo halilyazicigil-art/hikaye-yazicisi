@@ -1,9 +1,11 @@
-import { supabase } from '@/lib/supabase'
+'use server'
+
+import { createClient } from '../../utils/supabase/server'
 
 interface TestResults {
-  text: { status: 'PENDING' | 'SUCCESS' | 'ERROR', content?: string, error?: string }
-  image: { status: 'PENDING' | 'SUCCESS' | 'ERROR', url?: string, error?: string }
-  audio: { status: 'PENDING' | 'SUCCESS' | 'ERROR', url?: string, error?: string }
+  text: { status: 'PENDING' | 'SUCCESS' | 'ERROR'; content?: string; error?: string }
+  image: { status: 'PENDING' | 'SUCCESS' | 'ERROR'; url?: string; error?: string }
+  audio: { status: 'PENDING' | 'SUCCESS' | 'ERROR'; url?: string; error?: string }
 }
 
 export async function testPipelineAction(prompt: string, style: string, voiceId: string) {
@@ -14,11 +16,9 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
   }
 
   try {
+    const supabase = await createClient()
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
-    const vertexToken = process.env.GOOGLE_VERTEX_ACCESS_TOKEN // Veya uygun token çevresel değişkeni
-    
-    // Geçici çözüm: GCP Token alımı (Eğer service account yüklüyse)
-    // Burada token'ın hazır olduğunu varsayıyoruz.
+    const vertexToken = process.env.GOOGLE_VERTEX_ACCESS_TOKEN 
     const token = vertexToken 
 
     const styleMap: Record<string, any> = {
@@ -52,7 +52,7 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
     results.text.content = storyData.text || "Metin bulunamadı"
     results.text.status = 'SUCCESS'
 
-    // Karakter Çapalarını (Anchor) Birleştir (Maksimum Esneklik)
+    // Karakter Çapalarını (Anchor) Birleştir
     let characterAnchors = "";
     if (storyData.characters) {
         const charValues = Array.isArray(storyData.characters) 
@@ -62,11 +62,10 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
     }
     console.log(`>>> [TEŞHİS TEST] Mühürlenen Karakter Çapaları: ${characterAnchors}`);
 
-    // 2. FAZ: GÖRSEL (SİHİRLİ BİRLEŞTİRME 2.0)
+    // 2. FAZ: GÖRSEL
     console.log("2. Faz: Test görseli üretiliyor...")
     const hook = storyData.visualHook || storyData.sceneDescription || storyData.visual_description || "A beautiful scene";
     const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${hook}. ${styleConfig.suffix}`;
-    console.log(`>>> [PROMPT TEST]: ${finalImagePrompt}`);
 
     const imageResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
       method: 'POST',
@@ -88,9 +87,9 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
       results.image.error = JSON.stringify(imageData)
     }
 
-    // 3. FAZ: SES (Gemini 3.1 Flash TTS)
+    // 3. FAZ: SES
     const finalVoiceId = voiceId.includes('-') ? voiceId.split('-').pop() : voiceId;
-    console.log(`3. Faz: Ses üretiliyor (Final ID: ${finalVoiceId})...`);
+    console.log(`3. Faz: Ses üretiliyor (ID: ${finalVoiceId})...`);
 
     const VOICE_INSTRUCTIONS: Record<string, string> = {
       'Achird': 'Tok, bilgece, sakin ve güven veren bir tonla, torunlarına masal anlatır gibi oku.',
@@ -127,9 +126,9 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
     const audioB64 = audioData.audioContent
 
     if (audioB64) {
-      const fileName = `test_audio_${Date.now()}.mp3`
-      await supabase.storage.from('story_assets').upload(fileName, Buffer.from(audioB64, 'base64'), { contentType: 'audio/mpeg' })
-      results.audio.url = supabase.storage.from('story_assets').getPublicUrl(fileName).data.publicUrl
+      const audioFileName = `test_audio_${Date.now()}.mp3`
+      await supabase.storage.from('story_assets').upload(audioFileName, Buffer.from(audioB64, 'base64'), { contentType: 'audio/mpeg' })
+      results.audio.url = supabase.storage.from('story_assets').getPublicUrl(audioFileName).data.publicUrl
       results.audio.status = 'SUCCESS'
     } else {
       results.audio.status = 'ERROR'
