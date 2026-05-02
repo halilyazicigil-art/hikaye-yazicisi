@@ -70,4 +70,25 @@ Gemini'ye masalı yazdırırken gönderilen ana talimat:
 - **Karakter Mühürleme:** Hikayenin başında üretilen karakter tarifleri, hikaye boyu her sayfanın çizim komutuna otomatik eklenir (Karakterlerin değişmemesi için).
 
 ---
+
+## 5. TEKNİK ENTEGRASYON VE API ENVANTERİ
+Sistemin çalışması için gerekli olan tüm harici servis bağlantıları ve yetkilendirme anahtarları.
+
+### A. Veritabanı ve Medya Depolama (Supabase)
+- **URL:** `https://anxxcbbfhzwpwarywcbv.supabase.co`
+- **Anon Key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+- **Bucket:** `story_assets` (Görsel ve seslerin depolandığı alan)
+
+### B. Yapay Zeka Servisleri (Google Cloud & Vertex AI)
+- **Proje Kimliği:** `hikayeyazicisi`
+- **Servis Hesabı:** `hikaye-yazicisi-sa@hikayeyazicisi.iam.gserviceaccount.com`
+- **Metin Üretimi (Vertex AI):** `gemini-3-flash-preview`
+- **Görsel Üretimi (Vertex AI):** `gemini-3.1-flash-image-preview`
+- **Ses Sentezi (Vertex AI):** `gemini-3.1-flash-tts-preview`
+- **API Key (Gemini & TTS):** `AIzaSyBcKzTPDKcHRJKA3PMM9hp_sHHdssdwUxk`
+
+### C. Gelişmiş Görsel Motoru (Fal.ai - Yedek/Opsiyonel)
+- **API Key:** `94ba930b-46a5-4725-bb03-f2d27aba88e3:1dae85391ad53f13565be5b51cbba3cb`
+
+---
 *Son Güncelleme: 02.05.2026 - MyStory Geliştirici Ekibi*
