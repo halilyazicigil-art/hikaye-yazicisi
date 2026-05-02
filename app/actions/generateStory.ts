@@ -55,6 +55,8 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
 
     const finalPrompt = `${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${charAnchors}. Action: ${hook} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}`;
 
+    console.log(">>> [FAZ 2] Görsel üretiliyor, Prompt:", finalPrompt.substring(0, 50) + "...");
+
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,7 +65,12 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
         })
     });
 
-    if (!response.ok) throw new Error(`Görsel API hatası: ${response.status}`);
+    if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        console.error(">>> [FAZ 2 HATA]:", response.status, errData);
+        throw new Error(`Görsel API hatası: ${response.status}`);
+    }
+    
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
@@ -73,7 +80,8 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
  */
 async function generateAudio(text: string, voiceId: string, apiKey: string) {
     const shortId = voiceIdFixer(voiceId);
-    
+    console.log(">>> [FAZ 3] Ses üretiliyor, Ses ID:", shortId);
+
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-tts-preview:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,7 +100,12 @@ async function generateAudio(text: string, voiceId: string, apiKey: string) {
         })
     });
 
-    if (!response.ok) throw new Error(`Ses API hatası: ${response.status}`);
+    if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        console.error(">>> [FAZ 3 HATA]:", response.status, errData);
+        throw new Error(`Ses API hatası: ${response.status}`);
+    }
+    
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
@@ -113,6 +126,8 @@ export async function generateStoryAction(formData: {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Oturum açılmadı.");
 
+        console.log(">>> [STORY MOTOR] İşlem başlatıldı, User:", user.id);
+
         let { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).limit(1).single();
         if (!profile) {
             const { data: newProfile, error: profErr } = await supabase.from('profiles').insert({
@@ -125,8 +140,9 @@ export async function generateStoryAction(formData: {
         }
 
         // ---------------------------------------------------------
-        // FAZ 1: METİN
+        // FAZ 1: METİN (Flash 3 - Manifesto ve Kullanıcı Onayıyla)
         // ---------------------------------------------------------
+        console.log(">>> [FAZ 1] Metin üretiliyor (Model: gemini-3-flash-preview)...");
         const systemPrompt = `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. DİL: Türkçe.`;
         const userPrompt = `Konu: ${formData.theme}, Kahraman: ${formData.hero}, Yaş: ${formData.age}, Çocuk Adı: ${formData.childName}`;
 
@@ -139,9 +155,20 @@ export async function generateStoryAction(formData: {
             })
         });
 
+        if (!textResponse.ok) {
+            const errData = await textResponse.json().catch(() => ({}));
+            console.error(">>> [FAZ 1 HATA]:", textResponse.status, errData);
+            throw new Error(`Metin API hatası: ${textResponse.status}`);
+        }
+
         const textData = await textResponse.json();
-        if (!textData.candidates?.[0]) throw new Error("Metin üretilemedi.");
+        if (!textData.candidates?.[0]) {
+            console.error(">>> [FAZ 1 BOŞ YANIT]:", textData);
+            throw new Error("Metin üretilemedi (Boş yanıt).");
+        }
+        
         const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
+        console.log(">>> [FAZ 1 BAŞARILI] Masal:", storyData.title);
 
         // ---------------------------------------------------------
         // FAZ 2: GÖRSEL
@@ -158,7 +185,7 @@ export async function generateStoryAction(formData: {
                 const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
                 pagesWithImages.push({ text: scene.text, image_url: publicUrl });
             } catch (imgErr) {
-                console.error("Görsel hatası:", imgErr);
+                console.error("Görsel aşaması hatası (Pas geçiliyor):", imgErr);
                 pagesWithImages.push({ text: scene.text, image_url: '' });
             }
         }
@@ -180,7 +207,7 @@ export async function generateStoryAction(formData: {
             const { data: { publicUrl: aUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
             audioUrl = aUrl;
         } catch (audErr) {
-            console.error("Ses hatası:", audErr);
+            console.error("Ses aşaması hatası:", audErr);
         }
 
         // ---------------------------------------------------------
@@ -196,10 +223,11 @@ export async function generateStoryAction(formData: {
 
         if (dbErr) throw dbErr;
 
+        console.log(">>> [STORY MOTOR BAŞARILI] ID:", savedStory.id);
         return { success: true, id: savedStory.id };
 
     } catch (error: any) {
-        console.error(">>> [STORY MOTOR HATA]:", error);
+        console.error(">>> [STORY MOTOR KRİTİK HATA]:", error);
         return { success: false, error: error.message };
     }
 }

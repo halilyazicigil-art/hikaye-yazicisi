@@ -84,6 +84,7 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
   const supabase = await createClient();
 
   try {
+    console.log(">>> [TEST] Metin üretiliyor (gemini-3-flash-preview)...");
     const textResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -93,14 +94,21 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
       })
     });
 
+    if (!textResponse.ok) {
+        const err = await textResponse.json();
+        throw new Error(`Metin API Hatası (${textResponse.status}): ${JSON.stringify(err)}`);
+    }
+
     const textData = await textResponse.json();
     const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
+    console.log(">>> [TEST] Görsel üretiliyor...");
     const base64Image = await generateImage(storyData.visualHook, storyData.characters, style, apiKey);
     const fileName = `test_${Date.now()}.png`;
     await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(base64Image, 'base64'), { contentType: 'image/png' });
     const { data: { publicUrl: imageUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
 
+    console.log(">>> [TEST] Ses üretiliyor...");
     const base64Audio = await generateAudio(storyData.text, voiceId, apiKey);
     const audioFileName = `test_audio_${Date.now()}.mp3`;
     await supabase.storage.from('story_assets').upload(`audio/${audioFileName}`, Buffer.from(base64Audio, 'base64'), { contentType: 'audio/mpeg' });
