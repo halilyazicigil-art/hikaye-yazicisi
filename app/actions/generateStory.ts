@@ -145,14 +145,19 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
     const storyData = JSON.parse(storyJsonRaw)
     const { title, scenes, characters } = storyData
 
-    // 2. ADIM: GÖRSEL ÜRETİMİ (SABİT STİL + KARAKTER ÇAPASI + SAHNE TEMASI)
-    console.log("2. Adım: Görseller 'Sihirli Birleştirme' ile üretiliyor...")
+    // Karakter Çapalarını (Anchor) Birleştir (Object.values kullanarak)
+    const characterAnchors = characters ? Object.values(characters).join('. ') : '';
+    console.log(`>>> KARAKTER ÇAPALARI (ANCHORS): ${characterAnchors}`);
+
+    // 2. ADIM: GÖRSEL ÜRETİMİ (SİHİRLİ BİRLEŞTİRME 2.0)
+    console.log("2. Adım: Görseller 'Sihirli Birleştirme 2.0' ile üretiliyor...")
     const pages = []
     for (let i = 0; i < scenes.length; i++) {
         const scene = scenes[i]
         
-        // Sabit Stil + Sahne Teması Birleşimi
-        const finalImagePrompt = `${styleConfig.prefix} ${scene.sceneDescription} ${styleConfig.suffix}`
+        // FORMÜL: Stil Prefix + Karakter Kimlikleri + Sayfanın Vurucu Aksiyonu + Stil Suffix
+        const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${scene.sceneDescription}. ${styleConfig.suffix}`;
+        console.log(`>>> SAYFA ${i+1} FINAL PROMPT: ${finalImagePrompt}`);
 
         const imgResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
             method: 'POST',

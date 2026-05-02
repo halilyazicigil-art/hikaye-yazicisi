@@ -78,9 +78,14 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
     results.text.content = storyData.text
     results.text.status = 'SUCCESS'
 
-    // 2. FAZ: GÖRSEL (SABİT STİL + TEMA)
+    // Karakter Çapalarını (Anchor) Birleştir
+    const characterAnchors = storyData.characters ? Object.values(storyData.characters).join('. ') : '';
+    console.log(`>>> TEST KARAKTER ÇAPALARI: ${characterAnchors}`);
+
+    // 2. FAZ: GÖRSEL (SİHİRLİ BİRLEŞTİRME 2.0)
     console.log("2. Faz: Test görseli üretiliyor...")
-    const finalImagePrompt = `${styleConfig.prefix} ${storyData.sceneDescription} ${styleConfig.suffix}`
+    const finalImagePrompt = `${styleConfig.prefix} Physical Appearance: ${characterAnchors}. Scenario: ${storyData.sceneDescription}. ${styleConfig.suffix}`;
+    console.log(`>>> TEST FINAL PROMPT: ${finalImagePrompt}`);
     const imageResponse = await fetch(`https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
