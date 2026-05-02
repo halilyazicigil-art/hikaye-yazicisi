@@ -4,13 +4,15 @@ import { createClient } from '@/utils/supabase/server'
 
 /**
  * 🛡️ ZIRHLI PARSER (Manifesto 4)
+ * Daha dayanıklı hale getirildi.
  */
 function armoredParser(text: string) {
     try {
+        console.log(">>> [ZIRHLI PARSER] Ham metin:", text.substring(0, 100) + "...");
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) throw new Error("JSON bloğu bulunamadı.");
         const parsed = JSON.parse(jsonMatch[0].trim());
-        if (!parsed.scenes || !Array.isArray(parsed.scenes)) throw new Error("Sahneler eksik.");
+        if (!parsed.scenes || !Array.isArray(parsed.scenes)) throw new Error("Sahneler eksik veya hatalı format.");
         return parsed;
     } catch (err) {
         console.error(">>> [ZIRHLI PARSER] HATA:", err);
@@ -49,13 +51,13 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
         'Pop Art': ". bold lines, bright colors, comic book aesthetic, dynamic"
     };
 
-    const charAnchors = Object.entries(characters)
+    const charAnchors = Object.entries(characters || {})
         .map(([name, desc]) => `${name}: ${desc}`)
         .join(". ");
 
     const finalPrompt = `${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${charAnchors}. Action: ${hook} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}`;
 
-    console.log(">>> [FAZ 2] Görsel üretiliyor, Prompt:", finalPrompt.substring(0, 50) + "...");
+    console.log(">>> [FAZ 2] Görsel üretiliyor...");
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -66,13 +68,15 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
     });
 
     if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        console.error(">>> [FAZ 2 HATA]:", response.status, errData);
-        throw new Error(`Görsel API hatası: ${response.status}`);
+        const errBody = await response.json().catch(() => ({}));
+        console.error(">>> [FAZ 2 HATA]:", response.status, JSON.stringify(errBody));
+        throw new Error(`Görsel API Hatası: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    return data.candidates[0].content.parts[0].inlineData.data; 
+    const base64Data = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Data) throw new Error("Görsel verisi alınamadı.");
+    return base64Data;
 }
 
 /**
@@ -101,13 +105,15 @@ async function generateAudio(text: string, voiceId: string, apiKey: string) {
     });
 
     if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        console.error(">>> [FAZ 3 HATA]:", response.status, errData);
-        throw new Error(`Ses API hatası: ${response.status}`);
+        const errBody = await response.json().catch(() => ({}));
+        console.error(">>> [FAZ 3 HATA]:", response.status, JSON.stringify(errBody));
+        throw new Error(`Ses API Hatası: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    return data.candidates[0].content.parts[0].inlineData.data; 
+    const base64Data = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Data) throw new Error("Ses verisi alınamadı.");
+    return base64Data;
 }
 
 export async function generateStoryAction(formData: {
@@ -126,7 +132,7 @@ export async function generateStoryAction(formData: {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Oturum açılmadı.");
 
-        console.log(">>> [STORY MOTOR] İşlem başlatıldı, User:", user.id);
+        console.log(">>> [STORY MOTOR] Başlatıldı, User:", user.id);
 
         let { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).limit(1).single();
         if (!profile) {
@@ -140,9 +146,9 @@ export async function generateStoryAction(formData: {
         }
 
         // ---------------------------------------------------------
-        // FAZ 1: METİN (Flash 3 - Manifesto ve Kullanıcı Onayıyla)
+        // FAZ 1: METİN (Flash 3 - SADECE 3)
         // ---------------------------------------------------------
-        console.log(">>> [FAZ 1] Metin üretiliyor (Model: gemini-3-flash-preview)...");
+        console.log(">>> [FAZ 1] Metin üretiliyor (gemini-3-flash-preview)...");
         const systemPrompt = `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. DİL: Türkçe.`;
         const userPrompt = `Konu: ${formData.theme}, Kahraman: ${formData.hero}, Yaş: ${formData.age}, Çocuk Adı: ${formData.childName}`;
 
@@ -151,23 +157,27 @@ export async function generateStoryAction(formData: {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ role: 'user', parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
+                generationConfig: { 
+                    responseMimeType: "application/json"
+                }
             })
         });
 
         if (!textResponse.ok) {
-            const errData = await textResponse.json().catch(() => ({}));
-            console.error(">>> [FAZ 1 HATA]:", textResponse.status, errData);
+            const errBody = await textResponse.json().catch(() => ({}));
+            console.error(">>> [FAZ 1 HATA]:", textResponse.status, JSON.stringify(errBody));
             throw new Error(`Metin API hatası: ${textResponse.status}`);
         }
 
         const textData = await textResponse.json();
-        if (!textData.candidates?.[0]) {
-            console.error(">>> [FAZ 1 BOŞ YANIT]:", textData);
-            throw new Error("Metin üretilemedi (Boş yanıt).");
+        const contentPart = textData.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!contentPart) {
+            console.error(">>> [FAZ 1 BOŞ YANIT]:", JSON.stringify(textData));
+            throw new Error("Metin üretilemedi (Aday veya içerik bulunamadı).");
         }
         
-        const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
+        const storyData = armoredParser(contentPart);
         console.log(">>> [FAZ 1 BAŞARILI] Masal:", storyData.title);
 
         // ---------------------------------------------------------
@@ -178,9 +188,12 @@ export async function generateStoryAction(formData: {
             try {
                 const base64Image = await generateImage(scene.visualHook, storyData.characters, formData.style, apiKey);
                 const fileName = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-                await supabase.storage
+                
+                const { error: uploadErr } = await supabase.storage
                     .from('story_assets')
                     .upload(`images/${fileName}`, Buffer.from(base64Image, 'base64'), { contentType: 'image/png' });
+
+                if (uploadErr) throw uploadErr;
 
                 const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
                 pagesWithImages.push({ text: scene.text, image_url: publicUrl });
@@ -200,9 +213,11 @@ export async function generateStoryAction(formData: {
             const base64Audio = await generateAudio(fullText, voiceId, apiKey);
             
             const audioFileName = `audio_${Date.now()}.mp3`;
-            await supabase.storage
+            const { error: audioUploadErr } = await supabase.storage
                 .from('story_assets')
                 .upload(`audio/${audioFileName}`, Buffer.from(base64Audio, 'base64'), { contentType: 'audio/mpeg' });
+
+            if (audioUploadErr) throw audioUploadErr;
 
             const { data: { publicUrl: aUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
             audioUrl = aUrl;

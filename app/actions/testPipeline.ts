@@ -47,7 +47,11 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
         })
     });
 
-    if (!response.ok) throw new Error(`Görsel API Hatası: ${response.status}`);
+    if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(`Görsel API Hatası (${response.status}): ${JSON.stringify(errBody)}`);
+    }
+
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
@@ -74,7 +78,11 @@ async function generateAudio(text: string, voiceId: string, apiKey: string) {
         })
     });
 
-    if (!response.ok) throw new Error(`Ses API Hatası: ${response.status}`);
+    if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(`Ses API Hatası (${response.status}): ${JSON.stringify(errBody)}`);
+    }
+
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
@@ -100,7 +108,13 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
     }
 
     const textData = await textResponse.json();
-    const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
+    const contentPart = textData.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!contentPart) {
+        throw new Error(`Metin üretilemedi (Aday bulunamadı). Yanıt: ${JSON.stringify(textData)}`);
+    }
+
+    const storyData = armoredParser(contentPart);
 
     console.log(">>> [TEST] Görsel üretiliyor...");
     const base64Image = await generateImage(storyData.visualHook, storyData.characters, style, apiKey);
