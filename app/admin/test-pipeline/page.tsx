@@ -107,7 +107,12 @@ export default function TestPipelinePage() {
                 <h3 className="font-bold text-[#4A3E3E] mb-4">🔊 Ses (Flash TTS)</h3>
                 {results.audio.url ? (
                   <audio controls className="w-full mt-4"><source src={results.audio.url} type="audio/mpeg" /></audio>
-                ) : <div className="text-red-500">Ses Üretilemedi</div>}
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <div className="text-red-500 font-bold">Ses Üretilemedi</div>
+                    {results.audio.error && <p className="text-[10px] text-red-400 mt-2 text-center bg-red-50 p-2 rounded-lg">{results.audio.error}</p>}
+                  </div>
+                )}
               </div>
             </div>
 

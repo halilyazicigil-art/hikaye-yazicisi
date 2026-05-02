@@ -138,7 +138,7 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
       results.audio.status = 'SUCCESS'
     } else {
       results.audio.status = 'FAILED'
-      results.audio.error = JSON.stringify(audioData)
+      results.audio.error = audioData.error?.message || JSON.stringify(audioData)
     }
 
     // 4. FAZ: KÜTÜPHANEYE KAYDET
