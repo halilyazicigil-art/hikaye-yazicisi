@@ -197,8 +197,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
         };
 
         try {
-            // Ses akıcılığı için kesme işaretlerini temizleyen filtre
-            const cleanedTextForAudio = (pages.map(p => p.text).join(' ') || '').replace(/'/g, '');
+            const rawTextForAudio = pages.map(p => p.text).join(' ');
             console.log(`>>> KRİTİK LOG: Google Gemini-TTS'e gönderilen GERÇEK SES: ${elevenVoiceId}`);
 
             const audioResponse = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize`, {
@@ -206,7 +205,7 @@ export async function generateStoryAction({ childName, hero, theme, age, voiceOp
                 headers: { 'Authorization': `Bearer ${vertexToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     input: { 
-                        text: cleanedTextForAudio,
+                        text: rawTextForAudio,
                         prompt: VOICE_INSTRUCTIONS[elevenVoiceId] || 'Sıcak ve masalsı bir tonda oku.'
                     },
                     voice: { 

@@ -124,7 +124,7 @@ export async function testPipeline(testPrompt: string = "Küçük tavşan ve ya�
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         input: { 
-          text: (storyData?.text || '').replace(/'/g, ''),
+          text: storyData?.text || '',
           prompt: VOICE_INSTRUCTIONS[voiceId] || 'Sıcak ve masalsı bir tonda oku.'
         },
         voice: { 
