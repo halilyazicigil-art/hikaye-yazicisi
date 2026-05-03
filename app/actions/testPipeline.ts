@@ -46,6 +46,35 @@ function voiceIdFixer(voiceId: string): string {
 }
 
 /**
+ * 🎙️ WAV MÜHÜRLEYİCİ (PCM -> WAV)
+ * Vertex AI'dan gelen ham PCM verisine 44-byte WAV başlığı ekler.
+ */
+function addWavHeader(pcmData: Buffer): Buffer {
+    const numChannels = 1;
+    const sampleRate = 24000;
+    const bitsPerSample = 16;
+    const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+    const blockAlign = (numChannels * bitsPerSample) / 8;
+    const wavHeader = Buffer.alloc(44);
+
+    wavHeader.write('RIFF', 0);
+    wavHeader.writeUInt32LE(36 + pcmData.length, 4);
+    wavHeader.write('WAVE', 8);
+    wavHeader.write('fmt ', 12);
+    wavHeader.writeUInt32LE(16, 16);
+    wavHeader.writeUInt16LE(1, 20); // AudioFormat: PCM
+    wavHeader.writeUInt16LE(numChannels, 22);
+    wavHeader.writeUInt32LE(sampleRate, 24);
+    wavHeader.writeUInt32LE(byteRate, 28);
+    wavHeader.writeUInt16LE(blockAlign, 32);
+    wavHeader.writeUInt16LE(bitsPerSample, 34);
+    wavHeader.write('data', 36);
+    wavHeader.writeUInt32LE(pcmData.length, 40);
+
+    return Buffer.concat([wavHeader, pcmData]);
+}
+
+/**
  * 🎨 GÖRSEL MOTORU (FAZ 2)
  */
 async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string) {
@@ -93,7 +122,7 @@ async function generateImage(hook: string, characters: any, style: string, proje
 }
 
 /**
- * 🎙️ SES MOTORU (FAZ 3)
+ * 🎙️ SES MOTORU (FAZ 3) - Vertex AI (WAV MÜHÜRLÜ)
  */
 async function generateAudio(text: string, voiceId: string, projectId: string, token: string) {
     const shortId = voiceIdFixer(voiceId);
@@ -128,7 +157,15 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
 
     const media = extractMediaData(data.candidates);
     if (!media) throw new Error("Ses verisi yanıtta bulunamadı.");
-    return media;
+    
+    // 🛡️ VERTEX-ZIRHLI: Ham PCM verisini WAV başlığıyla sarmalıyoruz
+    const pcmBuffer = Buffer.from(media.data, 'base64');
+    const wavBuffer = addWavHeader(pcmBuffer);
+
+    return {
+        data: wavBuffer.toString('base64'),
+        mimeType: 'audio/wav'
+    };
 }
 
 export async function testPipelineAction(prompt: string, style: string, voiceId: string) {
@@ -168,7 +205,7 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
 
     // FAZ 3: SES
     const mediaAudio = await generateAudio(storyData.text, voiceId, projectId, token);
-    const audFileName = `test_audio_${Date.now()}.mp3`;
+    const audFileName = `test_audio_${Date.now()}.wav`; // .wav olarak kaydediyoruz
     const { error: audErr } = await adminSupabase.storage
       .from('story_assets')
       .upload(`audio/${audFileName}`, Buffer.from(mediaAudio.data, 'base64'), { contentType: mediaAudio.mimeType });
