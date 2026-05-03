@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { getVertexAccessToken } from '@/utils/vertex-auth'
 
 /**
@@ -143,6 +143,7 @@ export async function generateStoryAction(formData: {
 }) {
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
     const supabase = await createClient();
+    const adminSupabase = await createAdminClient(); // 🛡️ Zırhlı storage erişimi
 
     try {
         const token = await getVertexAccessToken();
@@ -188,13 +189,13 @@ export async function generateStoryAction(formData: {
                 const media = await generateImage(scene.visualHook, storyData.characters, formData.style, projectId, token);
                 const fileName = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
                 
-                const { error: uploadErr } = await supabase.storage
+                const { error: uploadErr } = await adminSupabase.storage
                     .from('story_assets')
                     .upload(`images/${fileName}`, Buffer.from(media.data, 'base64'), { contentType: media.mimeType });
 
                 if (uploadErr) throw new Error(`Storage Upload Hatası: ${uploadErr.message}`);
 
-                const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
+                const { data: { publicUrl } } = adminSupabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
                 pagesWithImages.push({ text: scene.text, image_url: publicUrl });
             } catch (imgErr: any) {
                 console.error("Görsel hatası:", imgErr.message);
@@ -210,13 +211,13 @@ export async function generateStoryAction(formData: {
             const media = await generateAudio(fullText, voiceId, projectId, token);
             
             const audioFileName = `audio_${Date.now()}.mp3`;
-            const { error: audUploadErr } = await supabase.storage
+            const { error: audUploadErr } = await adminSupabase.storage
                 .from('story_assets')
                 .upload(`audio/${audioFileName}`, Buffer.from(media.data, 'base64'), { contentType: media.mimeType });
 
             if (audUploadErr) throw new Error(`Storage Ses Hatası: ${audUploadErr.message}`);
 
-            const { data: { publicUrl: aUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
+            const { data: { publicUrl: aUrl } } = adminSupabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
             audioUrl = aUrl;
         } catch (audErr: any) {
             console.error("Ses hatası:", audErr.message);

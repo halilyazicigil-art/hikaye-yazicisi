@@ -25,3 +25,20 @@ export async function createClient() {
     }
   )
 }
+
+/**
+ * 🛡️ ADMIN CLIENT (Master Key)
+ * Bu istemci RLS kurallarını pas geçer. Sadece SERVER tarafında kullanılmalıdır.
+ */
+export async function createAdminClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!, // Master Key kullanımı
+    {
+      cookies: {
+        getAll() { return [] },
+        setAll() { }
+      },
+    }
+  )
+}

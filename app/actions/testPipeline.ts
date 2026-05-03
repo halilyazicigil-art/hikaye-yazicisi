@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { getVertexAccessToken } from '@/utils/vertex-auth'
 
 /**
@@ -134,6 +134,7 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
 export async function testPipelineAction(prompt: string, style: string, voiceId: string) {
   const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
   const supabase = await createClient();
+  const adminSupabase = await createAdminClient(); // 🛡️ Zırhlı storage erişimi
 
   try {
     const token = await getVertexAccessToken();
@@ -158,22 +159,22 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
     // FAZ 2: GÖRSEL
     const mediaImage = await generateImage(storyData.visualHook, storyData.characters, style, projectId, token);
     const imgFileName = `test_${Date.now()}.png`;
-    const { error: imgErr } = await supabase.storage
+    const { error: imgErr } = await adminSupabase.storage
       .from('story_assets')
       .upload(`images/${imgFileName}`, Buffer.from(mediaImage.data, 'base64'), { contentType: mediaImage.mimeType });
 
     if (imgErr) throw new Error(`Görsel Yükleme Hatası: ${imgErr.message}`);
-    const { data: { publicUrl: imageUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${imgFileName}`);
+    const { data: { publicUrl: imageUrl } } = adminSupabase.storage.from('story_assets').getPublicUrl(`images/${imgFileName}`);
 
     // FAZ 3: SES
     const mediaAudio = await generateAudio(storyData.text, voiceId, projectId, token);
     const audFileName = `test_audio_${Date.now()}.mp3`;
-    const { error: audErr } = await supabase.storage
+    const { error: audErr } = await adminSupabase.storage
       .from('story_assets')
       .upload(`audio/${audFileName}`, Buffer.from(mediaAudio.data, 'base64'), { contentType: mediaAudio.mimeType });
 
     if (audErr) throw new Error(`Ses Yükleme Hatası: ${audErr.message}`);
-    const { data: { publicUrl: audioUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audFileName}`);
+    const { data: { publicUrl: audioUrl } } = adminSupabase.storage.from('story_assets').getPublicUrl(`audio/${audFileName}`);
 
     return {
       text: { status: 'SUCCESS', content: storyData.text },

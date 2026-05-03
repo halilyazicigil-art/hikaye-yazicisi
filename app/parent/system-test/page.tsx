@@ -20,7 +20,7 @@ const VOICES = [
   { id: 'Kore', name: 'Gökkuşağı Kızı' },
 ]
 
-export default function TestPipelinePage() {
+export default function SystemTestPage() {
   const [prompt, setPrompt] = useState('Küçük bir robot ve kedisi yıldızlara bakıyor')
   const [selectedStyle, setSelectedStyle] = useState('Sulu Boya')
   const [selectedVoice, setSelectedVoice] = useState('Iapetus')
@@ -43,8 +43,9 @@ export default function TestPipelinePage() {
     <div className="min-h-screen bg-[#FDFCF8] p-8 font-outfit">
       <div className="max-w-6xl mx-auto">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-[#4A3E3E] mb-2">🧪 Sistem Laboratuvarı</h1>
-          <p className="text-[#8C7B7B]">Karakter uyumunu ve sesleri canlı kütüphane kaydıyla test edin.</p>
+          <Link href="/parent" className="inline-block mb-4 text-[#D4A373] hover:underline">← Ebeveyn Paneline Dön</Link>
+          <h1 className="text-4xl font-bold text-[#4A3E3E] mb-2">🧪 Sistem Teşhis Merkezi</h1>
+          <p className="text-[#8C7B7B]">Masal üretim motorunu (Metin, Görsel, Ses) canlı olarak test edin.</p>
         </header>
 
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-[#F0EBE3] mb-8">
@@ -55,6 +56,7 @@ export default function TestPipelinePage() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 className="w-full p-4 rounded-2xl bg-[#F9F7F2] border border-[#E8E2D6] focus:outline-none focus:ring-2 focus:ring-[#D4A373]"
+                placeholder="Örn: Ormanda kaybolan bir panda..."
               />
             </div>
             <div>
@@ -82,51 +84,51 @@ export default function TestPipelinePage() {
           <button 
             onClick={handleTest}
             disabled={loading}
-            className={`w-full py-4 rounded-2xl text-white font-bold text-lg transition-all ${loading ? 'bg-gray-400' : 'bg-[#D4A373] hover:bg-[#BC8A5F] shadow-lg shadow-[#D4A373]/30'}`}
+            className={`w-full py-4 rounded-2xl text-white font-bold text-lg transition-all ${loading ? 'bg-gray-400 animate-pulse' : 'bg-[#D4A373] hover:bg-[#BC8A5F] shadow-lg shadow-[#D4A373]/30'}`}
           >
-            {loading ? 'Laboratuvar Çalışıyor...' : 'Tam Sistem Testini Başlat 🚀'}
+            {loading ? 'Motorlar Isınıyor...' : 'Tam Sistem Testini Başlat 🚀'}
           </button>
         </div>
 
         {results && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* METİN SONUCU */}
               <div className="bg-white p-6 rounded-3xl border border-[#F0EBE3] shadow-md">
-                <h3 className="font-bold text-[#4A3E3E] mb-4">📝 Üretilen Metin</h3>
-                <p className="text-sm text-[#6B5B5B] leading-relaxed bg-[#F9F7F2] p-4 rounded-xl italic">"{results.text.content}"</p>
+                <h3 className="font-bold text-[#4A3E3E] mb-4 flex items-center">📝 Üretilen Metin</h3>
+                {results.text.status === 'SUCCESS' ? (
+                  <p className="text-sm text-[#6B5B5B] leading-relaxed bg-[#F9F7F2] p-4 rounded-xl italic">"{results.text.content}"</p>
+                ) : (
+                  <div className="text-red-500 bg-red-50 p-4 rounded-xl text-xs">{results.text.error}</div>
+                )}
               </div>
 
+              {/* GÖRSEL SONUCU */}
               <div className="bg-white p-6 rounded-3xl border border-[#F0EBE3] shadow-md">
-                <h3 className="font-bold text-[#4A3E3E] mb-4">🎨 Çizim (Banana 2)</h3>
-                {results.image.url ? (
+                <h3 className="font-bold text-[#4A3E3E] mb-4 flex items-center">🎨 Görsel Çıktısı</h3>
+                {results.image.status === 'SUCCESS' ? (
                   <img src={results.image.url} className="w-full aspect-square object-cover rounded-2xl border border-[#F0EBE3]" alt="Test" />
-                ) : <div className="text-red-500">Görsel Üretilemedi</div>}
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <div className="text-red-500 font-bold mb-2">Görsel Üretilemedi</div>
+                    <p className="text-[10px] text-red-400 text-center bg-red-50 p-2 rounded-lg">{results.image.error}</p>
+                  </div>
+                )}
               </div>
 
+              {/* SES SONUCU */}
               <div className="bg-white p-6 rounded-3xl border border-[#F0EBE3] shadow-md">
-                <h3 className="font-bold text-[#4A3E3E] mb-4">🔊 Ses (Flash TTS)</h3>
-                {results.audio.url ? (
+                <h3 className="font-bold text-[#4A3E3E] mb-4 flex items-center">🔊 Sesli Anlatım</h3>
+                {results.audio.status === 'SUCCESS' ? (
                   <audio controls className="w-full mt-4"><source src={results.audio.url} type="audio/mpeg" /></audio>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <div className="text-red-500 font-bold">Ses Üretilemedi</div>
-                    {results.audio.error && <p className="text-[10px] text-red-400 mt-2 text-center bg-red-50 p-2 rounded-lg">{results.audio.error}</p>}
+                    <div className="text-red-500 font-bold mb-2">Ses Üretilemedi</div>
+                    <p className="text-[10px] text-red-400 text-center bg-red-50 p-2 rounded-lg">{results.audio.error}</p>
                   </div>
                 )}
               </div>
             </div>
-
-            {results.savedId && (
-              <div className="bg-green-50 border border-green-200 p-6 rounded-3xl flex flex-col items-center">
-                <p className="text-green-800 font-bold mb-4">✅ Test Masalı Kütüphaneye Kaydedildi!</p>
-                <Link 
-                  href={`/story/${results.savedId}`}
-                  className="px-8 py-3 bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors"
-                >
-                  Masalı Kütüphanede Görüntüle 📖
-                </Link>
-              </div>
-            )}
           </div>
         )}
       </div>
