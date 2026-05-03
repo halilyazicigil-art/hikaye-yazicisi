@@ -5,7 +5,6 @@ import { getVertexAccessToken } from '@/utils/vertex-auth'
 
 /**
  * 🛡️ ZIRHLI PARSER (Manifesto 4)
- * streamGenerateContent veya generateContent yanıtlarından JSON ayıklamak için geliştirildi.
  */
 function armoredParser(text: string) {
     try {
@@ -57,7 +56,6 @@ async function generateImage(hook: string, characters: any, style: string, proje
 
     const finalPrompt = `${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${charAnchors}. Action: ${hook} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}`;
 
-    // 2026 Vertex AI v1 Global Endpoint
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
     const response = await fetch(url, {
@@ -67,14 +65,17 @@ async function generateImage(hook: string, characters: any, style: string, proje
             'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: finalPrompt }] }]
+            contents: [{ 
+                role: 'user', // 🛡️ ZIRHLI ROL TANIMI
+                parts: [{ text: finalPrompt }] 
+            }]
         })
     });
 
     if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         console.error(">>> [FAZ 2 GÖRSEL HATA]:", response.status, JSON.stringify(err));
-        throw new Error(`Görsel API hatası: ${response.status}`);
+        throw new Error(`Görsel API hatası: ${response.status} - ${err.error?.message || 'Bilinmeyen Hata'}`);
     }
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
@@ -95,7 +96,10 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
             'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: text }] }],
+            contents: [{ 
+                role: 'user', // 🛡️ ZIRHLI ROL TANIMI
+                parts: [{ text: text }] 
+            }],
             generationConfig: { 
                 responseModalities: ["AUDIO"],
                 speechConfig: {
@@ -112,7 +116,7 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
     if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         console.error(">>> [FAZ 3 SES HATA]:", response.status, JSON.stringify(err));
-        throw new Error(`Ses API hatası: ${response.status}`);
+        throw new Error(`Ses API hatası: ${response.status} - ${err.error?.message || 'Bilinmeyen Hata'}`);
     }
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
@@ -163,7 +167,10 @@ export async function generateStoryAction(formData: {
                 'Content-Type': 'application/json' 
             },
             body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
+                contents: [{ 
+                    role: 'user', // 🛡️ ZIRHLI ROL TANIMI
+                    parts: [{ text: systemPrompt + "\n\n" + userPrompt }] 
+                }],
                 generationConfig: { responseMimeType: "application/json" }
             })
         });
@@ -171,7 +178,7 @@ export async function generateStoryAction(formData: {
         if (!textResponse.ok) {
             const err = await textResponse.json().catch(() => ({}));
             console.error(">>> [FAZ 1 METİN HATA]:", textResponse.status, JSON.stringify(err));
-            throw new Error(`Metin API hatası: ${textResponse.status}`);
+            throw new Error(`Metin API hatası: ${textResponse.status} - ${err.error?.message || 'Bilinmeyen Hata'}`);
         }
         
         const textData = await textResponse.json();
