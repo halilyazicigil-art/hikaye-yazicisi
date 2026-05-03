@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { getVertexAccessToken } from '@/utils/vertex-auth'
 
 /**
- * 🛡️ ZIRHLI PARSER (Manifesto 4)
+ * 🛡️ ZIRHLI PARSER
  */
 function armoredParser(text: string) {
     try {
@@ -21,15 +21,16 @@ function armoredParser(text: string) {
 
 /**
  * 🔍 AKILLI MULTIMODAL AYIKLAYICI
- * Gemini 3.1 bazen parts[0]'da metin, parts[1]'de veri döner.
- * Bu fonksiyon inlineData içeren parçayı bulur.
+ * Hem base64 verisini hem de MIME tipini döner.
  */
-function extractBase64Data(candidates: any[]): string | null {
+function extractMediaData(candidates: any[]) {
     if (!candidates?.[0]?.content?.parts) return null;
-    
-    // Tüm parçaları tara, inlineData içeren ilkini al
     const mediaPart = candidates[0].content.parts.find((p: any) => p.inlineData?.data);
-    return mediaPart?.inlineData?.data || null;
+    if (!mediaPart) return null;
+    return {
+        data: mediaPart.inlineData.data,
+        mimeType: mediaPart.inlineData.mimeType
+    };
 }
 
 /**
@@ -78,25 +79,18 @@ async function generateImage(hook: string, characters: any, style: string, proje
             'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-            contents: [{ 
-                role: 'user',
-                parts: [{ text: finalPrompt }] 
-            }]
+            contents: [{ role: 'user', parts: [{ text: finalPrompt }] }]
         })
     });
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        console.error(">>> [FAZ 2 GÖRSEL HATA]:", response.status, JSON.stringify(data));
         throw new Error(`Görsel API hatası: ${response.status} - ${data.error?.message || 'Bilinmeyen Hata'}`);
     }
 
-    const base64 = extractBase64Data(data.candidates);
-    if (!base64) {
-        console.error(">>> [FAZ 2 VERİ KAYIP]:", JSON.stringify(data));
-        throw new Error("Görsel verisi API yanıtında bulunamadı (Filtreye takılmış olabilir).");
-    }
-    return base64;
+    const media = extractMediaData(data.candidates);
+    if (!media) throw new Error("Görsel verisi API yanıtında bulunamadı.");
+    return media;
 }
 
 /**
@@ -114,10 +108,7 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
             'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-            contents: [{ 
-                role: 'user',
-                parts: [{ text: text }] 
-            }],
+            contents: [{ role: 'user', parts: [{ text: text }] }],
             generationConfig: { 
                 responseModalities: ["AUDIO"],
                 speechConfig: {
@@ -133,16 +124,12 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        console.error(">>> [FAZ 3 SES HATA]:", response.status, JSON.stringify(data));
         throw new Error(`Ses API hatası: ${response.status} - ${data.error?.message || 'Bilinmeyen Hata'}`);
     }
 
-    const base64 = extractBase64Data(data.candidates);
-    if (!base64) {
-        console.error(">>> [FAZ 3 VERİ KAYIP]:", JSON.stringify(data));
-        throw new Error("Ses verisi API yanıtında bulunamadı.");
-    }
-    return base64;
+    const media = extractMediaData(data.candidates);
+    if (!media) throw new Error("Ses verisi API yanıtında bulunamadı.");
+    return media;
 }
 
 export async function generateStoryAction(formData: {
@@ -175,9 +162,7 @@ export async function generateStoryAction(formData: {
             profile = newProfile;
         }
 
-        // ---------------------------------------------------------
         // FAZ 1: METİN
-        // ---------------------------------------------------------
         const systemPrompt = `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. DİL: Türkçe.`;
         const userPrompt = `Konu: ${formData.theme}, Kahraman: ${formData.hero}, Yaş: ${formData.age}, Çocuk Adı: ${formData.childName}`;
 
@@ -185,70 +170,58 @@ export async function generateStoryAction(formData: {
 
         const textResponse = await fetch(textUrl, {
             method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json' 
-            },
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ 
-                    role: 'user',
-                    parts: [{ text: systemPrompt + "\n\n" + userPrompt }] 
-                }],
+                contents: [{ role: 'user', parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
                 generationConfig: { responseMimeType: "application/json" }
             })
         });
 
         const textData = await textResponse.json().catch(() => ({}));
-        if (!textResponse.ok) {
-            console.error(">>> [FAZ 1 METİN HATA]:", textResponse.status, JSON.stringify(textData));
-            throw new Error(`Metin API hatası: ${textResponse.status}`);
-        }
-        
+        if (!textResponse.ok) throw new Error(`Metin API hatası: ${textResponse.status}`);
         const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
-        // ---------------------------------------------------------
         // FAZ 2: GÖRSEL
-        // ---------------------------------------------------------
         const pagesWithImages = [];
         for (const scene of storyData.scenes) {
             try {
-                const base64Image = await generateImage(scene.visualHook, storyData.characters, formData.style, projectId, token);
+                const media = await generateImage(scene.visualHook, storyData.characters, formData.style, projectId, token);
                 const fileName = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-                await supabase.storage
+                
+                const { error: uploadErr } = await supabase.storage
                     .from('story_assets')
-                    .upload(`images/${fileName}`, Buffer.from(base64Image, 'base64'), { contentType: 'image/png' });
+                    .upload(`images/${fileName}`, Buffer.from(media.data, 'base64'), { contentType: media.mimeType });
+
+                if (uploadErr) throw new Error(`Storage Upload Hatası: ${uploadErr.message}`);
 
                 const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
                 pagesWithImages.push({ text: scene.text, image_url: publicUrl });
-            } catch (imgErr) {
-                console.error("Görsel hatası:", imgErr);
+            } catch (imgErr: any) {
+                console.error("Görsel hatası:", imgErr.message);
                 pagesWithImages.push({ text: scene.text, image_url: '' });
             }
         }
 
-        // ---------------------------------------------------------
         // FAZ 3: SES
-        // ---------------------------------------------------------
         let audioUrl = '';
         try {
             const fullText = storyData.scenes.map((s: any) => s.text).join(" ");
             const voiceId = formData.elevenVoiceId || formData.voiceOption;
-            const base64Audio = await generateAudio(fullText, voiceId, projectId, token);
+            const media = await generateAudio(fullText, voiceId, projectId, token);
             
             const audioFileName = `audio_${Date.now()}.mp3`;
-            await supabase.storage
+            const { error: audUploadErr } = await supabase.storage
                 .from('story_assets')
-                .upload(`audio/${audioFileName}`, Buffer.from(base64Audio, 'base64'), { contentType: 'audio/mpeg' });
+                .upload(`audio/${audioFileName}`, Buffer.from(media.data, 'base64'), { contentType: media.mimeType });
+
+            if (audUploadErr) throw new Error(`Storage Ses Hatası: ${audUploadErr.message}`);
 
             const { data: { publicUrl: aUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
             audioUrl = aUrl;
-        } catch (audErr) {
-            console.error("Ses hatası:", audErr);
+        } catch (audErr: any) {
+            console.error("Ses hatası:", audErr.message);
         }
 
-        // ---------------------------------------------------------
-        // KAYIT
-        // ---------------------------------------------------------
         const { data: savedStory, error: dbErr } = await supabase.from('stories').insert({
             profile_id: profile!.id,
             title: storyData.title,
@@ -258,7 +231,6 @@ export async function generateStoryAction(formData: {
         }).select().single();
 
         if (dbErr) throw dbErr;
-
         return { success: true, id: savedStory.id };
 
     } catch (error: any) {

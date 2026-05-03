@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { getVertexAccessToken } from '@/utils/vertex-auth'
 
 /**
- * 🛡️ ZIRHLI PARSER (Manifesto 4)
+ * 🛡️ ZIRHLI PARSER
  */
 function armoredParser(text: string) {
     try {
@@ -19,10 +19,30 @@ function armoredParser(text: string) {
 /**
  * 🔍 AKILLI MULTIMODAL AYIKLAYICI
  */
-function extractBase64Data(candidates: any[]): string | null {
+function extractMediaData(candidates: any[]) {
     if (!candidates?.[0]?.content?.parts) return null;
     const mediaPart = candidates[0].content.parts.find((p: any) => p.inlineData?.data);
-    return mediaPart?.inlineData?.data || null;
+    if (!mediaPart) return null;
+    return {
+        data: mediaPart.inlineData.data,
+        mimeType: mediaPart.inlineData.mimeType
+    };
+}
+
+/**
+ * 🎙️ SES ID DÜZELTİCİ
+ */
+function voiceIdFixer(voiceId: string): string {
+    const map: Record<string, string> = {
+        'Orman Muhafızı': 'Aoede',
+        'Bilge Dede': 'Achird',
+        'Neşeli Peri': 'Callirrhoe',
+        'Achird': 'Achird', 'Algenib': 'Algenib', 'Algieba': 'Algieba',
+        'Alnilam': 'Alnilam', 'Charon': 'Charon', 'Iapetus': 'Iapetus',
+        'Aoede': 'Aoede', 'Callirrhoe': 'Callirrhoe', 'Despina': 'Despina',
+        'Fenrir': 'Fenrir', 'Gacrux': 'Gacrux', 'Kore': 'Kore'
+    };
+    return map[voiceId] || 'Aoede';
 }
 
 /**
@@ -58,10 +78,7 @@ async function generateImage(hook: string, characters: any, style: string, proje
             'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-            contents: [{ 
-                role: 'user',
-                parts: [{ text: finalPrompt }] 
-            }]
+            contents: [{ role: 'user', parts: [{ text: finalPrompt }] }]
         })
     });
 
@@ -70,15 +87,17 @@ async function generateImage(hook: string, characters: any, style: string, proje
         throw new Error(`Görsel API Hatası (${response.status}): ${data.error?.message || JSON.stringify(data)}`);
     }
 
-    const base64 = extractBase64Data(data.candidates);
-    if (!base64) throw new Error("Görsel verisi yanıtta bulunamadı.");
-    return base64;
+    const media = extractMediaData(data.candidates);
+    if (!media) throw new Error("Görsel verisi yanıtta bulunamadı.");
+    return media;
 }
 
 /**
  * 🎙️ SES MOTORU (FAZ 3)
  */
 async function generateAudio(text: string, voiceId: string, projectId: string, token: string) {
+    const shortId = voiceIdFixer(voiceId);
+    
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
 
     const response = await fetch(url, {
@@ -88,16 +107,13 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
             'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-            contents: [{ 
-                role: 'user',
-                parts: [{ text: text }] 
-            }],
+            contents: [{ role: 'user', parts: [{ text: text }] }],
             generationConfig: { 
                 responseModalities: ["AUDIO"],
                 speechConfig: {
                     voiceConfig: {
                         prebuiltVoiceConfig: {
-                            voiceName: voiceId
+                            voiceName: shortId
                         }
                     }
                 }
@@ -110,9 +126,9 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
         throw new Error(`Ses API Hatası (${response.status}): ${data.error?.message || JSON.stringify(data)}`);
     }
 
-    const base64 = extractBase64Data(data.candidates);
-    if (!base64) throw new Error("Ses verisi yanıtta bulunamadı.");
-    return base64;
+    const media = extractMediaData(data.candidates);
+    if (!media) throw new Error("Ses verisi yanıtta bulunamadı.");
+    return media;
 }
 
 export async function testPipelineAction(prompt: string, style: string, voiceId: string) {
@@ -127,35 +143,37 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
 
     const textResponse = await fetch(textUrl, {
       method: 'POST',
-      headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json' 
-      },
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ 
-            role: 'user',
-            parts: [{ text: `Konu: ${prompt}. ÇIKTI: JSON formatında 'text' (string), 'characters' (object: name->desc) ve 'visualHook' (string) olarak dön. DİL: Türkçe.` }] 
-        }],
+        contents: [{ role: 'user', parts: [{ text: `Konu: ${prompt}. ÇIKTI: JSON formatında 'text' (string), 'characters' (object: name->desc) ve 'visualHook' (string) olarak dön. DİL: Türkçe.` }] }],
         generationConfig: { responseMimeType: "application/json" }
       })
     });
 
     const textData = await textResponse.json().catch(() => ({}));
-    if (!textResponse.ok) {
-        throw new Error(`Metin API Hatası (${textResponse.status}): ${JSON.stringify(textData)}`);
-    }
+    if (!textResponse.ok) throw new Error(`Metin API Hatası: ${textResponse.status}`);
 
     const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
-    const base64Image = await generateImage(storyData.visualHook, storyData.characters, style, projectId, token);
-    const fileName = `test_${Date.now()}.png`;
-    await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(base64Image, 'base64'), { contentType: 'image/png' });
-    const { data: { publicUrl: imageUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
+    // FAZ 2: GÖRSEL
+    const mediaImage = await generateImage(storyData.visualHook, storyData.characters, style, projectId, token);
+    const imgFileName = `test_${Date.now()}.png`;
+    const { error: imgErr } = await supabase.storage
+      .from('story_assets')
+      .upload(`images/${imgFileName}`, Buffer.from(mediaImage.data, 'base64'), { contentType: mediaImage.mimeType });
 
-    const base64Audio = await generateAudio(storyData.text, voiceId, projectId, token);
-    const audioFileName = `test_audio_${Date.now()}.mp3`;
-    await supabase.storage.from('story_assets').upload(`audio/${audioFileName}`, Buffer.from(base64Audio, 'base64'), { contentType: 'audio/mpeg' });
-    const { data: { publicUrl: audioUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
+    if (imgErr) throw new Error(`Görsel Yükleme Hatası: ${imgErr.message}`);
+    const { data: { publicUrl: imageUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${imgFileName}`);
+
+    // FAZ 3: SES
+    const mediaAudio = await generateAudio(storyData.text, voiceId, projectId, token);
+    const audFileName = `test_audio_${Date.now()}.mp3`;
+    const { error: audErr } = await supabase.storage
+      .from('story_assets')
+      .upload(`audio/${audFileName}`, Buffer.from(mediaAudio.data, 'base64'), { contentType: mediaAudio.mimeType });
+
+    if (audErr) throw new Error(`Ses Yükleme Hatası: ${audErr.message}`);
+    const { data: { publicUrl: audioUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audFileName}`);
 
     return {
       text: { status: 'SUCCESS', content: storyData.text },
@@ -164,7 +182,7 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
     };
 
   } catch (error: any) {
-    console.error(">>> [TEST HATA]:", error);
+    console.error(">>> [TEST HATA]:", error.message);
     return {
       text: { status: 'ERROR', error: error.message },
       image: { status: 'ERROR', error: error.message },
