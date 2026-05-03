@@ -5,6 +5,7 @@ import { getVertexAccessToken } from '@/utils/vertex-auth'
 
 /**
  * 🛡️ ZIRHLI PARSER (Manifesto 4)
+ * streamGenerateContent veya generateContent yanıtlarından JSON ayıklamak için geliştirildi.
  */
 function armoredParser(text: string) {
     try {
@@ -33,9 +34,9 @@ function voiceIdFixer(voiceId: string): string {
 }
 
 /**
- * 🎨 GÖRSEL MOTORU (FAZ 2) - Vertex AI v1beta1
+ * 🎨 GÖRSEL MOTORU (FAZ 2) - Vertex AI v1 (Global)
  */
-async function generateImage(hook: string, characters: any, style: string, projectId: string, location: string, token: string) {
+async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string) {
     const stylePrefixMap: Record<string, string> = {
         'Sulu Boya': "A professional children's book watercolor illustration of ",
         '3D Pixar Stili': "A high-quality 3D Disney Pixar style animation frame of ",
@@ -56,7 +57,8 @@ async function generateImage(hook: string, characters: any, style: string, proje
 
     const finalPrompt = `${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${charAnchors}. Action: ${hook} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}`;
 
-    const url = `https://${location === 'global' ? 'us-central1' : location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
+    // 2026 Vertex AI v1 Global Endpoint
+    const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -79,12 +81,12 @@ async function generateImage(hook: string, characters: any, style: string, proje
 }
 
 /**
- * 🎙️ SES MOTORU (FAZ 3) - Vertex AI v1beta1
+ * 🎙️ SES MOTORU (FAZ 3) - Vertex AI v1 (Global)
  */
-async function generateAudio(text: string, voiceId: string, projectId: string, location: string, token: string) {
+async function generateAudio(text: string, voiceId: string, projectId: string, token: string) {
     const shortId = voiceIdFixer(voiceId);
     
-    const url = `https://${location === 'global' ? 'us-central1' : location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
+    const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -126,7 +128,6 @@ export async function generateStoryAction(formData: {
     elevenVoiceId?: string;
 }) {
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
-    const location = process.env.GOOGLE_CLOUD_LOCATION || 'global';
     const supabase = await createClient();
 
     try {
@@ -148,12 +149,12 @@ export async function generateStoryAction(formData: {
         }
 
         // ---------------------------------------------------------
-        // FAZ 1: METİN (Vertex AI v1beta1 - Gemini 3 Flash)
+        // FAZ 1: METİN (Vertex AI v1 Global - Gemini 3 Flash)
         // ---------------------------------------------------------
         const systemPrompt = `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. DİL: Türkçe.`;
         const userPrompt = `Konu: ${formData.theme}, Kahraman: ${formData.hero}, Yaş: ${formData.age}, Çocuk Adı: ${formData.childName}`;
 
-        const textUrl = `https://${location === 'global' ? 'us-central1' : location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3-flash-preview:generateContent`;
+        const textUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent`;
 
         const textResponse = await fetch(textUrl, {
             method: 'POST',
@@ -182,7 +183,7 @@ export async function generateStoryAction(formData: {
         const pagesWithImages = [];
         for (const scene of storyData.scenes) {
             try {
-                const base64Image = await generateImage(scene.visualHook, storyData.characters, formData.style, projectId, location, token);
+                const base64Image = await generateImage(scene.visualHook, storyData.characters, formData.style, projectId, token);
                 const fileName = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
                 await supabase.storage
                     .from('story_assets')
@@ -203,7 +204,7 @@ export async function generateStoryAction(formData: {
         try {
             const fullText = storyData.scenes.map((s: any) => s.text).join(" ");
             const voiceId = formData.elevenVoiceId || formData.voiceOption;
-            const base64Audio = await generateAudio(fullText, voiceId, projectId, location, token);
+            const base64Audio = await generateAudio(fullText, voiceId, projectId, token);
             
             const audioFileName = `audio_${Date.now()}.mp3`;
             await supabase.storage
