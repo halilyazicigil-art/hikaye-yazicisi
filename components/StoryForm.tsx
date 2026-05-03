@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, Image as ImageIcon, Shuffle, X, Plus } from 'lucide-react'
 import { generateStoryAction } from '@/app/actions/generateStory'
+import { saveStoryMetadata } from '@/app/actions/metadata'
 import { createClient } from '@/utils/supabase/client'
 import { useEffect } from 'react'
 
@@ -136,7 +137,18 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         style: imageStyle
       })
       
-      if (response.success) {
+      if (response.success && response.id) {
+        // 🛡️ METADATA KAYDI (BORU HATTI DIŞI)
+        // Boru hattına dokunmadan, masalın yan bilgilerini sessizce kaydediyoruz.
+        await saveStoryMetadata(response.id, {
+          voice_name: voiceName,
+          genre: genre,
+          style: imageStyle,
+          age_group: ageGroup,
+          educational_value: tab === 'egitici' ? educationalValue : null,
+          characters: characters.filter(c => c.trim() !== '')
+        });
+
         window.location.href = `/story/${response.id}`
       } else {
         alert(response.error || 'Bilinmeyen bir hata oluştu.')

@@ -84,7 +84,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   if (profileIds.length > 0) {
     const { data: stories } = await supabase
       .from('stories')
-      .select('id, title, created_at, profiles(name)')
+      .select('id, title, created_at, content_json, metadata, profiles(name)')
       .in('profile_id', profileIds)
       .order('created_at', { ascending: false })
       .limit(10)
@@ -181,23 +181,70 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {recentStories.map((story) => (
-                  <Link href={`/story/${story.id}`} key={story.id} className="group relative p-6 bg-[#fdfaf3] hover:bg-[#f4e8d3] border border-amber-100 rounded-3xl transition-all cursor-pointer block">
-                    <div className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-sm text-amber-500">
-                      <Star size={18} fill="currentColor" />
-                    </div>
-                    <div className="w-12 h-12 bg-white text-[#b3593b] rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-                      <BookHeart size={24} />
-                    </div>
-                    <h3 className="font-bold text-xl text-gray-900 mb-2 group-hover:text-[#8c462e] transition-colors font-lora">
-                      {story.title}
-                    </h3>
-                    <div className="flex items-center text-sm text-gray-500 gap-4">
-                      <span className="bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">{story.profiles?.name || 'Çocuk'}</span>
-                      <span>{new Date(story.created_at).toLocaleDateString('tr-TR')}</span>
-                    </div>
-                  </Link>
-                ))}
+                {recentStories.map((story) => {
+                  const meta = story.metadata || {}
+                  // Karakterleri content_json'dan veya metadata'dan çek
+                  const characters = meta.characters || 
+                                   (Array.isArray(story.content_json) ? [] : []) // Basit bir fallback
+
+                  return (
+                    <Link href={`/story/${story.id}`} key={story.id} className="group relative p-6 bg-[#fdfaf3] hover:bg-[#f4e8d3] border border-amber-100 rounded-3xl transition-all cursor-pointer block overflow-hidden">
+                      <div className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-sm text-amber-500">
+                        <Star size={18} fill="currentColor" />
+                      </div>
+                      
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="w-12 h-12 bg-white text-[#b3593b] rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                          <BookHeart size={24} />
+                        </div>
+                        <div className="pt-1">
+                          <h3 className="font-bold text-lg text-gray-900 group-hover:text-[#8c462e] transition-colors font-lora leading-tight">
+                            {story.title}
+                          </h3>
+                          <div className="flex items-center text-[11px] text-gray-400 mt-1 gap-2">
+                            <span>{story.profiles?.name || 'Kullanıcı'}</span>
+                            <span>•</span>
+                            <span>{new Date(story.created_at).toLocaleDateString('tr-TR')}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 🏷️ Metadata Etiketleri */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {meta.genre && (
+                          <span className="bg-amber-100/50 text-amber-800 text-[10px] px-2 py-1 rounded-lg font-bold border border-amber-200/50">
+                            📖 {meta.genre}
+                          </span>
+                        )}
+                        {meta.style && (
+                          <span className="bg-blue-50 text-blue-700 text-[10px] px-2 py-1 rounded-lg font-bold border border-blue-100">
+                            🎨 {meta.style}
+                          </span>
+                        )}
+                        {meta.voice_name && (
+                          <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-1 rounded-lg font-bold border border-emerald-100">
+                            🎙️ {meta.voice_name}
+                          </span>
+                        )}
+                        {meta.age_group && (
+                          <span className="bg-purple-50 text-purple-700 text-[10px] px-2 py-1 rounded-lg font-bold border border-purple-100">
+                            👶 {meta.age_group} Yaş
+                          </span>
+                        )}
+                      </div>
+
+                      {/* ✨ Kahramanlar */}
+                      {characters && characters.length > 0 && (
+                        <div className="mt-2 pt-3 border-t border-amber-100/50">
+                          <p className="text-[11px] text-[#8c462e] italic leading-relaxed line-clamp-1">
+                            <span className="font-bold not-italic mr-1">Kahramanlar:</span> 
+                            {characters.join(', ')}
+                          </p>
+                        </div>
+                      )}
+                    </Link>
+                  )
+                })}
               </div>
             )}
 
