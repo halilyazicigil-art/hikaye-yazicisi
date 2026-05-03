@@ -20,7 +20,20 @@ function armoredParser(text: string) {
 }
 
 /**
- * 🎙️ SES ID DÜZELTİCİ (Manifesto 4)
+ * 🔍 AKILLI MULTIMODAL AYIKLAYICI
+ * Gemini 3.1 bazen parts[0]'da metin, parts[1]'de veri döner.
+ * Bu fonksiyon inlineData içeren parçayı bulur.
+ */
+function extractBase64Data(candidates: any[]): string | null {
+    if (!candidates?.[0]?.content?.parts) return null;
+    
+    // Tüm parçaları tara, inlineData içeren ilkini al
+    const mediaPart = candidates[0].content.parts.find((p: any) => p.inlineData?.data);
+    return mediaPart?.inlineData?.data || null;
+}
+
+/**
+ * 🎙️ SES ID DÜZELTİCİ
  */
 function voiceIdFixer(voiceId: string): string {
     const map: Record<string, string> = {
@@ -33,7 +46,7 @@ function voiceIdFixer(voiceId: string): string {
 }
 
 /**
- * 🎨 GÖRSEL MOTORU (FAZ 2) - Vertex AI v1 (Global)
+ * 🎨 GÖRSEL MOTORU (FAZ 2)
  */
 async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string) {
     const stylePrefixMap: Record<string, string> = {
@@ -66,23 +79,28 @@ async function generateImage(hook: string, characters: any, style: string, proje
         },
         body: JSON.stringify({
             contents: [{ 
-                role: 'user', // 🛡️ ZIRHLI ROL TANIMI
+                role: 'user',
                 parts: [{ text: finalPrompt }] 
             }]
         })
     });
 
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        console.error(">>> [FAZ 2 GÖRSEL HATA]:", response.status, JSON.stringify(err));
-        throw new Error(`Görsel API hatası: ${response.status} - ${err.error?.message || 'Bilinmeyen Hata'}`);
+        console.error(">>> [FAZ 2 GÖRSEL HATA]:", response.status, JSON.stringify(data));
+        throw new Error(`Görsel API hatası: ${response.status} - ${data.error?.message || 'Bilinmeyen Hata'}`);
     }
-    const data = await response.json();
-    return data.candidates[0].content.parts[0].inlineData.data; 
+
+    const base64 = extractBase64Data(data.candidates);
+    if (!base64) {
+        console.error(">>> [FAZ 2 VERİ KAYIP]:", JSON.stringify(data));
+        throw new Error("Görsel verisi API yanıtında bulunamadı (Filtreye takılmış olabilir).");
+    }
+    return base64;
 }
 
 /**
- * 🎙️ SES MOTORU (FAZ 3) - Vertex AI v1 (Global)
+ * 🎙️ SES MOTORU (FAZ 3)
  */
 async function generateAudio(text: string, voiceId: string, projectId: string, token: string) {
     const shortId = voiceIdFixer(voiceId);
@@ -97,7 +115,7 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
         },
         body: JSON.stringify({
             contents: [{ 
-                role: 'user', // 🛡️ ZIRHLI ROL TANIMI
+                role: 'user',
                 parts: [{ text: text }] 
             }],
             generationConfig: { 
@@ -113,13 +131,18 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
         })
     });
 
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        console.error(">>> [FAZ 3 SES HATA]:", response.status, JSON.stringify(err));
-        throw new Error(`Ses API hatası: ${response.status} - ${err.error?.message || 'Bilinmeyen Hata'}`);
+        console.error(">>> [FAZ 3 SES HATA]:", response.status, JSON.stringify(data));
+        throw new Error(`Ses API hatası: ${response.status} - ${data.error?.message || 'Bilinmeyen Hata'}`);
     }
-    const data = await response.json();
-    return data.candidates[0].content.parts[0].inlineData.data; 
+
+    const base64 = extractBase64Data(data.candidates);
+    if (!base64) {
+        console.error(">>> [FAZ 3 VERİ KAYIP]:", JSON.stringify(data));
+        throw new Error("Ses verisi API yanıtında bulunamadı.");
+    }
+    return base64;
 }
 
 export async function generateStoryAction(formData: {
@@ -153,7 +176,7 @@ export async function generateStoryAction(formData: {
         }
 
         // ---------------------------------------------------------
-        // FAZ 1: METİN (Vertex AI v1 Global - Gemini 3 Flash)
+        // FAZ 1: METİN
         // ---------------------------------------------------------
         const systemPrompt = `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. DİL: Türkçe.`;
         const userPrompt = `Konu: ${formData.theme}, Kahraman: ${formData.hero}, Yaş: ${formData.age}, Çocuk Adı: ${formData.childName}`;
@@ -168,20 +191,19 @@ export async function generateStoryAction(formData: {
             },
             body: JSON.stringify({
                 contents: [{ 
-                    role: 'user', // 🛡️ ZIRHLI ROL TANIMI
+                    role: 'user',
                     parts: [{ text: systemPrompt + "\n\n" + userPrompt }] 
                 }],
                 generationConfig: { responseMimeType: "application/json" }
             })
         });
 
+        const textData = await textResponse.json().catch(() => ({}));
         if (!textResponse.ok) {
-            const err = await textResponse.json().catch(() => ({}));
-            console.error(">>> [FAZ 1 METİN HATA]:", textResponse.status, JSON.stringify(err));
-            throw new Error(`Metin API hatası: ${textResponse.status} - ${err.error?.message || 'Bilinmeyen Hata'}`);
+            console.error(">>> [FAZ 1 METİN HATA]:", textResponse.status, JSON.stringify(textData));
+            throw new Error(`Metin API hatası: ${textResponse.status}`);
         }
         
-        const textData = await textResponse.json();
         const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
         // ---------------------------------------------------------

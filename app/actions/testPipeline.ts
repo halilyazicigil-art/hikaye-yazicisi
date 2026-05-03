@@ -17,6 +17,15 @@ function armoredParser(text: string) {
 }
 
 /**
+ * 🔍 AKILLI MULTIMODAL AYIKLAYICI
+ */
+function extractBase64Data(candidates: any[]): string | null {
+    if (!candidates?.[0]?.content?.parts) return null;
+    const mediaPart = candidates[0].content.parts.find((p: any) => p.inlineData?.data);
+    return mediaPart?.inlineData?.data || null;
+}
+
+/**
  * 🎨 GÖRSEL MOTORU (FAZ 2)
  */
 async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string) {
@@ -50,18 +59,20 @@ async function generateImage(hook: string, characters: any, style: string, proje
         },
         body: JSON.stringify({
             contents: [{ 
-                role: 'user', // 🛡️ ZIRHLI ROL TANIMI
+                role: 'user',
                 parts: [{ text: finalPrompt }] 
             }]
         })
     });
 
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(`Görsel API Hatası (${response.status}): ${err.error?.message || JSON.stringify(err)}`);
+        throw new Error(`Görsel API Hatası (${response.status}): ${data.error?.message || JSON.stringify(data)}`);
     }
-    const data = await response.json();
-    return data.candidates[0].content.parts[0].inlineData.data; 
+
+    const base64 = extractBase64Data(data.candidates);
+    if (!base64) throw new Error("Görsel verisi yanıtta bulunamadı.");
+    return base64;
 }
 
 /**
@@ -78,7 +89,7 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
         },
         body: JSON.stringify({
             contents: [{ 
-                role: 'user', // 🛡️ ZIRHLI ROL TANIMI
+                role: 'user',
                 parts: [{ text: text }] 
             }],
             generationConfig: { 
@@ -94,12 +105,14 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
         })
     });
 
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(`Ses API Hatası (${response.status}): ${err.error?.message || JSON.stringify(err)}`);
+        throw new Error(`Ses API Hatası (${response.status}): ${data.error?.message || JSON.stringify(data)}`);
     }
-    const data = await response.json();
-    return data.candidates[0].content.parts[0].inlineData.data; 
+
+    const base64 = extractBase64Data(data.candidates);
+    if (!base64) throw new Error("Ses verisi yanıtta bulunamadı.");
+    return base64;
 }
 
 export async function testPipelineAction(prompt: string, style: string, voiceId: string) {
@@ -110,7 +123,6 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
     const token = await getVertexAccessToken();
     if (!token) throw new Error("Token alınamadı.");
 
-    console.log(">>> [TEST] Metin üretiliyor...");
     const textUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent`;
 
     const textResponse = await fetch(textUrl, {
@@ -121,28 +133,25 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
       },
       body: JSON.stringify({
         contents: [{ 
-            role: 'user', // 🛡️ ZIRHLI ROL TANIMI
+            role: 'user',
             parts: [{ text: `Konu: ${prompt}. ÇIKTI: JSON formatında 'text' (string), 'characters' (object: name->desc) ve 'visualHook' (string) olarak dön. DİL: Türkçe.` }] 
         }],
         generationConfig: { responseMimeType: "application/json" }
       })
     });
 
+    const textData = await textResponse.json().catch(() => ({}));
     if (!textResponse.ok) {
-        const err = await textResponse.json().catch(() => ({}));
-        throw new Error(`Metin API Hatası (${textResponse.status}): ${err.error?.message || JSON.stringify(err)}`);
+        throw new Error(`Metin API Hatası (${textResponse.status}): ${JSON.stringify(textData)}`);
     }
 
-    const textData = await textResponse.json();
     const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
-    console.log(">>> [TEST] Görsel üretiliyor...");
     const base64Image = await generateImage(storyData.visualHook, storyData.characters, style, projectId, token);
     const fileName = `test_${Date.now()}.png`;
     await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(base64Image, 'base64'), { contentType: 'image/png' });
     const { data: { publicUrl: imageUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
 
-    console.log(">>> [TEST] Ses üretiliyor...");
     const base64Audio = await generateAudio(storyData.text, voiceId, projectId, token);
     const audioFileName = `test_audio_${Date.now()}.mp3`;
     await supabase.storage.from('story_assets').upload(`audio/${audioFileName}`, Buffer.from(base64Audio, 'base64'), { contentType: 'audio/mpeg' });
