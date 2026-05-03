@@ -33,7 +33,7 @@ function voiceIdFixer(voiceId: string): string {
 }
 
 /**
- * 🎨 GÖRSEL MOTORU (FAZ 2) - Vertex AI
+ * 🎨 GÖRSEL MOTORU (FAZ 2) - Vertex AI v1beta1
  */
 async function generateImage(hook: string, characters: any, style: string, projectId: string, location: string, token: string) {
     const stylePrefixMap: Record<string, string> = {
@@ -56,7 +56,7 @@ async function generateImage(hook: string, characters: any, style: string, proje
 
     const finalPrompt = `${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${charAnchors}. Action: ${hook} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}`;
 
-    const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
+    const url = `https://${location === 'global' ? 'us-central1' : location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -69,18 +69,22 @@ async function generateImage(hook: string, characters: any, style: string, proje
         })
     });
 
-    if (!response.ok) throw new Error(`Görsel API hatası: ${response.status}`);
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error(">>> [FAZ 2 GÖRSEL HATA]:", response.status, JSON.stringify(err));
+        throw new Error(`Görsel API hatası: ${response.status}`);
+    }
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
 
 /**
- * 🎙️ SES MOTORU (FAZ 3) - Vertex AI
+ * 🎙️ SES MOTORU (FAZ 3) - Vertex AI v1beta1
  */
 async function generateAudio(text: string, voiceId: string, projectId: string, location: string, token: string) {
     const shortId = voiceIdFixer(voiceId);
     
-    const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
+    const url = `https://${location === 'global' ? 'us-central1' : location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -103,7 +107,11 @@ async function generateAudio(text: string, voiceId: string, projectId: string, l
         })
     });
 
-    if (!response.ok) throw new Error(`Ses API hatası: ${response.status}`);
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error(">>> [FAZ 3 SES HATA]:", response.status, JSON.stringify(err));
+        throw new Error(`Ses API hatası: ${response.status}`);
+    }
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
@@ -118,7 +126,7 @@ export async function generateStoryAction(formData: {
     elevenVoiceId?: string;
 }) {
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
-    const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+    const location = process.env.GOOGLE_CLOUD_LOCATION || 'global';
     const supabase = await createClient();
 
     try {
@@ -140,12 +148,12 @@ export async function generateStoryAction(formData: {
         }
 
         // ---------------------------------------------------------
-        // FAZ 1: METİN (Vertex AI - Gemini 3 Flash)
+        // FAZ 1: METİN (Vertex AI v1beta1 - Gemini 3 Flash)
         // ---------------------------------------------------------
         const systemPrompt = `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. DİL: Türkçe.`;
         const userPrompt = `Konu: ${formData.theme}, Kahraman: ${formData.hero}, Yaş: ${formData.age}, Çocuk Adı: ${formData.childName}`;
 
-        const textUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3-flash-preview:generateContent`;
+        const textUrl = `https://${location === 'global' ? 'us-central1' : location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3-flash-preview:generateContent`;
 
         const textResponse = await fetch(textUrl, {
             method: 'POST',
@@ -159,7 +167,11 @@ export async function generateStoryAction(formData: {
             })
         });
 
-        if (!textResponse.ok) throw new Error(`Metin API hatası: ${textResponse.status}`);
+        if (!textResponse.ok) {
+            const err = await textResponse.json().catch(() => ({}));
+            console.error(">>> [FAZ 1 METİN HATA]:", textResponse.status, JSON.stringify(err));
+            throw new Error(`Metin API hatası: ${textResponse.status}`);
+        }
         
         const textData = await textResponse.json();
         const storyData = armoredParser(textData.candidates[0].content.parts[0].text);

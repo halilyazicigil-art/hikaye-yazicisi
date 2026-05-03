@@ -40,7 +40,7 @@ async function generateImage(hook: string, characters: any, style: string, proje
 
     const finalPrompt = `${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${charAnchors}. Action: ${hook} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}`;
 
-    const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
+    const url = `https://${location === 'global' ? 'us-central1' : location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -53,7 +53,10 @@ async function generateImage(hook: string, characters: any, style: string, proje
         })
     });
 
-    if (!response.ok) throw new Error(`Görsel API Hatası: ${response.status}`);
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(`Görsel API Hatası (${response.status}): ${JSON.stringify(err)}`);
+    }
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
@@ -62,7 +65,7 @@ async function generateImage(hook: string, characters: any, style: string, proje
  * 🎙️ SES MOTORU (FAZ 3)
  */
 async function generateAudio(text: string, voiceId: string, projectId: string, location: string, token: string) {
-    const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
+    const url = `https://${location === 'global' ? 'us-central1' : location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -85,21 +88,24 @@ async function generateAudio(text: string, voiceId: string, projectId: string, l
         })
     });
 
-    if (!response.ok) throw new Error(`Ses API Hatası: ${response.status}`);
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(`Ses API Hatası (${response.status}): ${JSON.stringify(err)}`);
+    }
     const data = await response.json();
     return data.candidates[0].content.parts[0].inlineData.data; 
 }
 
 export async function testPipelineAction(prompt: string, style: string, voiceId: string) {
   const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
-  const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+  const location = process.env.GOOGLE_CLOUD_LOCATION || 'global';
   const supabase = await createClient();
 
   try {
     const token = await getVertexAccessToken();
     if (!token) throw new Error("Token alınamadı.");
 
-    const textUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3-flash-preview:generateContent`;
+    const textUrl = `https://${location === 'global' ? 'us-central1' : location}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3-flash-preview:generateContent`;
 
     const textResponse = await fetch(textUrl, {
       method: 'POST',
@@ -113,7 +119,10 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
       })
     });
 
-    if (!textResponse.ok) throw new Error(`Metin API Hatası: ${textResponse.status}`);
+    if (!textResponse.ok) {
+        const err = await textResponse.json().catch(() => ({}));
+        throw new Error(`Metin API Hatası (${textResponse.status}): ${JSON.stringify(err)}`);
+    }
 
     const textData = await textResponse.json();
     const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
@@ -121,7 +130,7 @@ export async function testPipelineAction(prompt: string, style: string, voiceId:
     const base64Image = await generateImage(storyData.visualHook, storyData.characters, style, projectId, location, token);
     const fileName = `test_${Date.now()}.png`;
     await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(base64Image, 'base64'), { contentType: 'image/png' });
-    const { data: { publicUrl: imageUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${imageUrl}`);
+    const { data: { publicUrl: imageUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
 
     const base64Audio = await generateAudio(storyData.text, voiceId, projectId, location, token);
     const audioFileName = `test_audio_${Date.now()}.mp3`;
