@@ -1,18 +1,17 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { getVertexAccessToken } from '@/utils/vertex-auth'
 
 /**
  * 🛡️ ZIRHLI PARSER (Manifesto 4)
- * Daha dayanıklı hale getirildi.
  */
 function armoredParser(text: string) {
     try {
-        console.log(">>> [ZIRHLI PARSER] Ham metin:", text.substring(0, 100) + "...");
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) throw new Error("JSON bloğu bulunamadı.");
         const parsed = JSON.parse(jsonMatch[0].trim());
-        if (!parsed.scenes || !Array.isArray(parsed.scenes)) throw new Error("Sahneler eksik veya hatalı format.");
+        if (!parsed.scenes || !Array.isArray(parsed.scenes)) throw new Error("Sahneler eksik.");
         return parsed;
     } catch (err) {
         console.error(">>> [ZIRHLI PARSER] HATA:", err);
@@ -34,9 +33,9 @@ function voiceIdFixer(voiceId: string): string {
 }
 
 /**
- * 🎨 GÖRSEL MOTORU (FAZ 2)
+ * 🎨 GÖRSEL MOTORU (FAZ 2) - Vertex AI
  */
-async function generateImage(hook: string, characters: any, style: string, apiKey: string) {
+async function generateImage(hook: string, characters: any, style: string, projectId: string, location: string, token: string) {
     const stylePrefixMap: Record<string, string> = {
         'Sulu Boya': "A professional children's book watercolor illustration of ",
         '3D Pixar Stili': "A high-quality 3D Disney Pixar style animation frame of ",
@@ -51,44 +50,44 @@ async function generateImage(hook: string, characters: any, style: string, apiKe
         'Pop Art': ". bold lines, bright colors, comic book aesthetic, dynamic"
     };
 
-    const charAnchors = Object.entries(characters || {})
+    const charAnchors = Object.entries(characters)
         .map(([name, desc]) => `${name}: ${desc}`)
         .join(". ");
 
     const finalPrompt = `${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${charAnchors}. Action: ${hook} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}`;
 
-    console.log(">>> [FAZ 2] Görsel üretiliyor...");
+    const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`, {
+    const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+        },
         body: JSON.stringify({
             contents: [{ parts: [{ text: finalPrompt }] }]
         })
     });
 
-    if (!response.ok) {
-        const errBody = await response.json().catch(() => ({}));
-        console.error(">>> [FAZ 2 HATA]:", response.status, JSON.stringify(errBody));
-        throw new Error(`Görsel API Hatası: ${response.status}`);
-    }
-
+    if (!response.ok) throw new Error(`Görsel API hatası: ${response.status}`);
     const data = await response.json();
-    const base64Data = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Data) throw new Error("Görsel verisi alınamadı.");
-    return base64Data;
+    return data.candidates[0].content.parts[0].inlineData.data; 
 }
 
 /**
- * 🎙️ SES MOTORU (FAZ 3)
+ * 🎙️ SES MOTORU (FAZ 3) - Vertex AI
  */
-async function generateAudio(text: string, voiceId: string, apiKey: string) {
+async function generateAudio(text: string, voiceId: string, projectId: string, location: string, token: string) {
     const shortId = voiceIdFixer(voiceId);
-    console.log(">>> [FAZ 3] Ses üretiliyor, Ses ID:", shortId);
+    
+    const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-tts-preview:generateContent?key=${apiKey}`, {
+    const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+        },
         body: JSON.stringify({
             contents: [{ parts: [{ text: text }] }],
             generationConfig: { 
@@ -104,16 +103,9 @@ async function generateAudio(text: string, voiceId: string, apiKey: string) {
         })
     });
 
-    if (!response.ok) {
-        const errBody = await response.json().catch(() => ({}));
-        console.error(">>> [FAZ 3 HATA]:", response.status, JSON.stringify(errBody));
-        throw new Error(`Ses API Hatası: ${response.status}`);
-    }
-
+    if (!response.ok) throw new Error(`Ses API hatası: ${response.status}`);
     const data = await response.json();
-    const base64Data = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Data) throw new Error("Ses verisi alınamadı.");
-    return base64Data;
+    return data.candidates[0].content.parts[0].inlineData.data; 
 }
 
 export async function generateStoryAction(formData: {
@@ -125,14 +117,16 @@ export async function generateStoryAction(formData: {
     style: string;
     elevenVoiceId?: string;
 }) {
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY!;
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
+    const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
     const supabase = await createClient();
 
     try {
+        const token = await getVertexAccessToken();
+        if (!token) throw new Error("Auth Token alınamadı.");
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Oturum açılmadı.");
-
-        console.log(">>> [STORY MOTOR] Başlatıldı, User:", user.id);
 
         let { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).limit(1).single();
         if (!profile) {
@@ -146,39 +140,29 @@ export async function generateStoryAction(formData: {
         }
 
         // ---------------------------------------------------------
-        // FAZ 1: METİN (Flash 3 - SADECE 3)
+        // FAZ 1: METİN (Vertex AI - Gemini 3 Flash)
         // ---------------------------------------------------------
-        console.log(">>> [FAZ 1] Metin üretiliyor (gemini-3-flash-preview)...");
         const systemPrompt = `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. DİL: Türkçe.`;
         const userPrompt = `Konu: ${formData.theme}, Kahraman: ${formData.hero}, Yaş: ${formData.age}, Çocuk Adı: ${formData.childName}`;
 
-        const textResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
+        const textUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3-flash-preview:generateContent`;
+
+        const textResponse = await fetch(textUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json' 
+            },
             body: JSON.stringify({
                 contents: [{ role: 'user', parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
-                generationConfig: { 
-                    responseMimeType: "application/json"
-                }
+                generationConfig: { responseMimeType: "application/json" }
             })
         });
 
-        if (!textResponse.ok) {
-            const errBody = await textResponse.json().catch(() => ({}));
-            console.error(">>> [FAZ 1 HATA]:", textResponse.status, JSON.stringify(errBody));
-            throw new Error(`Metin API hatası: ${textResponse.status}`);
-        }
-
+        if (!textResponse.ok) throw new Error(`Metin API hatası: ${textResponse.status}`);
+        
         const textData = await textResponse.json();
-        const contentPart = textData.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (!contentPart) {
-            console.error(">>> [FAZ 1 BOŞ YANIT]:", JSON.stringify(textData));
-            throw new Error("Metin üretilemedi (Aday veya içerik bulunamadı).");
-        }
-        
-        const storyData = armoredParser(contentPart);
-        console.log(">>> [FAZ 1 BAŞARILI] Masal:", storyData.title);
+        const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
         // ---------------------------------------------------------
         // FAZ 2: GÖRSEL
@@ -186,19 +170,16 @@ export async function generateStoryAction(formData: {
         const pagesWithImages = [];
         for (const scene of storyData.scenes) {
             try {
-                const base64Image = await generateImage(scene.visualHook, storyData.characters, formData.style, apiKey);
+                const base64Image = await generateImage(scene.visualHook, storyData.characters, formData.style, projectId, location, token);
                 const fileName = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-                
-                const { error: uploadErr } = await supabase.storage
+                await supabase.storage
                     .from('story_assets')
                     .upload(`images/${fileName}`, Buffer.from(base64Image, 'base64'), { contentType: 'image/png' });
-
-                if (uploadErr) throw uploadErr;
 
                 const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
                 pagesWithImages.push({ text: scene.text, image_url: publicUrl });
             } catch (imgErr) {
-                console.error("Görsel aşaması hatası (Pas geçiliyor):", imgErr);
+                console.error("Görsel hatası:", imgErr);
                 pagesWithImages.push({ text: scene.text, image_url: '' });
             }
         }
@@ -210,19 +191,17 @@ export async function generateStoryAction(formData: {
         try {
             const fullText = storyData.scenes.map((s: any) => s.text).join(" ");
             const voiceId = formData.elevenVoiceId || formData.voiceOption;
-            const base64Audio = await generateAudio(fullText, voiceId, apiKey);
+            const base64Audio = await generateAudio(fullText, voiceId, projectId, location, token);
             
             const audioFileName = `audio_${Date.now()}.mp3`;
-            const { error: audioUploadErr } = await supabase.storage
+            await supabase.storage
                 .from('story_assets')
                 .upload(`audio/${audioFileName}`, Buffer.from(base64Audio, 'base64'), { contentType: 'audio/mpeg' });
-
-            if (audioUploadErr) throw audioUploadErr;
 
             const { data: { publicUrl: aUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
             audioUrl = aUrl;
         } catch (audErr) {
-            console.error("Ses aşaması hatası:", audErr);
+            console.error("Ses hatası:", audErr);
         }
 
         // ---------------------------------------------------------
@@ -238,11 +217,10 @@ export async function generateStoryAction(formData: {
 
         if (dbErr) throw dbErr;
 
-        console.log(">>> [STORY MOTOR BAŞARILI] ID:", savedStory.id);
         return { success: true, id: savedStory.id };
 
     } catch (error: any) {
-        console.error(">>> [STORY MOTOR KRİTİK HATA]:", error);
+        console.error(">>> [STORY MOTOR HATA]:", error);
         return { success: false, error: error.message };
     }
 }
