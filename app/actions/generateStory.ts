@@ -79,48 +79,37 @@ function addWavHeader(pcmData: Buffer): Buffer {
 /**
  * 🎨 GÖRSEL MOTORU (FAZ 2)
  */
-async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string, activeCharacters?: string[], sceneIndex?: number, totalScenes?: number, camera?: string, lighting?: string) {
+async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string, activeCharacters?: string[], camera?: string, lighting?: string) {
     const stylePrefixMap: Record<string, string> = {
-        'Sulu Boya': "A professional children's book watercolor illustration of ",
-        '3D Pixar Stili': "A high-quality 3D Disney Pixar style animation frame of ",
-        'Yağlı Boya': "A classic oil painting style illustration of ",
-        'Pop Art': "A vibrant Pop Art style illustration of ",
-        'Pastel Düşler': "A soft pastel colors dreamlike illustration of ",
-        'Anime': "High quality Studio Ghibli style anime illustration of ",
-        'Çizgi Film': "A clean 2D vector cartoon style illustration of ",
-        'Vintage Retro': "A classic 1950s golden age storybook illustration of "
-    };
-    
-    const styleSuffixMap: Record<string, string> = {
-        'Sulu Boya': ". soft pastel colors, dreamlike atmosphere, high quality, detailed",
-        '3D Pixar Stili': ". vibrant colors, cute character designs, cinematic lighting, 8k render",
-        'Yağlı Boya': ". rich textures, artistic brushstrokes, warm lighting, timeless",
-        'Pop Art': ". bold lines, bright colors, comic book aesthetic, dynamic",
-        'Pastel Düşler': ". ethereal lighting, soft edges, whimsical, magical",
-        'Anime': ". detailed backgrounds, expressive eyes, cinematic composition",
-        'Çizgi Film': ". flat colors, bold outlines, playful, friendly",
-        'Vintage Retro': ". muted tones, textured paper, nostalgic, charming"
+        'Sulu Boya': "watercolor storybook illustration",
+        '3D Pixar Stili': "3D Disney Pixar animation frame",
+        'Yağlı Boya': "classic oil painting illustration",
+        'Pop Art': "vibrant Pop Art illustration",
+        'Pastel Düşler': "ethereal pastel illustration",
+        'Anime': "Studio Ghibli style anime",
+        'Çizgi Film': "2D vector cartoon",
+        'Vintage Retro': "1950s retro storybook style"
     };
 
-    // 🛡️ 2026 CERRAHİ: Dinamik Perspektif ve Sahne Mührü
-    const activeCharSpecs = Object.entries(characters || {})
+    // 🛡️ 2026 ALTIN STANDART: Modüler Prompt Mimarisi
+    const identityDNA = Object.entries(characters || {})
         .filter(([name]) => activeCharacters?.includes(name))
-        .map(([name, desc]) => `CHARACTER ${name}: ${desc}`)
+        .map(([name, desc]) => `${name} (${desc})`)
         .join(". ");
 
     const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    const identityBlock = activeCharSpecs ? `[IDENTITY REFERENCE: ${activeCharSpecs}]` : "[NO CHARACTER]";
-    const sceneBlock = `[SCENE ${sceneIndex || 1} OF ${totalScenes || 12}]`;
-    const perspectiveBlock = `[CAMERA: ${camera || 'Eye-level'}] [LIGHTING: ${lighting || 'Natural'}]`;
-    const actionBlock = `[SCENE ACTION: ${hook}] [UNIQUE ID: ${uniqueId}]`;
-    const styleBlock = `[ARTISTIC STYLE: ${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}]`;
-    const mandatoryBlock = `MANDATORY: 100% character fidelity for IDENTITY REFERENCE. Strictly follow CAMERA and LIGHTING. Avoid any duplication with previous scenes. Unique composition required.`;
-
-    const finalPrompt = `${identityBlock} ${sceneBlock} ${perspectiveBlock} ${actionBlock} ${styleBlock} ${mandatoryBlock}`;
+    const promptStructure = `
+        [TASK: Generate a high-quality illustration for a children's book]
+        [STYLE: ${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']}]
+        [IDENTITY DNA: ${identityDNA || 'Multiple characters'}]
+        [SCENE ACTION: ${hook}]
+        [CINEMATIC: ${camera || 'Eye-level shot'}, ${lighting || 'Natural lighting'}, high detail, clear composition]
+        [NOISE_TOKEN: ${uniqueId}]
+        [MANDATORY: Maintain 100% character fidelity. No extra characters. No duplicate composition from previous pages.]
+    `;
 
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
-    // 🩺 SIRALI SABIR VE ÜSTEL KURTARMA DÖNGÜSÜ
     const MAX_RETRIES = 3;
     let lastError = null;
 
@@ -133,11 +122,12 @@ async function generateImage(hook: string, characters: any, style: string, proje
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ role: 'user', parts: [{ text: finalPrompt }] }],
+                    contents: [{ role: 'user', parts: [{ text: promptStructure }] }],
                     generationConfig: { 
                         responseMimeType: "application/json",
                         temperature: 1.0,
-                        seed: Math.floor(Math.random() * 2147483647) // 2026 Spec: Teknik Seed Enjeksiyonu
+                        // 🛠️ TEKNİK SEED: API seviyesinde rastgelelik zorunluluğu
+                        seed: Math.floor(Math.random() * 2147483647) 
                     }
                 }),
                 signal: controller.signal
@@ -203,7 +193,6 @@ async function generateAudio(text: string, voiceId: string, projectId: string, t
     const media = extractMediaData(data.candidates);
     if (!media) throw new Error("Ses verisi API yanıtında bulunamadı.");
     
-    // 🛡️ VERTEX-ZIRHLI: Ham PCM verisini WAV başlığıyla sarmalıyoruz
     const pcmBuffer = Buffer.from(media.data, 'base64');
     const wavBuffer = addWavHeader(pcmBuffer);
 
@@ -224,7 +213,7 @@ export async function generateStoryAction(formData: {
 }) {
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
     const supabase = await createClient();
-    const adminSupabase = await createAdminClient(); // 🛡️ Zırhlı storage erişimi
+    const adminSupabase = await createAdminClient(); 
 
     try {
         const token = await getVertexAccessToken();
@@ -244,7 +233,6 @@ export async function generateStoryAction(formData: {
             profile = newProfile;
         }
 
-        // FAZ 1: METİN
         const systemPrompt = `
                 GÖREV: Bir çocuk hikayesi yaz.
                 DİL: Türkçe.
@@ -256,11 +244,11 @@ export async function generateStoryAction(formData: {
                 3. 'scenes': ZORUNLU OLARAK TAM 12 SAHNE ÜRETİLECEK. Her sahne şunları içermeli:
                    - 'text': Çocuğun okuyacağı masal metni (Türkçe).
                    - 'active_characters': Bu sahnede fiziksel olarak bulunan karakter isimlerinin listesi (Örn: ["Ali", "Canan"]).
-                   - 'camera_angle': Bu sahne için benzersiz bir kamera açısı (Örn: 'Close-up', 'Wide-angle', 'Bird-s eye view', 'Side view').
-                   - 'lighting': Sahneye özel ışıklandırma (Örn: 'Golden hour', 'Cinematic', 'Soft moon light', 'Bright sun').
+                   - 'camera_angle': Sahneye uygun sinematik bakış açısı (Örn: 'Close-up', 'Wide-angle', 'Side-view').
+                   - 'lighting': Sahneye uygun ışıklandırma (Örn: 'Golden hour', 'Moonlight', 'Bright sun').
                    - 'visualHook': BU SAHNE İÇİN GÖRSEL MOTORUNA GİDECEK KESİN TALİMAT (İngilizce). 
                      KURALLAR: 'Subject-Verb-Object' yapısını kullan. Sadece 'active_characters' listesindeki isimleri kullan. 
-                     Örn: 'Ali jumping in the air' veya 'Mırnav sitting on a red chair'. Aksiyonu ve ortamı net betimle.
+                     Aksiyonu ve ortamı net betimle.
                 
                 KULLANICI PROMPT'U: ${formData.theme}
                 HEDEF YAŞ: ${formData.age}
@@ -282,9 +270,7 @@ export async function generateStoryAction(formData: {
         if (!textResponse.ok) throw new Error(`Metin API hatası: ${textResponse.status}`);
         const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
-        // FAZ 2: GÖRSEL (SIRALI, FİLTRELİ VE SABIRLI)
         const pagesWithImages = [];
-        let sceneCount = 1;
         for (const scene of storyData.scenes) {
             try {
                 const media = await generateImage(
@@ -294,8 +280,6 @@ export async function generateStoryAction(formData: {
                     projectId, 
                     token,
                     scene.active_characters,
-                    sceneCount++,
-                    storyData.scenes.length,
                     scene.camera_angle,
                     scene.lighting
                 );
