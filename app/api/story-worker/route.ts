@@ -39,6 +39,10 @@ function extractMediaData(candidates: Candidate[]) {
     return { data: mediaPart.inlineData.data, mimeType: mediaPart.inlineData.mimeType };
 }
 
+function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function addWavHeader(pcmData: Buffer): Buffer {
     const numChannels = 1, sampleRate = 24000, bitsPerSample = 16;
     const wavHeader = Buffer.alloc(44);
@@ -59,7 +63,7 @@ function addWavHeader(pcmData: Buffer): Buffer {
 }
 
 // 🎨 GÖRSEL ÜRETİMİ (Pro Model)
-async function generateImagePro(prompt: string, projectId: string, token: string, refs?: CharacterRef[]) {
+async function generateImagePro(prompt: string, projectId: string, token: string, refs?: CharacterRef[], retries = 3) {
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
     
     interface RequestPart {
@@ -75,20 +79,39 @@ async function generateImagePro(prompt: string, projectId: string, token: string
         refs.forEach(ref => parts.push({ inlineData: { mimeType: "image/png", data: ref.data } }));
     }
 
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{ role: 'user', parts }],
-            generationConfig: { 
-                seed: Math.floor(Math.random() * 2147483647)
-            }
-        })
-    });
+    let lastError: any;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts }],
+                    generationConfig: { 
+                        seed: Math.floor(Math.random() * 2147483647)
+                    }
+                })
+            });
 
-    const data = await response.json() as { candidates?: Candidate[], error?: { message: string } };
-    if (!response.ok) throw new Error(data.error?.message || "Görsel Hatası");
-    return extractMediaData(data.candidates || []);
+            const data = await response.json() as { candidates?: Candidate[], error?: { message: string } };
+            
+            if (!response.ok) {
+                throw new Error(data.error?.message || `HTTP Error ${response.status}: Görsel Hatası`);
+            }
+            
+            return extractMediaData(data.candidates || []);
+        } catch (error: any) {
+            lastError = error;
+            console.warn(`[Görsel Üretimi] Deneme ${attempt + 1}/${retries + 1} başarısız:`, error.message);
+            if (attempt < retries) {
+                const backoff = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
+                console.log(`[Görsel Üretimi] ${backoff}ms bekleniyor...`);
+                await delay(backoff);
+            }
+        }
+    }
+    
+    throw new Error(`Tüm görsel üretimi denemeleri başarısız oldu. Son Hata: ${lastError?.message}`);
 }
 
 export async function POST(req: NextRequest) {
@@ -164,7 +187,7 @@ export async function POST(req: NextRequest) {
         }
 
         const pagesWithImages = [];
-        const BATCH_SIZE = 2;
+        const BATCH_SIZE = 1;
 
         for (let i = 0; i < storyData.scenes.length; i += BATCH_SIZE) {
             const chunk = storyData.scenes.slice(i, i + BATCH_SIZE);
@@ -186,6 +209,11 @@ export async function POST(req: NextRequest) {
 
             const chunkResults = await Promise.all(chunkPromises);
             pagesWithImages.push(...chunkResults);
+            
+            // Kota aşımını önlemek için her batch/sahne arasında 2 saniye bekle
+            if (i + BATCH_SIZE < storyData.scenes.length) {
+                await delay(2000);
+            }
         }
 
         // 5. ADIM: SESLENDİRME (%90)
