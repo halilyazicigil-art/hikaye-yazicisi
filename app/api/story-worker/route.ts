@@ -112,15 +112,40 @@ export async function POST(req: NextRequest) {
 
         // 2. ADIM: METİN YAZIMI (%10)
         await supabase.from('generation_jobs').update({ status: 'text_ready', progress: 10 }).eq('id', jobId);
-        const systemPrompt = `GÖREV: Bir çocuk hikayesi yaz. ÇIKTI: JSON. 12 SAHNE ZORUNLU. Konu: ${payload.theme}, Kahraman: ${payload.hero}`;
+        
+        const storySystemPrompt = `GÖREV: Bir çocuk hikayesi yaz. 
+        FORMAT: Sadece JSON döndür. 
+        ZORUNLU ALANLAR: title (string), characters (obj: {name: description}), scenes (array: [{text, visualHook}]). 
+        SAHNE SAYISI: 12.
+        KONU: ${payload.theme}, KAHRAMAN: ${payload.hero}`;
+
         const textUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent`;
         const textResp = await fetch(textUrl, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: systemPrompt }] }], generationConfig: { responseMimeType: "application/json" } })
+            body: JSON.stringify({ 
+                contents: [{ role: 'user', parts: [{ text: storySystemPrompt }] }], 
+                generationConfig: { 
+                    responseMimeType: "application/json"
+                } 
+            })
         });
+
+        if (!textResp.ok) {
+            const errData = await textResp.json();
+            throw new Error(`LLM Metin Hatası: ${errData.error?.message || textResp.statusText}`);
+        }
+
         const textData = await textResp.json() as { candidates: { content: { parts: { text: string }[] } }[] };
-        const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
+        const rawText = textData.candidates[0].content.parts[0].text;
+        
+        let storyData;
+        try {
+            storyData = JSON.parse(rawText);
+        } catch (e) {
+            console.log(">>> JSON Parse failed, trying armoredParser:", e);
+            storyData = armoredParser(rawText);
+        }
 
         // 3. ADIM: MASTER KARAKTER PAFTASI (%20)
         await supabase.from('generation_jobs').update({ status: 'master_ready', progress: 20 }).eq('id', jobId);
