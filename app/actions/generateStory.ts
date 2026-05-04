@@ -94,11 +94,17 @@ async function generateImage(hook: string, characters: any, style: string, proje
         'Pop Art': ". bold lines, bright colors, comic book aesthetic, dynamic"
     };
 
-    const charAnchors = Object.entries(characters)
-        .map(([name, desc]) => `${name}: ${desc}`)
+    // 🛡️ CERRAHİ MÜDAHALE: Google 'Identity-First' Blok Yapısı
+    const charAnchors = Object.entries(characters || {})
+        .map(([name, desc]) => `CHARACTER ${name}: ${desc}`)
         .join(". ");
 
-    const finalPrompt = `${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${charAnchors}. Action: ${hook} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}`;
+    const identityBlock = `[IDENTITY REFERENCE: ${charAnchors}]`;
+    const actionBlock = `[SCENE ACTION: ${hook}]`;
+    const styleBlock = `[ARTISTIC STYLE: ${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}]`;
+    const mandatoryBlock = `MANDATORY: Maintain 100% visual consistency with the IDENTITY REFERENCE. Do not add any extra characters. Follow the SCENE ACTION precisely.`;
+
+    const finalPrompt = `${identityBlock} ${actionBlock} ${styleBlock} ${mandatoryBlock}`;
 
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
@@ -203,7 +209,23 @@ export async function generateStoryAction(formData: {
         }
 
         // FAZ 1: METİN
-        const systemPrompt = `Aşağıdaki konuyla ilgili 8-10 sayfalık sürükleyici bir çocuk masalı yaz. ÇIKTI: JSON formatında 'title', 'characters' (her karakterin fiziksel tarifiyle), 'scenes' (her sahne için 'text' ve o sahneyi çizecek 'visualHook' tarifiyle) olarak dön. DİL: Türkçe.`;
+        const systemPrompt = `
+                GÖREV: Bir çocuk hikayesi yaz.
+                DİL: Türkçe.
+                ÇIKTI: JSON formatında olmalı.
+
+                İÇERİK KURALLARI:
+                1. 'title': Hikayenin başlığı.
+                2. 'characters': Hikayedeki karakterlerin sözlüğü. { "İsim": "Çok detaylı fiziksel tarif, kıyafet, saç rengi" } formatında. (Görsel süreklilik için kritik).
+                3. 'scenes': 5-8 sahnelik bir dizi. Her sahne şunları içermeli:
+                   - 'text': Çocuğun okuyacağı masal metni (Türkçe).
+                   - 'visualHook': BU SAHNE İÇİN GÖRSEL MOTORUNA GİDECEK KESİN TALİMAT (İngilizce). 
+                     KURALLAR: 'Subject-Verb-Object' yapısını kullan. Asla 'a boy' veya 'the character' deme. Sadece 'characters' kısmında tanımladığın isimleri kullan. 
+                     Örn: 'Ali jumping in the air' veya 'Mırnav sitting on a red chair'. Aksiyonu ve ortamı net betimle.
+                
+                KULLANICI PROMPT'U: ${formData.theme}
+                HEDEF YAŞ: ${formData.age}
+            `;
         const userPrompt = `Konu: ${formData.theme}, Kahraman: ${formData.hero}, Yaş: ${formData.age}, Çocuk Adı: ${formData.childName}`;
 
         const textUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent`;
