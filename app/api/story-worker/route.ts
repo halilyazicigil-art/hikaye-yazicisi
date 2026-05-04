@@ -60,7 +60,7 @@ function addWavHeader(pcmData: Buffer): Buffer {
 
 // 🎨 GÖRSEL ÜRETİMİ (Pro Model)
 async function generateImagePro(prompt: string, projectId: string, token: string, refs?: CharacterRef[]) {
-    const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-3-pro-image-preview:generateContent`;
+    const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-3.1-pro-image-preview:generateContent`;
     
     interface RequestPart {
         text?: string;
