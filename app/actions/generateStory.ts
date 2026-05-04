@@ -23,10 +23,23 @@ function armoredParser(text: string) {
  * 🔍 AKILLI MULTIMODAL AYIKLAYICI
  * Hem base64 verisini hem de MIME tipini döner.
  */
-function extractMediaData(candidates: any[]) {
+interface MediaPart {
+    inlineData?: {
+        data: string;
+        mimeType: string;
+    };
+}
+
+interface Candidate {
+    content?: {
+        parts?: MediaPart[];
+    };
+}
+
+function extractMediaData(candidates: Candidate[]) {
     if (!candidates?.[0]?.content?.parts) return null;
-    const mediaPart = candidates[0].content.parts.find((p: any) => p.inlineData?.data);
-    if (!mediaPart) return null;
+    const mediaPart = candidates[0].content.parts.find((p: MediaPart) => p.inlineData?.data);
+    if (!mediaPart || !mediaPart.inlineData) return null;
     return {
         data: mediaPart.inlineData.data,
         mimeType: mediaPart.inlineData.mimeType
@@ -79,16 +92,19 @@ function addWavHeader(pcmData: Buffer): Buffer {
 /**
  * 🎨 GÖRSEL MOTORU (FAZ 2)
  */
+type CharacterDescriptions = Record<string, string>;
+type CharacterRef = { name: string, data: string };
+
 async function generateImage(
     hook: string, 
-    characters: any, 
+    characters: CharacterDescriptions, 
     style: string, 
     projectId: string, 
     token: string, 
     activeCharacters?: string[], 
     camera?: string, 
     lighting?: string,
-    characterRefs?: { name: string, data: string }[] 
+    characterRefs?: CharacterRef[] 
 ) {
     const stylePrefixMap: Record<string, string> = {
         'Sulu Boya': "watercolor storybook illustration",
@@ -119,7 +135,15 @@ async function generateImage(
         [ID: ${uniqueId}]
     `;
 
-    const parts: any[] = [{ text: promptText }];
+    interface RequestPart {
+        text?: string;
+        inlineData?: {
+            mimeType: string;
+            data: string;
+        };
+    }
+
+    const parts: RequestPart[] = [{ text: promptText }];
     if (characterRefs && characterRefs.length > 0) {
         characterRefs.forEach(ref => {
             parts.push({
@@ -168,9 +192,9 @@ async function generateImage(
             if (media) return media;
             throw new Error("Görsel verisi bulunamadı.");
 
-        } catch (error: any) {
-            lastError = error;
-            console.log(`>>> Deneme ${attempt} başarısız: ${error.message}.`);
+        } catch (error: unknown) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+            console.log(`>>> Deneme ${attempt} başarısız: ${lastError.message}.`);
             if (attempt < MAX_RETRIES) {
                 const waitTime = attempt * 2000; 
                 await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -335,8 +359,9 @@ export async function generateStoryAction(formData: {
 
                 const { data: { publicUrl } } = adminSupabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
                 pagesWithImages.push({ text: scene.text, image_url: publicUrl });
-            } catch (imgErr: any) {
-                console.error("Görsel hatası:", imgErr.message);
+            } catch (imgErr: unknown) {
+                const message = imgErr instanceof Error ? imgErr.message : String(imgErr);
+                console.error("Görsel hatası:", message);
                 pagesWithImages.push({ text: scene.text, image_url: '' });
             }
         }
@@ -344,7 +369,7 @@ export async function generateStoryAction(formData: {
         // FAZ 3: SES
         let audioUrl = '';
         try {
-            const fullText = storyData.scenes.map((s: any) => s.text).join(" ");
+            const fullText = storyData.scenes.map((s: { text: string }) => s.text).join(" ");
             const voiceId = formData.elevenVoiceId || formData.voiceOption;
             const media = await generateAudio(fullText, voiceId, projectId, token);
             
@@ -357,8 +382,9 @@ export async function generateStoryAction(formData: {
 
             const { data: { publicUrl: aUrl } } = adminSupabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
             audioUrl = aUrl;
-        } catch (audErr: any) {
-            console.error("Ses hatası:", audErr.message);
+        } catch (audErr: unknown) {
+            const message = audErr instanceof Error ? audErr.message : String(audErr);
+            console.error("Ses hatası:", message);
         }
 
         const { data: savedStory, error: dbErr } = await supabase.from('stories').insert({
@@ -372,8 +398,9 @@ export async function generateStoryAction(formData: {
         if (dbErr) throw dbErr;
         return { success: true, id: savedStory.id };
 
-    } catch (error: any) {
-        console.error(">>> [STORY MOTOR HATA]:", error);
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(">>> [STORY MOTOR HATA]:", message);
+        return { success: false, error: message };
     }
 }
