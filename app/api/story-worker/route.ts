@@ -164,6 +164,8 @@ export async function POST(req: NextRequest) {
         }
 
         const pagesWithImages = [];
+        const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
         for (let idx = 0; idx < storyData.scenes.length; idx++) {
             const scene: Scene = storyData.scenes[idx];
             const scenePrompt = `[SCENE ${idx+1}] Style: ${payload.style}. Content: ${scene.visualHook}. Characters from reference image.`;
@@ -179,6 +181,11 @@ export async function POST(req: NextRequest) {
             await supabase.from('generation_jobs').update({ progress: currentProgress }).eq('id', jobId);
             
             pagesWithImages.push({ text: scene.text, image_url: publicUrl });
+
+            // 🧘 KOTA KORUMASI: Her resimden sonra 10 saniye nefes (5 IPM Limit)
+            if (idx < storyData.scenes.length - 1) {
+                await sleep(10000);
+            }
         }
 
         // 5. ADIM: SESLENDİRME (%90)
