@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         if (!masterMedia) throw new Error("Master Pafta üretilemedi");
         await supabase.from('generation_jobs').update({ master_ref_data: masterMedia.data }).eq('id', jobId);
 
-        // 4. ADIM: PARALEL GÖRSEL ÜRETİMİ (%30-80)
+        // 4. ADIM: SIRALI GÖRSEL ÜRETİMİ (%30-80)
         await supabase.from('generation_jobs').update({ status: 'processing', progress: 30 }).eq('id', jobId);
         
         interface Scene {
@@ -163,8 +163,11 @@ export async function POST(req: NextRequest) {
             visualHook: string;
         }
 
-        const imagePromises = storyData.scenes.map(async (scene: Scene, idx: number) => {
+        const pagesWithImages = [];
+        for (let idx = 0; idx < storyData.scenes.length; idx++) {
+            const scene: Scene = storyData.scenes[idx];
             const scenePrompt = `[SCENE ${idx+1}] Style: ${payload.style}. Content: ${scene.visualHook}. Characters from reference image.`;
+            
             const media = await generateImagePro(scenePrompt, projectId, token, [{ name: 'master', data: masterMedia.data }]);
             
             const fileName = `bg_img_${jobId}_${idx}.png`;
@@ -172,13 +175,11 @@ export async function POST(req: NextRequest) {
             const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
             
             // İlerlemeyi güncelle
-            const currentProgress = 30 + Math.floor(((idx + 1) / 12) * 50);
+            const currentProgress = 30 + Math.floor(((idx + 1) / storyData.scenes.length) * 50);
             await supabase.from('generation_jobs').update({ progress: currentProgress }).eq('id', jobId);
             
-            return { text: scene.text, image_url: publicUrl };
-        });
-
-        const pagesWithImages = await Promise.all(imagePromises);
+            pagesWithImages.push({ text: scene.text, image_url: publicUrl });
+        }
 
         // 5. ADIM: SESLENDİRME (%90)
         await supabase.from('generation_jobs').update({ status: 'audio_ready', progress: 90 }).eq('id', jobId);
