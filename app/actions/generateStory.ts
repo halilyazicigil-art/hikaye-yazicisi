@@ -79,7 +79,7 @@ function addWavHeader(pcmData: Buffer): Buffer {
 /**
  * 🎨 GÖRSEL MOTORU (FAZ 2)
  */
-async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string, activeCharacters?: string[]) {
+async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string, activeCharacters?: string[], sceneIndex?: number, totalScenes?: number, camera?: string, lighting?: string) {
     const stylePrefixMap: Record<string, string> = {
         'Sulu Boya': "A professional children's book watercolor illustration of ",
         '3D Pixar Stili': "A high-quality 3D Disney Pixar style animation frame of ",
@@ -102,7 +102,7 @@ async function generateImage(hook: string, characters: any, style: string, proje
         'Vintage Retro': ". muted tones, textured paper, nostalgic, charming"
     };
 
-    // 🛡️ 2026 CERRAHİ: İzole Kimlik ve Cache Kırıcı (Noise Token)
+    // 🛡️ 2026 CERRAHİ: Dinamik Perspektif ve Sahne Mührü
     const activeCharSpecs = Object.entries(characters || {})
         .filter(([name]) => activeCharacters?.includes(name))
         .map(([name, desc]) => `CHARACTER ${name}: ${desc}`)
@@ -110,11 +110,13 @@ async function generateImage(hook: string, characters: any, style: string, proje
 
     const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const identityBlock = activeCharSpecs ? `[IDENTITY REFERENCE: ${activeCharSpecs}]` : "[NO CHARACTER]";
-    const actionBlock = `[SCENE ACTION: ${hook}] [NOISE TOKEN: ${uniqueId}]`;
+    const sceneBlock = `[SCENE ${sceneIndex || 1} OF ${totalScenes || 12}]`;
+    const perspectiveBlock = `[CAMERA: ${camera || 'Eye-level'}] [LIGHTING: ${lighting || 'Natural'}]`;
+    const actionBlock = `[SCENE ACTION: ${hook}] [UNIQUE ID: ${uniqueId}]`;
     const styleBlock = `[ARTISTIC STYLE: ${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}]`;
-    const mandatoryBlock = `MANDATORY: NO GHOST CHARACTERS. Only include characters from IDENTITY REFERENCE. Follow SCENE ACTION precisely. Distinct composition from previous scenes.`;
+    const mandatoryBlock = `MANDATORY: 100% character fidelity for IDENTITY REFERENCE. Strictly follow CAMERA and LIGHTING. Avoid any duplication with previous scenes. Unique composition required.`;
 
-    const finalPrompt = `${identityBlock} ${actionBlock} ${styleBlock} ${mandatoryBlock}`;
+    const finalPrompt = `${identityBlock} ${sceneBlock} ${perspectiveBlock} ${actionBlock} ${styleBlock} ${mandatoryBlock}`;
 
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
@@ -125,7 +127,7 @@ async function generateImage(hook: string, characters: any, style: string, proje
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 saniye cerrah sabrı
+            const timeoutId = setTimeout(() => controller.abort(), 60000); 
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -134,7 +136,8 @@ async function generateImage(hook: string, characters: any, style: string, proje
                     contents: [{ role: 'user', parts: [{ text: finalPrompt }] }],
                     generationConfig: { 
                         responseMimeType: "application/json",
-                        temperature: 1.0 // Maksimum çeşitlilik
+                        temperature: 1.0,
+                        seed: Math.floor(Math.random() * 2147483647) // 2026 Spec: Teknik Seed Enjeksiyonu
                     }
                 }),
                 signal: controller.signal
@@ -153,13 +156,13 @@ async function generateImage(hook: string, characters: any, style: string, proje
             lastError = error;
             console.log(`>>> Deneme ${attempt} başarısız: ${error.message}.`);
             if (attempt < MAX_RETRIES) {
-                const waitTime = attempt * 2000; // 2s, 4s sıralı deneme
+                const waitTime = attempt * 2000; 
                 await new Promise(resolve => setTimeout(resolve, waitTime));
             }
         }
     }
 
-    throw lastError || new Error("Görsel üretimi tüm denemelere rağmen başarısız.");
+    throw lastError || new Error("Görsel üretimi başarısız.");
 }
 
 /**
@@ -253,6 +256,8 @@ export async function generateStoryAction(formData: {
                 3. 'scenes': ZORUNLU OLARAK TAM 12 SAHNE ÜRETİLECEK. Her sahne şunları içermeli:
                    - 'text': Çocuğun okuyacağı masal metni (Türkçe).
                    - 'active_characters': Bu sahnede fiziksel olarak bulunan karakter isimlerinin listesi (Örn: ["Ali", "Canan"]).
+                   - 'camera_angle': Bu sahne için benzersiz bir kamera açısı (Örn: 'Close-up', 'Wide-angle', 'Bird-s eye view', 'Side view').
+                   - 'lighting': Sahneye özel ışıklandırma (Örn: 'Golden hour', 'Cinematic', 'Soft moon light', 'Bright sun').
                    - 'visualHook': BU SAHNE İÇİN GÖRSEL MOTORUNA GİDECEK KESİN TALİMAT (İngilizce). 
                      KURALLAR: 'Subject-Verb-Object' yapısını kullan. Sadece 'active_characters' listesindeki isimleri kullan. 
                      Örn: 'Ali jumping in the air' veya 'Mırnav sitting on a red chair'. Aksiyonu ve ortamı net betimle.
@@ -279,6 +284,7 @@ export async function generateStoryAction(formData: {
 
         // FAZ 2: GÖRSEL (SIRALI, FİLTRELİ VE SABIRLI)
         const pagesWithImages = [];
+        let sceneCount = 1;
         for (const scene of storyData.scenes) {
             try {
                 const media = await generateImage(
@@ -287,7 +293,11 @@ export async function generateStoryAction(formData: {
                     formData.style, 
                     projectId, 
                     token,
-                    scene.active_characters
+                    scene.active_characters,
+                    sceneCount++,
+                    storyData.scenes.length,
+                    scene.camera_angle,
+                    scene.lighting
                 );
                 const fileName = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
                 
