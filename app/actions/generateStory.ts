@@ -84,40 +84,48 @@ async function generateImage(hook: string, characters: any, style: string, proje
         'Sulu Boya': "A professional children's book watercolor illustration of ",
         '3D Pixar Stili': "A high-quality 3D Disney Pixar style animation frame of ",
         'Yağlı Boya': "A classic oil painting style illustration of ",
-        'Pop Art': "A vibrant Pop Art style illustration of "
+        'Pop Art': "A vibrant Pop Art style illustration of ",
+        'Pastel Düşler': "A soft pastel colors dreamlike illustration of ",
+        'Anime': "High quality Studio Ghibli style anime illustration of ",
+        'Çizgi Film': "A clean 2D vector cartoon style illustration of ",
+        'Vintage Retro': "A classic 1950s golden age storybook illustration of "
     };
     
     const styleSuffixMap: Record<string, string> = {
         'Sulu Boya': ". soft pastel colors, dreamlike atmosphere, high quality, detailed",
         '3D Pixar Stili': ". vibrant colors, cute character designs, cinematic lighting, 8k render",
         'Yağlı Boya': ". rich textures, artistic brushstrokes, warm lighting, timeless",
-        'Pop Art': ". bold lines, bright colors, comic book aesthetic, dynamic"
+        'Pop Art': ". bold lines, bright colors, comic book aesthetic, dynamic",
+        'Pastel Düşler': ". ethereal lighting, soft edges, whimsical, magical",
+        'Anime': ". detailed backgrounds, expressive eyes, cinematic composition",
+        'Çizgi Film': ". flat colors, bold outlines, playful, friendly",
+        'Vintage Retro': ". muted tones, textured paper, nostalgic, charming"
     };
 
-    // 🛡️ CERRAHİ MÜDAHALE: Seçici Kimlik ve Rastgele Tohum (Seed)
+    // 🛡️ 2026 CERRAHİ: İzole Kimlik ve Cache Kırıcı (Noise Token)
     const activeCharSpecs = Object.entries(characters || {})
         .filter(([name]) => activeCharacters?.includes(name))
         .map(([name, desc]) => `CHARACTER ${name}: ${desc}`)
         .join(". ");
 
-    const randomSeed = Math.floor(Math.random() * 2147483647);
-    const identityBlock = activeCharSpecs ? `[IDENTITY REFERENCE: ${activeCharSpecs}]` : "";
-    const actionBlock = `[SCENE ACTION: ${hook}] [RANDOM SEED: ${randomSeed}]`;
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const identityBlock = activeCharSpecs ? `[IDENTITY REFERENCE: ${activeCharSpecs}]` : "[NO CHARACTER]";
+    const actionBlock = `[SCENE ACTION: ${hook}] [NOISE TOKEN: ${uniqueId}]`;
     const styleBlock = `[ARTISTIC STYLE: ${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}]`;
-    const mandatoryBlock = `MANDATORY: Maintain 100% visual consistency with the IDENTITY REFERENCE. Do not add any extra characters. Follow the SCENE ACTION precisely.`;
+    const mandatoryBlock = `MANDATORY: NO GHOST CHARACTERS. Only include characters from IDENTITY REFERENCE. Follow SCENE ACTION precisely. Distinct composition from previous scenes.`;
 
     const finalPrompt = `${identityBlock} ${actionBlock} ${styleBlock} ${mandatoryBlock}`;
 
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
-    // 🩺 SIRALI SABIR HATTI (RETRY & TIMEOUT)
+    // 🩺 SIRALI SABIR VE ÜSTEL KURTARMA DÖNGÜSÜ
     const MAX_RETRIES = 3;
     let lastError = null;
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 saniye sabır
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 saniye cerrah sabrı
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -126,7 +134,7 @@ async function generateImage(hook: string, characters: any, style: string, proje
                     contents: [{ role: 'user', parts: [{ text: finalPrompt }] }],
                     generationConfig: { 
                         responseMimeType: "application/json",
-                        temperature: 0.9 
+                        temperature: 1.0 // Maksimum çeşitlilik
                     }
                 }),
                 signal: controller.signal
@@ -135,17 +143,17 @@ async function generateImage(hook: string, characters: any, style: string, proje
             clearTimeout(timeoutId);
             const data = await response.json().catch(() => ({}));
 
-            if (!response.ok) throw new Error(`API Error: ${response.status} - ${data.error?.message}`);
+            if (!response.ok) throw new Error(`API Hatası: ${response.status} - ${data.error?.message}`);
 
             const media = extractMediaData(data.candidates);
             if (media) return media;
-            throw new Error("Görsel verisi API yanıtında bulunamadı.");
+            throw new Error("Görsel verisi bulunamadı.");
 
         } catch (error: any) {
             lastError = error;
+            console.log(`>>> Deneme ${attempt} başarısız: ${error.message}.`);
             if (attempt < MAX_RETRIES) {
-                const waitTime = attempt * 2000; // 2s, 4s bekleyerek sıralı deneme
-                console.log(`Görsel denemesi ${attempt} başarısız. ${waitTime}ms bekleniyor...`);
+                const waitTime = attempt * 2000; // 2s, 4s sıralı deneme
                 await new Promise(resolve => setTimeout(resolve, waitTime));
             }
         }
