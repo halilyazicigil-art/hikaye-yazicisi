@@ -155,8 +155,8 @@ async function generateImage(
         });
     }
 
-    // 🚀 2026 PRO UPGRADE: us-central1 endpoint + gemini-3-pro-image-preview
-    const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-3.1-pro-image-preview:generateContent`;
+    // 🚀 2026 PRO UPGRADE: GLOBAL endpoint + gemini-3-pro-image-preview
+    const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-pro-image-preview:generateContent`;
 
     const MAX_RETRIES = 3;
     let lastError = null;
