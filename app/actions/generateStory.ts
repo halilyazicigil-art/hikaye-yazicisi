@@ -79,7 +79,7 @@ function addWavHeader(pcmData: Buffer): Buffer {
 /**
  * 🎨 GÖRSEL MOTORU (FAZ 2)
  */
-async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string) {
+async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string, activeCharacters?: string[]) {
     const stylePrefixMap: Record<string, string> = {
         'Sulu Boya': "A professional children's book watercolor illustration of ",
         '3D Pixar Stili': "A high-quality 3D Disney Pixar style animation frame of ",
@@ -94,13 +94,15 @@ async function generateImage(hook: string, characters: any, style: string, proje
         'Pop Art': ". bold lines, bright colors, comic book aesthetic, dynamic"
     };
 
-    // 🛡️ CERRAHİ MÜDAHALE: Google 'Identity-First' Blok Yapısı
-    const charAnchors = Object.entries(characters || {})
+    // 🛡️ CERRAHİ MÜDAHALE: Seçici Kimlik ve Rastgele Tohum (Seed)
+    const activeCharSpecs = Object.entries(characters || {})
+        .filter(([name]) => activeCharacters?.includes(name))
         .map(([name, desc]) => `CHARACTER ${name}: ${desc}`)
         .join(". ");
 
-    const identityBlock = `[IDENTITY REFERENCE: ${charAnchors}]`;
-    const actionBlock = `[SCENE ACTION: ${hook}]`;
+    const randomSeed = Math.floor(Math.random() * 2147483647);
+    const identityBlock = activeCharSpecs ? `[IDENTITY REFERENCE: ${activeCharSpecs}]` : "";
+    const actionBlock = `[SCENE ACTION: ${hook}] [RANDOM SEED: ${randomSeed}]`;
     const styleBlock = `[ARTISTIC STYLE: ${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']} ${styleSuffixMap[style] || styleSuffixMap['Sulu Boya']}]`;
     const mandatoryBlock = `MANDATORY: Maintain 100% visual consistency with the IDENTITY REFERENCE. Do not add any extra characters. Follow the SCENE ACTION precisely.`;
 
@@ -108,25 +110,48 @@ async function generateImage(hook: string, characters: any, style: string, proje
 
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: finalPrompt }] }]
-        })
-    });
+    // 🩺 SIRALI SABIR HATTI (RETRY & TIMEOUT)
+    const MAX_RETRIES = 3;
+    let lastError = null;
 
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-        throw new Error(`Görsel API hatası: ${response.status} - ${data.error?.message || 'Bilinmeyen Hata'}`);
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 saniye sabır
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: finalPrompt }] }],
+                    generationConfig: { 
+                        responseMimeType: "application/json",
+                        temperature: 0.9 
+                    }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) throw new Error(`API Error: ${response.status} - ${data.error?.message}`);
+
+            const media = extractMediaData(data.candidates);
+            if (media) return media;
+            throw new Error("Görsel verisi API yanıtında bulunamadı.");
+
+        } catch (error: any) {
+            lastError = error;
+            if (attempt < MAX_RETRIES) {
+                const waitTime = attempt * 2000; // 2s, 4s bekleyerek sıralı deneme
+                console.log(`Görsel denemesi ${attempt} başarısız. ${waitTime}ms bekleniyor...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            }
+        }
     }
 
-    const media = extractMediaData(data.candidates);
-    if (!media) throw new Error("Görsel verisi API yanıtında bulunamadı.");
-    return media;
+    throw lastError || new Error("Görsel üretimi tüm denemelere rağmen başarısız.");
 }
 
 /**
@@ -217,10 +242,11 @@ export async function generateStoryAction(formData: {
                 İÇERİK KURALLARI:
                 1. 'title': Hikayenin başlığı.
                 2. 'characters': Hikayedeki karakterlerin sözlüğü. { "İsim": "Çok detaylı fiziksel tarif, kıyafet, saç rengi" } formatında. (Görsel süreklilik için kritik).
-                3. 'scenes': 5-8 sahnelik bir dizi. Her sahne şunları içermeli:
+                3. 'scenes': ZORUNLU OLARAK TAM 12 SAHNE ÜRETİLECEK. Her sahne şunları içermeli:
                    - 'text': Çocuğun okuyacağı masal metni (Türkçe).
+                   - 'active_characters': Bu sahnede fiziksel olarak bulunan karakter isimlerinin listesi (Örn: ["Ali", "Canan"]).
                    - 'visualHook': BU SAHNE İÇİN GÖRSEL MOTORUNA GİDECEK KESİN TALİMAT (İngilizce). 
-                     KURALLAR: 'Subject-Verb-Object' yapısını kullan. Asla 'a boy' veya 'the character' deme. Sadece 'characters' kısmında tanımladığın isimleri kullan. 
+                     KURALLAR: 'Subject-Verb-Object' yapısını kullan. Sadece 'active_characters' listesindeki isimleri kullan. 
                      Örn: 'Ali jumping in the air' veya 'Mırnav sitting on a red chair'. Aksiyonu ve ortamı net betimle.
                 
                 KULLANICI PROMPT'U: ${formData.theme}
@@ -243,11 +269,18 @@ export async function generateStoryAction(formData: {
         if (!textResponse.ok) throw new Error(`Metin API hatası: ${textResponse.status}`);
         const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
-        // FAZ 2: GÖRSEL
+        // FAZ 2: GÖRSEL (SIRALI, FİLTRELİ VE SABIRLI)
         const pagesWithImages = [];
         for (const scene of storyData.scenes) {
             try {
-                const media = await generateImage(scene.visualHook, storyData.characters, formData.style, projectId, token);
+                const media = await generateImage(
+                    scene.visualHook, 
+                    storyData.characters, 
+                    formData.style, 
+                    projectId, 
+                    token,
+                    scene.active_characters
+                );
                 const fileName = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
                 
                 const { error: uploadErr } = await adminSupabase.storage
