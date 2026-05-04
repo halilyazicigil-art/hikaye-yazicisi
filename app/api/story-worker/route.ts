@@ -60,7 +60,7 @@ function addWavHeader(pcmData: Buffer): Buffer {
 
 // 🎨 GÖRSEL ÜRETİMİ (Pro Model)
 async function generateImagePro(prompt: string, projectId: string, token: string, refs?: CharacterRef[]) {
-    const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3-pro-image-preview:generateContent`;
+    const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
     
     interface RequestPart {
         text?: string;
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         if (!masterMedia) throw new Error("Master Pafta üretilemedi");
         await supabase.from('generation_jobs').update({ master_ref_data: masterMedia.data }).eq('id', jobId);
 
-        // 4. ADIM: SIRALI GÖRSEL ÜRETİMİ (%30-80)
+        // 4. ADIM: PARALEL GÖRSEL ÜRETİMİ (%30-80)
         await supabase.from('generation_jobs').update({ status: 'processing', progress: 30 }).eq('id', jobId);
         
         interface Scene {
@@ -163,13 +163,8 @@ export async function POST(req: NextRequest) {
             visualHook: string;
         }
 
-        const pagesWithImages = [];
-        const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-        for (let idx = 0; idx < storyData.scenes.length; idx++) {
-            const scene: Scene = storyData.scenes[idx];
+        const imagePromises = storyData.scenes.map(async (scene: Scene, idx: number) => {
             const scenePrompt = `[SCENE ${idx+1}] Style: ${payload.style}. Content: ${scene.visualHook}. Characters from reference image.`;
-            
             const media = await generateImagePro(scenePrompt, projectId, token, [{ name: 'master', data: masterMedia.data }]);
             
             const fileName = `bg_img_${jobId}_${idx}.png`;
@@ -180,13 +175,10 @@ export async function POST(req: NextRequest) {
             const currentProgress = 30 + Math.floor(((idx + 1) / storyData.scenes.length) * 50);
             await supabase.from('generation_jobs').update({ progress: currentProgress }).eq('id', jobId);
             
-            pagesWithImages.push({ text: scene.text, image_url: publicUrl });
+            return { text: scene.text, image_url: publicUrl };
+        });
 
-            // 🧘 KOTA KORUMASI: Her resimden sonra 10 saniye nefes (5 IPM Limit)
-            if (idx < storyData.scenes.length - 1) {
-                await sleep(10000);
-            }
-        }
+        const pagesWithImages = await Promise.all(imagePromises);
 
         // 5. ADIM: SESLENDİRME (%90)
         await supabase.from('generation_jobs').update({ status: 'audio_ready', progress: 90 }).eq('id', jobId);
