@@ -174,10 +174,7 @@ async function generateImage(
                     generationConfig: { 
                         responseMimeType: "application/json",
                         temperature: 1.0,
-                        seed: Math.floor(Math.random() * 2147483647),
-                        // 🧠 2026 PRO PARAMETERS: Akıl yürütme ve kaliteyi tetikler
-                        thinking_level: "high",
-                        media_resolution: "high"
+                        seed: Math.floor(Math.random() * 2147483647)
                     }
                 }),
                 signal: controller.signal
