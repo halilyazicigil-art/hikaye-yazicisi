@@ -88,7 +88,7 @@ async function generateImage(
     activeCharacters?: string[], 
     camera?: string, 
     lighting?: string,
-    characterRefs?: { name: string, data: string }[] // 🛡️ 2026: Karakter Referans Listesi
+    characterRefs?: { name: string, data: string }[] 
 ) {
     const stylePrefixMap: Record<string, string> = {
         'Sulu Boya': "watercolor storybook illustration",
@@ -101,7 +101,6 @@ async function generateImage(
         'Vintage Retro': "1950s retro storybook style"
     };
 
-    // 🧬 Karakter DNA ve Referans Blokları
     const identityDNA = Object.entries(characters || {})
         .filter(([name]) => activeCharacters?.includes(name))
         .map(([name, desc]) => `${name} (${desc})`)
@@ -109,21 +108,18 @@ async function generateImage(
 
     const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
     
-    // 🛡️ MULTIMODAL PROMPT (Metin Kısmı)
+    // 🛡️ MULTIMODAL PROMPT
     const promptText = `
-        [TASK: Generate a high-quality illustration for a children's book]
+        [TASK: Generate a high-fidelity illustration for a children's book]
         [STYLE: ${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']}]
         [IDENTITY DNA: ${identityDNA || 'Multiple characters'}]
         [SCENE ACTION: ${hook}]
         [CINEMATIC: ${camera || 'Eye-level shot'}, ${lighting || 'Natural lighting'}]
-        [MANDATORY: 100% character fidelity from the attached REFERENCE IMAGES. NO GHOST CHARACTERS. New composition required.]
+        [MANDATORY: 100% character fidelity from references. Advanced narrative reasoning required.]
         [ID: ${uniqueId}]
     `;
 
-    // 🖼️ API PARÇALARI (Metin + Referans Görseller)
     const parts: any[] = [{ text: promptText }];
-    
-    // Eğer karakter referansları varsa, base64 olarak ekliyoruz
     if (characterRefs && characterRefs.length > 0) {
         characterRefs.forEach(ref => {
             parts.push({
@@ -135,7 +131,8 @@ async function generateImage(
         });
     }
 
-    const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
+    // 🚀 2026 PRO UPGRADE: us-central1 endpoint + gemini-3-pro-image-preview
+    const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-3-pro-image-preview:generateContent`;
 
     const MAX_RETRIES = 3;
     let lastError = null;
@@ -149,11 +146,14 @@ async function generateImage(
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ role: 'user', parts: parts }], // Multimodal parts
+                    contents: [{ role: 'user', parts: parts }],
                     generationConfig: { 
                         responseMimeType: "application/json",
                         temperature: 1.0,
-                        seed: Math.floor(Math.random() * 2147483647) 
+                        seed: Math.floor(Math.random() * 2147483647),
+                        // 🧠 2026 PRO PARAMETERS: Akıl yürütme ve kaliteyi tetikler
+                        thinking_level: "high",
+                        media_resolution: "high"
                     }
                 }),
                 signal: controller.signal
