@@ -79,7 +79,17 @@ function addWavHeader(pcmData: Buffer): Buffer {
 /**
  * 🎨 GÖRSEL MOTORU (FAZ 2)
  */
-async function generateImage(hook: string, characters: any, style: string, projectId: string, token: string, activeCharacters?: string[], camera?: string, lighting?: string) {
+async function generateImage(
+    hook: string, 
+    characters: any, 
+    style: string, 
+    projectId: string, 
+    token: string, 
+    activeCharacters?: string[], 
+    camera?: string, 
+    lighting?: string,
+    characterRefs?: { name: string, data: string }[] // 🛡️ 2026: Karakter Referans Listesi
+) {
     const stylePrefixMap: Record<string, string> = {
         'Sulu Boya': "watercolor storybook illustration",
         '3D Pixar Stili': "3D Disney Pixar animation frame",
@@ -91,22 +101,39 @@ async function generateImage(hook: string, characters: any, style: string, proje
         'Vintage Retro': "1950s retro storybook style"
     };
 
-    // 🛡️ 2026 ALTIN STANDART: Modüler Prompt Mimarisi
+    // 🧬 Karakter DNA ve Referans Blokları
     const identityDNA = Object.entries(characters || {})
         .filter(([name]) => activeCharacters?.includes(name))
         .map(([name, desc]) => `${name} (${desc})`)
         .join(". ");
 
     const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    const promptStructure = `
+    
+    // 🛡️ MULTIMODAL PROMPT (Metin Kısmı)
+    const promptText = `
         [TASK: Generate a high-quality illustration for a children's book]
         [STYLE: ${stylePrefixMap[style] || stylePrefixMap['Sulu Boya']}]
         [IDENTITY DNA: ${identityDNA || 'Multiple characters'}]
         [SCENE ACTION: ${hook}]
-        [CINEMATIC: ${camera || 'Eye-level shot'}, ${lighting || 'Natural lighting'}, high detail, clear composition]
-        [NOISE_TOKEN: ${uniqueId}]
-        [MANDATORY: Maintain 100% character fidelity. No extra characters. No duplicate composition from previous pages.]
+        [CINEMATIC: ${camera || 'Eye-level shot'}, ${lighting || 'Natural lighting'}]
+        [MANDATORY: 100% character fidelity from the attached REFERENCE IMAGES. NO GHOST CHARACTERS. New composition required.]
+        [ID: ${uniqueId}]
     `;
+
+    // 🖼️ API PARÇALARI (Metin + Referans Görseller)
+    const parts: any[] = [{ text: promptText }];
+    
+    // Eğer karakter referansları varsa, base64 olarak ekliyoruz
+    if (characterRefs && characterRefs.length > 0) {
+        characterRefs.forEach(ref => {
+            parts.push({
+                inlineData: {
+                    mimeType: "image/png",
+                    data: ref.data
+                }
+            });
+        });
+    }
 
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
 
@@ -122,11 +149,10 @@ async function generateImage(hook: string, characters: any, style: string, proje
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ role: 'user', parts: [{ text: promptStructure }] }],
+                    contents: [{ role: 'user', parts: parts }], // Multimodal parts
                     generationConfig: { 
                         responseMimeType: "application/json",
                         temperature: 1.0,
-                        // 🛠️ TEKNİK SEED: API seviyesinde rastgelelik zorunluluğu
                         seed: Math.floor(Math.random() * 2147483647) 
                     }
                 }),
@@ -270,9 +296,17 @@ export async function generateStoryAction(formData: {
         if (!textResponse.ok) throw new Error(`Metin API hatası: ${textResponse.status}`);
         const storyData = armoredParser(textData.candidates[0].content.parts[0].text);
 
+        // FAZ 2: GÖRSEL (SIRALI VE REFERANSLI)
         const pagesWithImages = [];
+        const characterArchive: Record<string, string> = {}; // 🛡️ Karakter ilk kare arşivi
+
         for (const scene of storyData.scenes) {
             try {
+                // Bu sahnede olan karakterlerin arşivdeki referanslarını al
+                const currentRefs = scene.active_characters
+                    ?.map(name => ({ name, data: characterArchive[name] }))
+                    .filter(ref => ref && ref.data) as { name: string, data: string }[];
+
                 const media = await generateImage(
                     scene.visualHook, 
                     storyData.characters, 
@@ -281,8 +315,16 @@ export async function generateStoryAction(formData: {
                     token,
                     scene.active_characters,
                     scene.camera_angle,
-                    scene.lighting
+                    scene.lighting,
+                    currentRefs
                 );
+
+                // Eğer bir karakterin henüz arşivi yoksa, bu sayfadaki halini referans olarak kaydet
+                scene.active_characters?.forEach(name => {
+                    if (!characterArchive[name]) {
+                        characterArchive[name] = media.data;
+                    }
+                });
                 const fileName = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
                 
                 const { error: uploadErr } = await adminSupabase.storage
