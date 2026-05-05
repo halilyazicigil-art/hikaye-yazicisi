@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { testPipelineAction } from '@/app/actions/testPipeline'
 import { backgroundStoryAction } from '@/app/actions/backgroundStoryAction'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
@@ -28,8 +27,6 @@ export default function SystemTestPage() {
   const [selectedStyle, setSelectedStyle] = useState('Sulu Boya')
   const [selectedVoice, setSelectedVoice] = useState('Iapetus')
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<Record<string, unknown> | null>(null)
-  
   // Arka Plan Test State'leri
   const [jobId, setJobId] = useState<string | null>(null)
   
@@ -65,23 +62,8 @@ export default function SystemTestPage() {
     return () => { supabase.removeChannel(channel) }
   }, [jobId])
 
-  const handleTest = async () => {
-    setLoading(true)
-    setJobId(null)
-    setJobStatus(null)
-    try {
-      const data = await testPipelineAction(prompt, selectedStyle, selectedVoice)
-      setResults(data)
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleBackgroundTest = async () => {
     setLoading(true)
-    setResults(null)
     try {
       const res = await backgroundStoryAction({
         hero: 'Test Kahramanı',
@@ -146,21 +128,13 @@ export default function SystemTestPage() {
             </div>
           </div>
           
-          <div className="flex gap-4">
-            <button 
-              onClick={handleTest}
-              disabled={loading}
-              className={`flex-1 py-4 rounded-2xl text-white font-bold text-lg transition-all ${loading ? 'bg-gray-400' : 'bg-[#D4A373] hover:bg-[#BC8A5F] shadow-lg shadow-[#D4A373]/30'}`}
-            >
-              {loading && !jobId ? 'Motorlar Isınıyor...' : 'Eski Sistem Testi 🚀'}
-            </button>
-
+          <div className="flex justify-center">
             <button 
               onClick={handleBackgroundTest}
               disabled={loading}
-              className={`flex-1 py-4 rounded-2xl text-white font-bold text-lg transition-all ${loading ? 'bg-gray-400' : 'bg-[#4A3E3E] hover:bg-black shadow-lg shadow-black/20'}`}
+              className={`w-full max-w-md py-4 rounded-2xl text-white font-bold text-lg transition-all ${loading ? 'bg-gray-400' : 'bg-[#4A3E3E] hover:bg-black shadow-lg shadow-black/20'}`}
             >
-              {loading && jobId ? 'Kuyrukta...' : 'YENİ Asenkron Boru Hattı (Kuyruk) 🔥'}
+              {loading && jobId ? 'Kuyrukta İşleniyor...' : 'Hikaye Üretimini Başlat (Yeni Asenkron Hat) 🚀'}
             </button>
           </div>
         </div>
@@ -236,47 +210,7 @@ export default function SystemTestPage() {
           </div>
         )}
 
-        {results && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* METİN SONUCU */}
-              <div className="bg-white p-6 rounded-3xl border border-[#F0EBE3] shadow-md">
-                <h3 className="font-bold text-[#4A3E3E] mb-4 flex items-center">📝 Üretilen Metin</h3>
-                {results.text.status === 'SUCCESS' ? (
-                  <p className="text-sm text-[#6B5B5B] leading-relaxed bg-[#F9F7F2] p-4 rounded-xl italic">&quot;{results.text.content}&quot;</p>
-                ) : (
-                  <div className="text-red-500 bg-red-50 p-4 rounded-xl text-xs">{results.text.error}</div>
-                )}
-              </div>
 
-              {/* GÖRSEL SONUCU */}
-              <div className="bg-white p-6 rounded-3xl border border-[#F0EBE3] shadow-md">
-                <h3 className="font-bold text-[#4A3E3E] mb-4 flex items-center">🎨 Görsel Çıktısı</h3>
-                {results.image.status === 'SUCCESS' ? (
-                  <img src={results.image.url} className="w-full aspect-square object-cover rounded-2xl border border-[#F0EBE3]" alt="Test" />
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <div className="text-red-500 font-bold mb-2">Görsel Üretilemedi</div>
-                    <p className="text-[10px] text-red-400 text-center bg-red-50 p-2 rounded-lg">{results.image.error}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* SES SONUCU */}
-              <div className="bg-white p-6 rounded-3xl border border-[#F0EBE3] shadow-md">
-                <h3 className="font-bold text-[#4A3E3E] mb-4 flex items-center">🔊 Sesli Anlatım</h3>
-                {results.audio.status === 'SUCCESS' ? (
-                  <audio controls className="w-full mt-4"><source src={results.audio.url} type="audio/mpeg" /></audio>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <div className="text-red-500 font-bold mb-2">Ses Üretilemedi</div>
-                    <p className="text-[10px] text-red-400 text-center bg-red-50 p-2 rounded-lg">{results.audio.error}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

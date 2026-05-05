@@ -184,43 +184,47 @@ export async function POST(req: NextRequest) {
         // Master Karakter işlemi tamamlandı
         await supabase.from('generation_jobs').update({ status: 'master_ready', progress: 20, master_ref_data: masterMedia.data }).eq('id', jobId);
 
-        // 4. ADIM: 12 SAHNE ÇİZİMİ (%30-80)
-        await supabase.from('generation_jobs').update({ status: 'processing' }).eq('id', jobId);
+        // 4. ADIM: 12 SAHNE KADEMELİ PARALEL ÇİZİM (%30-80)
+        await supabase.from('generation_jobs').update({ status: 'processing', progress: 30 }).eq('id', jobId);
         
         interface Scene {
             text: string;
             visualHook: string;
         }
 
-        const pagesWithImages = [];
-        const BATCH_SIZE = 1;
-
-        for (let i = 0; i < storyData.scenes.length; i += BATCH_SIZE) {
-            const chunk = storyData.scenes.slice(i, i + BATCH_SIZE);
-            const chunkPromises = chunk.map(async (scene: Scene, localIdx: number) => {
-                const idx = i + localIdx;
-                const scenePrompt = `[SCENE ${idx+1}] Style: ${payload.style}. Content: ${scene.visualHook}. Characters from reference image.`;
-                const media = await generateImagePro(scenePrompt, projectId, token, [{ name: 'master', data: masterMedia.data }]);
-                
-                const fileName = `bg_img_${jobId}_${idx}.png`;
-                await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(media!.data, 'base64'), { contentType: 'image/png' });
-                const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
-                
-                // İlerlemeyi güncelle
-                const currentProgress = 30 + Math.floor(((idx + 1) / storyData.scenes.length) * 50);
-                await supabase.from('generation_jobs').update({ progress: currentProgress }).eq('id', jobId);
-                
-                return { text: scene.text, image_url: publicUrl };
-            });
-
-            const chunkResults = await Promise.all(chunkPromises);
-            pagesWithImages.push(...chunkResults);
-            
-            // Kota aşımını önlemek için her batch/sahne arasında 2 saniye bekle
-            if (i + BATCH_SIZE < storyData.scenes.length) {
-                await delay(2000);
+        let completedScenes = 0;
+        
+        // Sahneleri "Staggered" (Kademeli) Paralel İşleme sokuyoruz
+        const scenePromises = storyData.scenes.map(async (scene: Scene, idx: number) => {
+            // ÖNEMLİ: Her sahnenin başlaması için index * 2500ms bekletiyoruz.
+            // 0. sahne hiç beklemez, 1. sahne 2.5s sonra, 2. sahne 5s sonra başlar.
+            // Bu sayede istekler arka arkaya sıralanır, ancak birbirinin *bitmesini* beklemez!
+            if (idx > 0) {
+                await delay(idx * 2500);
             }
-        }
+
+            const scenePrompt = `[SCENE ${idx+1}] Style: ${payload.style}. Content: ${scene.visualHook}. Characters from reference image.`;
+            // Exponential backoff try-catch bloğumuz zaten generateImagePro içinde var!
+            const media = await generateImagePro(scenePrompt, projectId, token, [{ name: 'master', data: masterMedia.data }]);
+            
+            const fileName = `bg_img_${jobId}_${idx}.png`;
+            await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(media!.data, 'base64'), { contentType: 'image/png' });
+            const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
+            
+            // İlerlemeyi say ve güncelle
+            completedScenes++;
+            const currentProgress = 30 + Math.floor((completedScenes / storyData.scenes.length) * 50);
+            await supabase.from('generation_jobs').update({ progress: currentProgress }).eq('id', jobId);
+            
+            return { idx, text: scene.text, image_url: publicUrl };
+        });
+
+        // Bütün sahnelerin asenkron olarak tamamlanmasını bekle
+        const results = await Promise.all(scenePromises);
+        
+        // Sonuçları doğru sıraya diz
+        results.sort((a, b) => a.idx - b.idx);
+        const pagesWithImages = results.map(r => ({ text: r.text, image_url: r.image_url }));
 
         // 5. ADIM: SESLENDİRME (%90)
         await supabase.from('generation_jobs').update({ status: 'generating_audio', progress: 80 }).eq('id', jobId);
