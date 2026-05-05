@@ -25,6 +25,10 @@ const AI_VOICES = [
   { id: 'Kore',         name: 'Gökkuşağı Kızı',   desc: 'Canlı, neşeli ve renkli' },
 ]
 
+const GENRES = ['Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl']
+const IMAGE_STYLES = ['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Anime', 'Yağlı Boya', 'Pop Art', 'Çizgi Film', 'Vintage Retro']
+const AGE_GROUPS = ['0-1', '1-2', '2-4', '4-6', '6-10', '10-13']
+
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
   const [prompt, setPrompt] = useState('')
   const [tab, setTab] = useState<'normal' | 'egitici'>('normal')
@@ -159,6 +163,25 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     setTab(selectedTab)
   }
 
+  const handleRandomize = () => {
+    // Random Voice
+    const randomVoice = AI_VOICES[Math.floor(Math.random() * AI_VOICES.length)]
+    setVoice(randomVoice.id)
+    setVoiceName(randomVoice.name)
+
+    // Random Genre
+    const randomGenre = GENRES[Math.floor(Math.random() * GENRES.length)]
+    setGenre(randomGenre)
+
+    // Random Style
+    const randomStyle = IMAGE_STYLES[Math.floor(Math.random() * IMAGE_STYLES.length)]
+    setImageStyle(randomStyle)
+
+    // Random Age Group
+    const randomAge = AGE_GROUPS[Math.floor(Math.random() * AGE_GROUPS.length)]
+    setAgeGroup(randomAge)
+  }
+
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!prompt) {
@@ -263,7 +286,14 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               <ImageIcon size={20} />
               {uploadedRefFile && <span className="text-xs font-bold whitespace-nowrap overflow-hidden max-w-[120px] text-ellipsis">{uploadedRefFile.name}</span>}
             </label>
-            <button type="button" className="p-2 text-sky-700/60 hover:bg-sky-50 rounded-lg transition"><Shuffle size={20} /></button>
+            <button 
+              type="button" 
+              onClick={handleRandomize}
+              className="p-2 text-sky-700/60 hover:bg-sky-50 rounded-lg transition-all hover:scale-110 active:scale-95 group"
+              title="Sürpriz Seçim Yap"
+            >
+              <Shuffle size={20} className="group-hover:rotate-180 transition-transform duration-500" />
+            </button>
             {uploadedRefFile && (
               <button type="button" onClick={() => setUploadedRefFile(null)} className="p-1 text-red-400 hover:text-red-600 transition">
                 <X size={16} />
@@ -421,7 +451,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
             {openSection === 'genre' && (
               <div className="p-4 bg-gray-50/50 rounded-xl mt-2 flex flex-wrap gap-2">
-                {['Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl'].map(g => (
+                {GENRES.map(g => (
                   <button type="button" key={g} onClick={() => setGenre(g)} className={`px-4 py-2 rounded-full font-bold transition ${genre === g ? 'bg-[#84B1D9] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
                     {g}
                   </button>
@@ -441,7 +471,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
             {openSection === 'style' && (
               <div className="p-4 bg-gray-50/50 rounded-xl mt-2 flex flex-wrap gap-2">
-                {['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Anime', 'Yağlı Boya', 'Pop Art', 'Çizgi Film', 'Vintage Retro'].map(s => (
+                {IMAGE_STYLES.map(s => (
                   <button type="button" key={s} onClick={() => setImageStyle(s)} className={`px-4 py-2 rounded-full font-bold transition ${imageStyle === s ? 'bg-[#84B1D9] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
                     {s}
                   </button>
@@ -462,7 +492,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             {openSection === 'age' && (
               <div className="p-4 bg-gray-50/50 rounded-xl mt-2">
                 <div className="flex flex-wrap justify-center gap-3">
-                  {['0-1', '1-2', '2-4', '4-6', '6-10', '10-13'].map((range) => (
+                  {AGE_GROUPS.map((range) => (
                     <button
                       key={range}
                       type="button"
