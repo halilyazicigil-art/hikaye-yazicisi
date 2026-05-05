@@ -134,7 +134,8 @@ export async function POST(req: NextRequest) {
         };
 
         // 2. ADIM: METİN YAZIMI (%10)
-        await supabase.from('generation_jobs').update({ status: 'text_ready', progress: 10 }).eq('id', jobId);
+        // İstek öncesi veritabanı durumunu processing_text olarak güncelleyebiliriz (opsiyonel)
+        await supabase.from('generation_jobs').update({ status: 'processing_text' }).eq('id', jobId);
         
         const storySystemPrompt = `GÖREV: Bir çocuk hikayesi yaz. 
         FORMAT: Sadece JSON döndür. 
@@ -170,16 +171,21 @@ export async function POST(req: NextRequest) {
             storyData = armoredParser(rawText);
         }
 
+        // Metin işlemi tamamlandı
+        await supabase.from('generation_jobs').update({ status: 'text_ready', progress: 10 }).eq('id', jobId);
+
         // 3. ADIM: MASTER KARAKTER PAFTASI (%20)
-        await supabase.from('generation_jobs').update({ status: 'master_ready', progress: 20 }).eq('id', jobId);
+        await supabase.from('generation_jobs').update({ status: 'generating_master' }).eq('id', jobId);
         const charNames = Object.keys(storyData.characters).join(", ");
         const masterPrompt = `[MASTER CHARACTER SHEET] Generate a high-fidelity reference sheet for ${charNames}. ${JSON.stringify(storyData.characters)}. Show characters side-by-side, full body, neutral white background. Clear details.`;
         const masterMedia = await generateImagePro(masterPrompt, projectId, token);
         if (!masterMedia) throw new Error("Master Pafta üretilemedi");
-        await supabase.from('generation_jobs').update({ master_ref_data: masterMedia.data }).eq('id', jobId);
+        
+        // Master Karakter işlemi tamamlandı
+        await supabase.from('generation_jobs').update({ status: 'master_ready', progress: 20, master_ref_data: masterMedia.data }).eq('id', jobId);
 
-        // 4. ADIM: 2'ŞERLİ TURBO GRUPLAMA (%30-80)
-        await supabase.from('generation_jobs').update({ status: 'processing', progress: 30 }).eq('id', jobId);
+        // 4. ADIM: 12 SAHNE ÇİZİMİ (%30-80)
+        await supabase.from('generation_jobs').update({ status: 'processing' }).eq('id', jobId);
         
         interface Scene {
             text: string;
@@ -217,7 +223,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 5. ADIM: SESLENDİRME (%90)
-        await supabase.from('generation_jobs').update({ status: 'audio_ready', progress: 90 }).eq('id', jobId);
+        await supabase.from('generation_jobs').update({ status: 'generating_audio', progress: 80 }).eq('id', jobId);
         const fullText = storyData.scenes.map((s: Scene) => s.text).join(" ");
         const ttsUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
         const ttsResp = await fetch(ttsUrl, {
@@ -230,6 +236,9 @@ export async function POST(req: NextRequest) {
         const audioFileName = `bg_audio_${jobId}.wav`;
         await supabase.storage.from('story_assets').upload(`audio/${audioFileName}`, addWavHeader(Buffer.from(audioMedia!.data, 'base64')), { contentType: 'audio/wav' });
         const { data: { publicUrl: audioUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
+
+        // Ses işlemi tamamlandı
+        await supabase.from('generation_jobs').update({ status: 'audio_ready', progress: 90 }).eq('id', jobId);
 
         // 6. ADIM: MÜHÜR VE BİTİŞ (%100)
         const { data: story, error: storyErr } = await supabase.from('stories').insert({
