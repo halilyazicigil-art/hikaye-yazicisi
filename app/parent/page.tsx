@@ -81,6 +81,8 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   const profileIds = profiles?.map(p => p.id) || []
 
   let totalStories = 0
+  let recentStories: any[] = []
+
   if (profileIds.length > 0) {
     // Toplam Arşiv Sayısı (Kısıtlamasız)
     const { count } = await supabase
