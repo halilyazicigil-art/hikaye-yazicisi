@@ -16,11 +16,11 @@ export default async function LandingPage() {
     <main className="min-h-screen bg-[#BDD9F2] text-[#052159] overflow-x-hidden font-nunito relative">
       
       {/* 1. KAHRAMAN BÖLÜMÜ (Hero) - Uyuyan Çocuk Görseli */}
-      <div className="relative w-full min-h-[85vh] flex flex-col overflow-hidden">
-        {/* Görsel Katmanı */}
-        <div className="absolute inset-0 bg-[url('/images/hero-sleeping.png')] bg-cover bg-center bg-no-repeat z-0"></div>
-        {/* Yumuşak Geçiş Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#BDD9F2] z-10"></div>
+      <div className="relative w-full min-h-[85vh] flex flex-col overflow-hidden bg-[#BDD9F2]">
+        {/* Görsel Katmanı - Softened for legibility */}
+        <div className="absolute inset-0 bg-[url('/images/hero-sleeping.png')] bg-cover bg-bottom bg-no-repeat z-0 opacity-15 filter blur-[1px] grayscale-[0.6]"></div>
+        {/* Yumuşak Geçiş ve Renk Dengeleyici Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#BDD9F2]/80 via-[#BDD9F2]/40 to-[#BDD9F2] z-10"></div>
         
         <div className="relative z-50">
           <Navbar user={user} />
@@ -28,10 +28,10 @@ export default async function LandingPage() {
         
         <div className="flex-grow flex flex-col justify-center relative z-20">
           <section className="max-w-5xl mx-auto px-6 py-20 text-center">
-            <h1 className="text-5xl md:text-7xl font-lora font-bold text-[#052159] leading-tight mb-6 drop-shadow-md">
+            <h1 className="text-5xl md:text-7xl font-lora font-bold text-[#052159] leading-tight mb-6 drop-shadow-[0_2px_10px_rgba(255,255,255,0.7)]">
               Hayallerini Süsleyen Masalları Beraber Yazın
             </h1>
-            <p className="text-xl md:text-2xl text-[#052159] mb-10 max-w-3xl mx-auto font-medium drop-shadow-md">
+            <p className="text-xl md:text-2xl text-[#052159] mb-10 max-w-3xl mx-auto font-medium drop-shadow-[0_1px_5px_rgba(255,255,255,0.4)]">
               Çocuğunuzun ismini, en sevdiği karakteri ve temayı seçin. Geri kalan tüm sihri yapay zeka halletsin. Resimli, sesli ve sadece ona özel uyku öncesi serüvenleri yaratın.
             </p>
             
