@@ -5,7 +5,11 @@ import { Cloud, ArrowLeft } from 'lucide-react'
 
 export default function HowItWorksPage() {
   return (
-    <main className="min-h-screen bg-[#BDD9F2] font-nunito">
+    <main className="min-h-screen bg-[#BDD9F2] font-nunito relative overflow-x-hidden">
+      {/* Whimsical Background Layer */}
+      <div className="fixed inset-0 bg-[url('/images/whimsical-bg.png')] bg-cover bg-center bg-no-repeat opacity-40 pointer-events-none z-0"></div>
+      
+      <div className="relative z-10">
       {/* Navbar for Inner Page */}
       <nav className="max-w-7xl mx-auto px-6 py-8 flex justify-between items-center relative z-20">
         <Link href="/" className="flex items-center gap-4 group">
@@ -48,6 +52,7 @@ export default function HowItWorksPage() {
       <footer className="py-10 text-center text-[#052159]/50 text-sm">
         &copy; 2026 MyStory. Tüm hakları saklıdır.
       </footer>
+      </div>
     </main>
   )
 }

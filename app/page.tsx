@@ -21,6 +21,10 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-[#BDD9F2] text-[#052159] overflow-x-hidden font-nunito relative">
+      {/* Whimsical Background Layer */}
+      <div className="fixed inset-0 bg-[url('/images/whimsical-bg.png')] bg-cover bg-center bg-no-repeat opacity-20 pointer-events-none z-0"></div>
+      
+      <div className="relative z-10">
       {/* Decorative watercolor background blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#84B1D9] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
       <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-[#8FBDD9] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
@@ -161,6 +165,7 @@ export default async function Home() {
         </div>
       </section>
 
+      </div>
     </main>
   )
 }
