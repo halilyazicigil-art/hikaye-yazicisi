@@ -36,11 +36,20 @@ export async function POST(req: Request) {
     const userId = session.metadata?.userId || session.subscription_details?.metadata?.userId
 
     if (userId) {
-      // Kullanıcının abonelik durumunu 'active' yapıyoruz
+      // 1. Stripe Customer ID'yi users tablosuna kaydet (Portal için gerekli)
+      if (session.customer) {
+        // Veritabanını güncelleyelim ki bir sonraki seferde hızlı gelsin
+        await supabaseAdmin.from('users').update({ 
+          stripe_customer_id: session.customer as string 
+        }).eq('id', userId)
+      }
+
+      // 2. Abonelik durumunu güncelle
+      const planId = session.metadata?.planId || 'pro'
       await supabaseAdmin.from('subscriptions').upsert({
         user_id: userId,
         status: 'active',
-        plan_id: 'bee_hive',
+        plan_id: planId,
         current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       }, { onConflict: 'user_id' })
     }

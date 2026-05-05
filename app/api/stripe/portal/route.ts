@@ -22,12 +22,30 @@ export async function POST(req: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!userData?.stripe_customer_id) {
+    let customerId = userData?.stripe_customer_id
+
+    // Self-healing: Eğer DB'de yoksa Stripe'dan email ile bulmaya çalışalım
+    if (!customerId && user.email) {
+      const customers = await stripe.customers.list({
+        email: user.email,
+        limit: 1,
+      })
+      
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id
+        // Veritabanını güncelleyelim ki bir sonraki seferde hızlı gelsin
+        await supabase.from('users').update({ 
+          stripe_customer_id: customerId 
+        }).eq('id', user.id)
+      }
+    }
+
+    if (!customerId) {
       return NextResponse.json({ error: 'Stripe müşteri kaydı bulunamadı' }, { status: 404 })
     }
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: userData.stripe_customer_id,
+      customer: customerId,
       return_url: `${req.headers.get('origin')}/settings`,
     })
 
