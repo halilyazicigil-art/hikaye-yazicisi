@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, Image as ImageIcon, Shuffle, X, Plus } from 'lucide-react'
 import { backgroundStoryAction } from '@/app/actions/backgroundStoryAction'
 import { saveStoryMetadata } from '@/app/actions/metadata'
 import { uploadReferenceImage } from '@/app/actions/uploadReferenceImage'
 import { createClient } from '@/utils/supabase/client'
-import { useEffect } from 'react'
 
 const AI_VOICES = [
   // — Beyefendi Masalcılar —
@@ -106,6 +105,10 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
   const supabase = createClient()
   const [jobId, setJobId] = useState<string | null>(null)
+  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
+  const [remainingStories, setRemainingStories] = useState<number | null>(null)
+  const [quotaStats, setQuotaStats] = useState<any>(null)
+  const fakeProgressIntervalRef = useRef<NodeJS.Timeout | null>(null)
   
   interface JobStatus {
     status: string;
@@ -116,8 +119,6 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     id: string;
     _isFaking?: boolean;
   }
-  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
-  const [remainingStories, setRemainingStories] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchQuota = async () => {
@@ -139,22 +140,18 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       const storyLimit = isPremiumUser ? 90 : (isProUser ? 40 : 3)
 
       // 2. Mevcut Dönem Başlangıcını Bul (Sert Sıfırlama)
-      let startDate = new Date()
-      startDate.setDate(1)
-      startDate.setHours(0, 0, 0, 0)
-      if (sub?.current_period_end) {
-        startDate = new Date(sub.current_period_end)
-        startDate.setDate(startDate.getDate() - 30)
-      }
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-      // 3. Kullanımı Say
+      // 3. Kullanılan Kotayı Say
       const { count } = await supabase
         .from('stories')
         .select('*', { count: 'exact', head: true })
         .in('profile_id', profileIds)
-        .gte('created_at', startDate.toISOString())
+        .gte('created_at', startOfMonth)
 
-      setRemainingStories(Math.max(0, storyLimit - (count || 0)))
+      const usedCount = count || 0
+      setRemainingStories(Math.max(0, storyLimit - usedCount))
+      setQuotaStats({ usedCount, storyLimit, isExpired })
     }
 
     fetchQuota()
@@ -178,7 +175,14 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         filter: `id=eq.${jobId}` 
       }, async (payload) => {
         const newStatus = payload.new as JobStatus;
-        setJobStatus(newStatus)
+        
+        // Eğer faking (sahte ilerleme) modundaysak, veritabanından gelen 0% bilgisinin yerel ilerlemeyi ezmesine izin verme
+        setJobStatus(prev => {
+          if (prev?._isFaking && newStatus.status === 'cached_processing') {
+            return { ...newStatus, progress: prev.progress, _isFaking: true };
+          }
+          return newStatus;
+        });
 
         if (newStatus.status === 'completed' && newStatus.story_id) {
           // Başarılı üretim sonrası sayacı düşür (iyimser güncelleme)
@@ -201,38 +205,54 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     return () => { supabase.removeChannel(channel) }
   }, [jobId, voiceName, genre, imageStyle, ageGroup, tab, educationalValue, characters])
 
-  // Freemium Caching (Fake Progress Delay)
+  // Freemium Caching (Fake Progress Delay) - useRef tabanlı stabil versiyon
   useEffect(() => {
     if (jobStatus?.status === 'cached_processing' && jobStatus.story_id && !jobStatus._isFaking) {
-      setJobStatus(prev => prev ? { ...prev, _isFaking: true } : null);
+      // 1. Sahte süreci başlat
+      setJobStatus(prev => prev ? { ...prev, _isFaking: true, progress: 1 } : null);
       
-      let currentProgress = 0;
-      // 3 dakika (180 saniye) boyunca %100'e ulaşmak için her 1.8 saniyede bir %1 artır
-      const interval = setInterval(() => {
+      // 2. Mevcut bir interval varsa temizle (garantiye al)
+      if (fakeProgressIntervalRef.current) clearInterval(fakeProgressIntervalRef.current);
+      
+      let currentProgress = 1;
+      fakeProgressIntervalRef.current = setInterval(() => {
         currentProgress += 1;
+        
         if (currentProgress >= 100) {
-          clearInterval(interval);
+          // Sayaç bitti!
+          if (fakeProgressIntervalRef.current) clearInterval(fakeProgressIntervalRef.current);
+          fakeProgressIntervalRef.current = null;
+          
           setJobStatus(prev => prev ? { ...prev, status: 'completed', progress: 100 } : null);
           setRemainingStories(prev => (prev !== null ? prev - 1 : 0));
           
-          saveStoryMetadata(jobStatus.story_id!, {
-            voice_name: voiceName,
-            genre: genre,
-            style: imageStyle,
-            age_group: ageGroup,
-            educational_value: tab === 'egitici' ? educationalValue : null,
-            characters: characters.filter(c => c.trim() !== '')
-          }).then(() => {
-            window.location.href = `/story/${jobStatus.story_id}`
-          });
+          if (jobStatus.story_id) {
+            saveStoryMetadata(jobStatus.story_id, {
+              voice_name: voiceName,
+              genre: genre,
+              style: imageStyle,
+              age_group: ageGroup,
+              educational_value: tab === 'egitici' ? educationalValue : null,
+              characters: characters.filter(c => c.trim() !== '')
+            }).then(() => {
+              window.location.href = `/story/${jobStatus.story_id}`
+            });
+          }
         } else {
-          setJobStatus(prev => prev ? { ...prev, progress: currentProgress } : null);
+          // İlerlemeyi güncelle
+          setJobStatus(prev => prev ? { ...prev, progress: currentProgress, _isFaking: true } : null);
         }
-      }, 1800);
-      
-      return () => clearInterval(interval);
+      }, 1800); // 3 dakika = 180 saniye -> 180/100 = 1.8 saniye
     }
-  }, [jobStatus?.status, jobStatus?._isFaking, jobStatus?.story_id, voiceName, genre, imageStyle, ageGroup, tab, educationalValue, characters])
+    
+    // Cleanup: Bileşen unmount olduğunda veya jobId sıfırlandığında temizle
+    return () => {
+      if (!jobId && fakeProgressIntervalRef.current) {
+        clearInterval(fakeProgressIntervalRef.current);
+        fakeProgressIntervalRef.current = null;
+      }
+    };
+  }, [jobStatus?.status, jobStatus?._isFaking, jobStatus?.story_id, jobId, voiceName, genre, imageStyle, ageGroup, tab, educationalValue, characters])
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section)
