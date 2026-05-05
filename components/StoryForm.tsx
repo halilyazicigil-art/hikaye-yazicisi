@@ -482,6 +482,13 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                   <p className="text-gray-500 mt-2">Masalları senin sesinle okuyalım!</p>
                 </div>
 
+                <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-bold shadow-sm animate-pulse">
+              <span className="text-lg">⚠️</span>
+              {quotaStats?.isExpired 
+                ? "Abonelik süreniz dolmuştur. Devam etmek için lütfen üyeliğinizi yenileyin."
+                : `Aylık hikaye limitinize ulaştınız.`
+              }
+            </div>
                 <div className="bg-sky-50 border border-sky-200 rounded-2xl p-4 mb-6">
                   <p className="text-sm text-sky-800 font-bold flex items-start gap-2">
                     <span className="text-lg">⚠️</span>
@@ -679,8 +686,11 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
           </button>
           
           {(remainingStories !== null && remainingStories <= 0) && (
-            <p className="mt-4 text-red-500 font-bold text-sm bg-red-50 px-4 py-2 rounded-full border border-red-100">
-              ⚠️ Aylık hikaye limitinize ulaştınız.
+            <p className="mt-4 text-red-500 font-bold text-sm bg-red-50 px-4 py-2 rounded-full border border-red-100 animate-pulse">
+              ⚠️ {quotaStats?.isExpired 
+                ? "Abonelik süreniz dolmuştur. Devam etmek için lütfen üyeliğinizi yenileyin." 
+                : "Aylık hikaye limitinize ulaştınız."
+              }
             </p>
           )}
           

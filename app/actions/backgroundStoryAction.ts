@@ -52,7 +52,10 @@ export async function backgroundStoryAction(formData: {
 
         // 🚨 KOTA ENGELLEME (GÜVENLİK DUVARI) - AYLIK ÜRETİM LİMİTİ
         if ((usedStories || 0) >= storyLimit) {
-            throw new Error(`Aylık hikaye limitinize ulaştınız (${storyLimit}/${storyLimit}). Yeni haklarınız dönem sonunda yenilenecektir.`);
+            const message = isExpired 
+                ? "Abonelik süreniz dolmuştur. Masal üretimine devam etmek için lütfen üyeliğinizi yenileyin."
+                : `Aylık hikaye limitinize ulaştınız (${storyLimit}/${storyLimit}). Yeni haklarınız dönem sonunda yenilenecektir.`;
+            throw new Error(message);
         }
 
         // 🧹 ARŞİV TEMİZLEME (YENİ KURAL)

@@ -19,11 +19,11 @@ export async function POST(req: Request) {
     }
 
     const isPremium = plan === 'premium'
-    const productName = isPremium ? 'MyStory Premium (Kraliçe Arı)' : 'MyStory Pro (Tatlı Bal)'
+    const productName = isPremium ? 'Altın Güneş (Premium Paket)' : 'Gümüş Gökyüzü (Pro Paket)'
     const productDesc = isPremium 
-      ? 'Sınırsız masal oluşturma ve ebeveyn ses klonlama özelliği.' 
-      : 'Ayda 50 masal oluşturma hakkı.'
-    const unitAmount = isPremium ? 4000 : 1500 // $40.00 veya $15.00
+      ? 'Aylık 90 masal üretimi, 100 masal arşivi ve ebeveyn ses klonlama özelliği.' 
+      : 'Aylık 40 masal üretimi ve 50 masal arşivi hakkı.'
+    const unitAmount = isPremium ? 188111 : 75000 // 1.881,11 TL ve 750,00 TL (Örnek rakamlar, TRY üzerinden)
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'try',
             product_data: {
               name: productName,
               description: productDesc,
