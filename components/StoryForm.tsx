@@ -29,6 +29,49 @@ const GENRES = ['Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl']
 const IMAGE_STYLES = ['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Anime', 'Yağlı Boya', 'Pop Art', 'Çizgi Film', 'Vintage Retro']
 const AGE_GROUPS = ['0-1', '1-2', '2-4', '4-6', '6-10', '10-13']
 
+const STORY_SCENARIOS = [
+  {
+    characters: ['Kaptan Bulut', 'Martı Gümüş'],
+    prompt: 'Kaptan Bulut ve yardımcısı Martı Gümüş, gökyüzündeki gökkuşağının renklerinin neden solduğunu bulmak için renkli bir yolculuğa çıkıyor.'
+  },
+  {
+    characters: ['Robot Çark', 'Küçük Mühendis Melis'],
+    prompt: 'Robot Çark ve Melis, bozulan bir yıldız haritasını tamir etmek için uzay gemileriyle Samanyolu galaksisinde gizemli bir parçanın peşine düşerler.'
+  },
+  {
+    characters: ['Sevimli Ayı Pofuduk', 'Bilge Baykuş'],
+    prompt: 'Ayı Pofuduk, kış uykusuna yatmadan önce ormandaki en büyük bal kovanının haritasını bulmak için Bilge Baykuş ile bir maceraya atılır.'
+  },
+  {
+    characters: ['Prenses Ada', 'Uçan At Kanat'],
+    prompt: 'Prenses Ada, krallığın üzerinden hiç eksilmeyen yağmur bulutlarını dağıtmak için Uçan Atı Kanat ile güneşin doğduğu diyara uçar.'
+  },
+  {
+    characters: ['Minik Tavşan Pamuk', 'Hızlı Kaplumbağa'],
+    prompt: 'Pamuk ve Kaplumbağa, ormanda düzenlenen yıllık büyük piknik için en lezzetli havuçları toplamak üzere gizli bahçeye giderler.'
+  },
+  {
+    characters: ['Cesur İtfaiyeci Kerem', 'Yavru Kedi Duman'],
+    prompt: 'İtfaiyeci Kerem, bir ağacın en tepesinde mahsur kalan Duman\'ı kurtarmaya çalışırken, ikisi birden sihirli bir tünelden başka bir diyara geçerler.'
+  },
+  {
+    characters: ['Dedektif Can', 'Konuşan Köpek Tarçın'],
+    prompt: 'Dedektif Can ve Tarçın, müzedeki en değerli elmasın neden sadece geceleri parladığını çözmek için gizemli bir ipucunu takip ederler.'
+  },
+  {
+    characters: ['Minik Peri Işıltı', 'Dev Arı Vızvız'],
+    prompt: 'Peri Işıltı, kanatlarındaki tozun azalması üzerine, dünyanın en nadir çiçeğinden polen toplamak için Dev Arı Vızvız\'ın sırtında bir yolculuğa çıkar.'
+  },
+  {
+    characters: ['Süper Çocuk Mert', 'Gölge Adam'],
+    prompt: 'Mert, şehri ele geçirmeye çalışan Gölge Adam\'ı iyilik ve neşe ile durdurmak için mahalledeki tüm çocuklarla bir plan yapar.'
+  },
+  {
+    characters: ['Mavi Ejderha Alev', 'Küçük Viking'],
+    prompt: 'Alev, ateş püskürtemediği için üzüldüğünde, Küçük Viking ona acı biberlerin ve dostluğun sırrını anlatarak yardım eder.'
+  }
+]
+
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
   const [prompt, setPrompt] = useState('')
   const [tab, setTab] = useState<'normal' | 'egitici'>('normal')
@@ -180,6 +223,11 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     // Random Age Group
     const randomAge = AGE_GROUPS[Math.floor(Math.random() * AGE_GROUPS.length)]
     setAgeGroup(randomAge)
+
+    // Random Scenario (Contextual Prompt & Characters)
+    const randomScenario = STORY_SCENARIOS[Math.floor(Math.random() * STORY_SCENARIOS.length)]
+    setPrompt(randomScenario.prompt)
+    setCharacters(randomScenario.characters)
   }
 
   const handleGenerate = async (e: React.FormEvent) => {
