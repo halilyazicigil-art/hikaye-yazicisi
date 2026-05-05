@@ -89,7 +89,7 @@ export default function SettingsPage() {
                   >
                     <span className="absolute inset-0 bg-white/20 blur-xl rounded-full translate-y-1/2 scale-150 animate-pulse"></span>
                     <span className="relative z-10 flex items-center justify-center gap-2">
-                      👑 Kraliçe Arı ($40/ay)
+                      👑 Altın Güneş ($40/ay)
                     </span>
                   </button>
                 </div>

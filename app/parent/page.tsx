@@ -106,7 +106,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
           <div className="flex gap-4 items-center">
             {isPremium && (
                <span className="hidden sm:inline-flex items-center bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-bold border border-purple-200">
-                 👑 Kraliçe Arı
+                 👑 Altın Güneş
                </span>
             )}
             {isPro && !isPremium && (
@@ -253,7 +253,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
               <div className={`mt-8 ${isPro ? 'bg-purple-50 border-purple-200' : 'bg-[#BDD9F2] border-[#BDD9F2]'} border rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between shadow-inner`}>
                 <div>
                   <h3 className={`${isPro ? 'text-purple-800' : 'text-[#84B1D9]'} font-lora font-bold text-lg`}>
-                    {isPro ? 'Kraliçe Arı\'ya Terfi Edin! 👑' : 'Premium\'a Geçin!'}
+                    {isPro ? 'Altın Güneş\'ya Terfi Edin! 👑' : 'Premium\'a Geçin!'}
                   </h3>
                   <p className="text-gray-600 mt-1">Kendi sesinizi klonlayarak masalları siz okuyun.</p>
                 </div>

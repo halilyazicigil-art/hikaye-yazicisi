@@ -151,8 +151,8 @@ export default async function Home() {
 
         <div className="grid md:grid-cols-3 gap-6 items-center">
           {/* Free Plan */}
-          <div className="bg-[#BDD9F2] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full opacity-80 scale-95">
-            <h3 className="text-2xl font-lora font-bold mb-2">Başlangıç Kovanı</h3>
+          <div className="bg-white/70 backdrop-blur-md border border-white/50 rounded-[2rem] p-8 shadow-xl flex flex-col h-full scale-95">
+            <h3 className="text-2xl font-lora font-bold mb-2">Pamuk Bulut</h3>
             <div className="text-4xl font-bold text-[#84B1D9] mb-8">Ücretsiz</div>
             <ul className="space-y-4 text-sm font-bold text-gray-700 flex-grow">
               <li className="flex justify-between border-b pb-2"><span>Hikaye Uzunluğu</span> <span>Standart</span></li>
@@ -171,7 +171,7 @@ export default async function Home() {
             ) : (
               <div className="absolute -top-4 right-8 bg-[#f5c345] text-sky-900 font-bold px-4 py-1 rounded-full text-sm">En Popüler</div>
             )}
-            <h3 className="text-2xl font-lora font-bold mb-2">Tatlı Bal (Pro)</h3>
+            <h3 className="text-2xl font-lora font-bold mb-2">Gümüş Gökyüzü (Pro)</h3>
             <div className="text-4xl font-bold text-[#84B1D9] mb-8">15 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
             <ul className="space-y-3 text-xs font-bold text-gray-700 flex-grow">
               <li className="flex justify-between border-b pb-1"><span>Aylık Masal</span> <span>40 Adet</span></li>
@@ -195,7 +195,7 @@ export default async function Home() {
             {isPremium && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 👑</div>
             )}
-            <h3 className="text-2xl font-lora font-bold mb-2">Kraliçe Arı (Premium)</h3>
+            <h3 className="text-2xl font-lora font-bold mb-2">Altın Güneş (Premium)</h3>
             <div className="text-4xl font-bold text-[#84B1D9] mb-8">40 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
             <ul className="space-y-3 text-xs font-bold text-gray-700 flex-grow">
               <li className="flex justify-between border-b pb-1"><span>Aylık Masal</span> <span>80 Adet</span></li>

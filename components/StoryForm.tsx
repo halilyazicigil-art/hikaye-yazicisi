@@ -153,7 +153,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
   const handleTabSelect = (selectedTab: 'normal' | 'egitici') => {
     if (selectedTab === 'egitici' && !isPro && !isPremium) {
-      alert('Eğitici mod için Tatlı Bal veya Kraliçe Arı paketine sahip olmalısınız.')
+      alert('Eğitici mod için Tatlı Bal veya Altın Güneş paketine sahip olmalısınız.')
       return
     }
     setTab(selectedTab)
@@ -329,7 +329,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                       type="button"
                       onClick={() => {
                         if (!isPremium) {
-                          alert('Kendi sesinizi klonlamak için Kraliçe Arı paketine sahip olmalısınız.')
+                          alert('Kendi sesinizi klonlamak için Altın Güneş paketine sahip olmalısınız.')
                         } else {
                           setShowVoiceModal(true)
                         }
