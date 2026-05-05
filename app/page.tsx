@@ -18,7 +18,7 @@ export default async function LandingPage() {
       {/* 1. KAHRAMAN BÖLÜMÜ (Hero) - Uyuyan Çocuk Görseli */}
       <div className="relative w-full min-h-[85vh] flex flex-col overflow-hidden bg-[#BDD9F2]">
         {/* Görsel Katmanı - Softened for legibility */}
-        <div className="absolute inset-0 bg-[url('/images/hero-sleeping.png')] bg-cover bg-center bg-no-repeat z-0 opacity-40 filter blur-[1px] grayscale-[0.25]"></div>
+        <div className="absolute inset-0 bg-[url('/images/hero-sleeping.png')] bg-cover bg-center bg-no-repeat z-0 opacity-50 filter blur-[1px] grayscale-[0.4]"></div>
         {/* Yumuşak Geçiş ve Renk Dengeleyici Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#BDD9F2]/60 via-[#BDD9F2]/25 to-[#BDD9F2] z-10"></div>
         
