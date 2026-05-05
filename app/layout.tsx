@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body className={`${nunito.variable} ${lora.variable} font-nunito antialiased bg-[#EFEBED] text-gray-800`}>
+      <body className={`${nunito.variable} ${lora.variable} font-nunito antialiased bg-[#BDD9F2] text-gray-800`}>
         {children}
       </body>
     </html>

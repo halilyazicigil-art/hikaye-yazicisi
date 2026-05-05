@@ -95,7 +95,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   const { remainingText, remainingVoiceText } = await getQuotaStats(supabase, profileIds, sub, isPro, isPremium)
 
   return (
-    <div className="min-h-screen bg-[#EFEBED] font-nunito p-4 sm:p-8">
+    <div className="min-h-screen bg-[#BDD9F2] font-nunito p-4 sm:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-sky-900/10">
@@ -119,7 +119,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                 Admin
               </Link>
             )}
-            <Link href="/settings" className="p-3 bg-[#EFEBED] text-[#84B1D9] rounded-xl hover:bg-[#BDD9F2] transition border border-[#BDD9F2]/30">
+            <Link href="/settings" className="p-3 bg-[#BDD9F2] text-[#84B1D9] rounded-xl hover:bg-[#BDD9F2] transition border border-[#BDD9F2]/30">
               <Settings size={24} />
             </Link>
           </div>
@@ -145,7 +145,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
               <h3 className="font-bold text-gray-900 text-lg border-b border-sky-100 pb-4">Aylık İstatistikler</h3>
               
               <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between p-4 bg-[#EFEBED] border border-sky-100 rounded-2xl">
+                <div className="flex items-center justify-between p-4 bg-[#BDD9F2] border border-sky-100 rounded-2xl">
                   <div className="flex items-center text-[#84B1D9] font-semibold">
                     <BookHeart className="mr-3" size={24} /> Okunan Masallar
                   </div>
@@ -188,7 +188,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                                    (Array.isArray(story.content_json) ? [] : []) // Basit bir fallback
 
                   return (
-                    <Link href={`/story/${story.id}`} key={story.id} className="group relative p-6 bg-[#EFEBED] hover:bg-[#BDD9F2] border border-sky-100 rounded-3xl transition-all cursor-pointer block overflow-hidden">
+                    <Link href={`/story/${story.id}`} key={story.id} className="group relative p-6 bg-[#BDD9F2] hover:bg-[#BDD9F2] border border-sky-100 rounded-3xl transition-all cursor-pointer block overflow-hidden">
                       <div className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-sm text-sky-500">
                         <Star size={18} fill="currentColor" />
                       </div>
@@ -250,7 +250,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
 
             {/* Upgrade Banner - Dinamik */}
             {!isPremium && (
-              <div className={`mt-8 ${isPro ? 'bg-purple-50 border-purple-200' : 'bg-[#EFEBED] border-[#BDD9F2]'} border rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between shadow-inner`}>
+              <div className={`mt-8 ${isPro ? 'bg-purple-50 border-purple-200' : 'bg-[#BDD9F2] border-[#BDD9F2]'} border rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between shadow-inner`}>
                 <div>
                   <h3 className={`${isPro ? 'text-purple-800' : 'text-[#84B1D9]'} font-lora font-bold text-lg`}>
                     {isPro ? 'Kraliçe Arı\'ya Terfi Edin! 👑' : 'Premium\'a Geçin!'}

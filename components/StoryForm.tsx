@@ -289,7 +289,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                 {/* Sessiz Seçeneği */}
                 <div 
                   onClick={() => handleVoiceSelect('Sessiz', 'Sessiz')}
-                  className={`p-4 rounded-xl cursor-pointer border-2 transition text-center ${voice === 'Sessiz' ? 'border-[#84B1D9] bg-[#EFEBED]' : 'border-transparent bg-white shadow-sm'}`}
+                  className={`p-4 rounded-xl cursor-pointer border-2 transition text-center ${voice === 'Sessiz' ? 'border-[#84B1D9] bg-[#BDD9F2]' : 'border-transparent bg-white shadow-sm'}`}
                 >
                   <span className="font-bold">Sessiz (Sadece Metin)</span>
                 </div>
@@ -302,7 +302,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                       <div 
                         key={v.id} 
                         onClick={() => handleVoiceSelect(v.id, v.name)}
-                        className={`p-3 rounded-xl cursor-pointer border-2 transition flex flex-col items-center ${voice === v.id ? 'border-[#84B1D9] bg-[#EFEBED]' : 'border-transparent bg-white shadow-sm'}`}
+                        className={`p-3 rounded-xl cursor-pointer border-2 transition flex flex-col items-center ${voice === v.id ? 'border-[#84B1D9] bg-[#BDD9F2]' : 'border-transparent bg-white shadow-sm'}`}
                       >
                         <span className="font-bold text-sm text-center">{v.name}</span>
                         <span className="text-[10px] text-gray-400 text-center">{v.desc}</span>
@@ -319,7 +319,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                       <div 
                         key={v.eleven_voice_id} 
                         onClick={() => handleVoiceSelect(v.eleven_voice_id, v.name)}
-                        className={`p-3 rounded-xl cursor-pointer border-2 transition flex flex-col items-center ${voice === v.eleven_voice_id ? 'border-[#84B1D9] bg-[#EFEBED]' : 'border-transparent bg-white shadow-sm'}`}
+                        className={`p-3 rounded-xl cursor-pointer border-2 transition flex flex-col items-center ${voice === v.eleven_voice_id ? 'border-[#84B1D9] bg-[#BDD9F2]' : 'border-transparent bg-white shadow-sm'}`}
                       >
                         <span className="font-bold text-sm text-center">{v.name}</span>
                         <span className="text-[10px] text-emerald-500">Kendi Sesin</span>
@@ -552,7 +552,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
       {/* Progress Modal Overlay */}
       {jobId && jobStatus && (
-        <div className="fixed inset-0 bg-[#EFEBED]/95 backdrop-blur-sm z-[200] flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto">
+        <div className="fixed inset-0 bg-[#BDD9F2]/95 backdrop-blur-sm z-[200] flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto">
           <div className="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl border-4 border-[#84B1D9] relative animate-in zoom-in duration-500">
             {jobStatus.status === 'failed' && (
               <button 
@@ -619,7 +619,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               </div>
 
               {/* Visual Reference Panel */}
-              <div className="bg-[#EFEBED] rounded-3xl p-6 border-2 border-dashed border-[#BDD9F2] flex flex-col items-center justify-center min-h-[300px]">
+              <div className="bg-[#BDD9F2] rounded-3xl p-6 border-2 border-dashed border-[#BDD9F2] flex flex-col items-center justify-center min-h-[300px]">
                 <h4 className="text-sm font-bold text-sky-700 uppercase tracking-widest mb-4">Karakter Referansınız</h4>
                 {jobStatus.master_ref_data ? (
                   <img 

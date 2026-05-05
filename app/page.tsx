@@ -19,14 +19,14 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#EFEBED] text-[#3d3d3d] overflow-x-hidden font-nunito relative">
+    <main className="min-h-screen bg-[#BDD9F2] text-[#3d3d3d] overflow-x-hidden font-nunito relative">
       {/* Decorative watercolor background blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#f4dcb5] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
-      <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-[#f7d6c4] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#84B1D9] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
+      <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-[#8FBDD9] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
 
       {/* Hero and Navbar Wrapper with Background */}
       <div className="relative w-full bg-[url('/images/hero_bg.png')] bg-cover bg-center bg-no-repeat pb-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#EFEBED]/90 via-[#EFEBED]/70 to-[#EFEBED]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#BDD9F2]/90 via-[#BDD9F2]/70 to-[#BDD9F2]"></div>
         
         {/* Navbar */}
         <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center relative z-20">
@@ -148,7 +148,7 @@ export default async function Home() {
 
         <div className="grid md:grid-cols-3 gap-6 items-center">
           {/* Free Plan */}
-          <div className="bg-[#EFEBED] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full opacity-80 scale-95">
+          <div className="bg-[#BDD9F2] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full opacity-80 scale-95">
             <h3 className="text-2xl font-lora font-bold mb-2">Başlangıç Kovanı</h3>
             <div className="text-4xl font-bold text-[#84B1D9] mb-8">Ücretsiz</div>
             <ul className="space-y-4 text-sm font-bold text-gray-700 flex-grow">
@@ -188,7 +188,7 @@ export default async function Home() {
           </div>
 
           {/* Premium Plan */}
-          <div className={`bg-[#EFEBED] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full relative ${isPremium ? 'ring-4 ring-purple-500/30 opacity-100 scale-100 border-purple-200 bg-white' : 'opacity-80 scale-95'}`}>
+          <div className={`bg-[#BDD9F2] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full relative ${isPremium ? 'ring-4 ring-purple-500/30 opacity-100 scale-100 border-purple-200 bg-white' : 'opacity-80 scale-95'}`}>
             {isPremium && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 👑</div>
             )}
