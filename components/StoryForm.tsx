@@ -120,8 +120,11 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       ])
 
       const profileIds = profiles?.map(p => p.id) || []
-      const isPremiumUser = sub?.plan_id === 'premium'
-      const isProUser = sub?.plan_id === 'pro'
+      const now = new Date()
+      const isExpired = sub?.current_period_end ? new Date(sub.current_period_end) < now : true
+
+      const isPremiumUser = !isExpired && sub?.plan_id === 'premium'
+      const isProUser = !isExpired && sub?.plan_id === 'pro'
       const storyLimit = isPremiumUser ? 90 : (isProUser ? 40 : 3)
 
       // 2. Mevcut Dönem Başlangıcını Bul (Sert Sıfırlama)

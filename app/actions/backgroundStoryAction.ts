@@ -25,8 +25,13 @@ export async function backgroundStoryAction(formData: {
         ]);
 
         const profileIds = profiles?.map(p => p.id) || [];
-        const isPremium = sub?.plan_id === 'premium';
-        const isPro = sub?.plan_id === 'pro';
+        
+        // 🚨 ABONELİK SÜRE KONTROLÜ
+        const now = new Date();
+        const isExpired = sub?.current_period_end ? new Date(sub.current_period_end) < now : true;
+        
+        const isPremium = !isExpired && sub?.plan_id === 'premium';
+        const isPro = !isExpired && sub?.plan_id === 'pro';
         const storyLimit = isPremium ? 90 : (isPro ? 40 : 3);
 
         // 2. Mevcut Fatura Dönemindeki Kullanımı Hesapla (Sert Sıfırlama Mantığı)
