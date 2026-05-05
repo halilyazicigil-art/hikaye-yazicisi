@@ -41,7 +41,7 @@ export default async function Home() {
           
           <div className="hidden md:flex items-center gap-8 text-white font-bold">
             <Link href="/pricing" className="hover:text-[#052159] transition">Fiyatlandırma</Link>
-            <a href="#how-it-works" className="hover:text-[#052159] transition">Nasıl Çalışır</a>
+            <Link href="/how-it-works" className="hover:text-[#052159] transition">Nasıl Çalışır</Link>
             <a href="#" className="hover:text-[#052159] transition">Masallar</a>
           </div>
 
