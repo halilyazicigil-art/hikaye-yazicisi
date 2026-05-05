@@ -74,8 +74,13 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   }
 
   const { data: sub } = await supabase.from('subscriptions').select('plan_id, status, current_period_end').eq('user_id', user.id).maybeSingle()
-  const isPro = sub?.plan_id === 'pro'
-  const isPremium = sub?.plan_id === 'premium'
+  
+  // 🚨 ABONELİK SÜRE KONTROLÜ
+  const now = new Date()
+  const isExpired = sub?.current_period_end ? new Date(sub.current_period_end) < now : true
+
+  const isPro = !isExpired && sub?.plan_id === 'pro'
+  const isPremium = !isExpired && sub?.plan_id === 'premium'
 
   const { data: profiles } = await supabase.from('profiles').select('id, name').eq('user_id', user.id)
   const profileIds = profiles?.map(p => p.id) || []
