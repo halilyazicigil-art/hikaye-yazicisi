@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Lora, Nunito } from "next/font/google";
 import "./globals.css";
+import { AudioPlayerProvider } from "@/context/AudioPlayerContext";
+import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 
 const lora = Lora({
   variable: "--font-lora",
@@ -25,7 +27,10 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={`${nunito.variable} ${lora.variable} font-nunito antialiased bg-[#BDD9F2] text-gray-800`}>
-        {children}
+        <AudioPlayerProvider>
+          {children}
+          <GlobalAudioPlayer />
+        </AudioPlayerProvider>
       </body>
     </html>
   );

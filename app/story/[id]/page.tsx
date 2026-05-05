@@ -3,6 +3,7 @@ import StoryPlayer from '@/components/StoryPlayer'
 import Link from 'next/link'
 import { Download, Music, ImageIcon } from 'lucide-react'
 import DownloadBookButton from '@/components/DownloadBookButton'
+import AudioBanner from '@/components/AudioBanner'
 
 export default async function StoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -79,8 +80,12 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
 
+        {/* Seslendirme Bannerı */}
+        <AudioBanner story={story} />
+
         {/* Story Player */}
         <StoryPlayer
+          id={story.id}
           title={story.title}
           content={[]}
           imageUrl={story.image_url}

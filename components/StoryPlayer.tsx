@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Play, Pause, Download, BookOpen, Music } from 'lucide-react'
+import { useAudioPlayer } from '@/context/AudioPlayerContext'
 
 interface StoryPageData {
   text: string
@@ -9,6 +10,7 @@ interface StoryPageData {
 }
 
 interface StoryPlayerProps {
+  id: string
   title: string
   content: string[]
   imageUrl: string
@@ -16,15 +18,16 @@ interface StoryPlayerProps {
   pages?: StoryPageData[]
 }
 
-export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages }: StoryPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
+export default function StoryPlayer({ id, title, content, imageUrl, audioUrl, pages }: StoryPlayerProps) {
+  const { currentTrack, isPlaying, playTrack, togglePlay, audioRef, progress: globalProgress } = useAudioPlayer()
   const [currentPage, setCurrentPage] = useState(0)
-  const [progress, setProgress] = useState(0)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [localProgress, setLocalProgress] = useState(0)
 
   const bookPages = pages && pages.length > 0
     ? pages
     : content.map(text => ({ text, image_url: imageUrl }))
+
+  const isThisPlaying = currentTrack?.id === id && isPlaying
 
   // Sayfa başlangıç zamanlarını metin uzunluğu oranına göre hesapla
   const getPageTimestamps = useCallback((duration: number) => {
@@ -39,81 +42,32 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
 
   // Ses süresi boyunca sayfayı takip et (auto page-turn)
   useEffect(() => {
+    if (currentTrack?.id !== id || !audioRef.current) return
+
     const audio = audioRef.current
-    if (!audio) return
+    const duration = audio.duration
+    if (!duration || isNaN(duration)) return
 
-    const handleTimeUpdate = () => {
-      const duration = audio.duration
-      if (!duration || isNaN(duration)) return
+    const timestamps = getPageTimestamps(duration)
+    setLocalProgress((audio.currentTime / duration) * 100)
 
-      const timestamps = getPageTimestamps(duration)
-      setProgress((audio.currentTime / duration) * 100)
-
-      // Hangi sayfadayız?
-      let newPage = 0
-      for (let i = timestamps.length - 1; i >= 0; i--) {
-        if (audio.currentTime >= timestamps[i]) {
-          newPage = i
-          break
-        }
+    // Hangi sayfadayız?
+    let newPage = 0
+    for (let i = timestamps.length - 1; i >= 0; i--) {
+      if (audio.currentTime >= timestamps[i]) {
+        newPage = i
+        break
       }
-      setCurrentPage(newPage)
     }
+    setCurrentPage(newPage)
+  }, [id, currentTrack?.id, globalProgress, getPageTimestamps])
 
-    audio.addEventListener('timeupdate', handleTimeUpdate)
-    audio.addEventListener('ended', () => setIsPlaying(false))
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate)
-    }
-  }, [getPageTimestamps])
-
-  const togglePlay = () => {
-    if (!audioRef.current || !audioUrl) return
-    if (isPlaying) {
-      audioRef.current.pause()
+  const handleTogglePlay = () => {
+    if (currentTrack?.id === id) {
+      togglePlay()
     } else {
-      audioRef.current.play()
+      playTrack({ id, title, audioUrl, imageUrl })
     }
-    setIsPlaying(!isPlaying)
-  }
-
-  const downloadBook = () => {
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>${title}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-          body { font-family: 'Outfit', sans-serif; line-height: 1.6; color: #334155; margin: 0; padding: 0; background: #fff; }
-          .cover { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #fef3c7, #fde68a); text-align: center; page-break-after: always; }
-          h1 { color: #92400e; font-size: 56px; margin: 20px; }
-          .page { padding: 40px; display: flex; flex-direction: column; align-items: center; page-break-after: always; }
-          .page-image { width: 100%; max-width: 600px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 30px; }
-          .page-text { font-size: 22px; text-align: center; max-width: 700px; color: #475569; }
-          .footer { margin-top: 30px; color: #94a3b8; font-size: 13px; }
-        </style>
-      </head>
-      <body>
-        <div class="cover"><h1>${title}</h1><p>Özel Resimli Masal Kitabı</p></div>
-        ${bookPages.map((p, i) => `
-          <div class="page">
-            <img class="page-image" src="${p.image_url || imageUrl}" />
-            <div class="page-text">${p.text}</div>
-            <div class="footer">Sayfa ${i + 1} / ${bookPages.length}</div>
-          </div>
-        `).join('')}
-      </body>
-      </html>
-    `
-    const blob = new Blob([htmlContent], { type: 'text/html' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `${title}_Resimli_Kitap.html`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
   }
 
   const currentDisplayImage = bookPages[currentPage]?.image_url || imageUrl
@@ -151,22 +105,23 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
           {/* Ses çubuğu — sadece play butonu */}
           {audioUrl && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
-              <audio ref={audioRef} src={audioUrl} />
               <button
-                onClick={togglePlay}
-                className="w-16 h-16 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 border-4 border-white"
+                onClick={handleTogglePlay}
+                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 border-4 border-white ${
+                  isThisPlaying ? 'bg-orange-500' : 'bg-sky-500'
+                } text-white`}
               >
-                {isPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
+                {isThisPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
               </button>
             </div>
           )}
 
           {/* Progress bar */}
-          {audioUrl && (
+          {audioUrl && currentTrack?.id === id && (
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-sky-100">
               <div
                 className="h-full bg-sky-500 transition-all duration-300"
-                style={{ width: `${progress}%` }}
+                style={{ width: `${localProgress}%` }}
               />
             </div>
           )}
@@ -196,8 +151,9 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
               <button
                 onClick={() => {
                   setCurrentPage(Math.max(0, currentPage - 1))
-                  if (audioRef.current) audioRef.current.pause()
-                  setIsPlaying(false)
+                  if (currentTrack?.id === id && audioRef.current) {
+                    audioRef.current.pause()
+                  }
                 }}
                 disabled={currentPage === 0}
                 className="flex-1 py-4 bg-white text-sky-800 rounded-2xl font-bold text-lg disabled:opacity-25 border-2 border-sky-200 shadow-sm hover:bg-sky-50 hover:border-amber-300 transition-all"
@@ -214,8 +170,9 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
               <button
                 onClick={() => {
                   setCurrentPage(Math.min(bookPages.length - 1, currentPage + 1))
-                  if (audioRef.current) audioRef.current.pause()
-                  setIsPlaying(false)
+                  if (currentTrack?.id === id && audioRef.current) {
+                    audioRef.current.pause()
+                  }
                 }}
                 disabled={currentPage === bookPages.length - 1}
                 className="flex-1 py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-bold text-lg disabled:opacity-25 shadow-lg transition-all"
