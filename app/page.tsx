@@ -1,4 +1,5 @@
 import StoryForm from '@/components/StoryForm'
+import HowItWorks from '@/components/HowItWorks'
 import Link from 'next/link'
 import { CheckCircle2, Cloud } from 'lucide-react'
 import { createClient } from '@/utils/supabase/server'
@@ -103,6 +104,9 @@ export default async function Home() {
         </div>
         <StoryForm isPro={isPro} isPremium={isPremium} />
       </section>
+
+      {/* How It Works Section */}
+      <HowItWorks />
 
       {/* Features Section */}
       <section className="max-w-7xl mx-auto px-6 py-20 border-t border-sky-900/5 relative z-10">
