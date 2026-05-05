@@ -32,43 +32,53 @@ const AGE_GROUPS = ['0-1', '1-2', '2-4', '4-6', '6-10', '10-13']
 const STORY_SCENARIOS = [
   {
     characters: ['Kaptan Bulut', 'Martı Gümüş'],
-    prompt: 'Kaptan Bulut ve yardımcısı Martı Gümüş, gökyüzündeki gökkuşağının renklerinin neden solduğunu bulmak için renkli bir yolculuğa çıkıyor.'
+    prompt: 'Kaptan Bulut ve yardımcısı Martı Gümüş, gökyüzündeki gökkuşağının renklerinin neden solduğunu bulmak için renkli bir yolculuğa çıkıyor.',
+    voice: 'Alnilam', voiceName: 'Yüce Kral', genre: 'Macera', style: 'Sulu Boya', age: '4-6'
   },
   {
     characters: ['Robot Çark', 'Küçük Mühendis Melis'],
-    prompt: 'Robot Çark ve Melis, bozulan bir yıldız haritasını tamir etmek için uzay gemileriyle Samanyolu galaksisinde gizemli bir parçanın peşine düşerler.'
+    prompt: 'Robot Çark ve Melis, bozulan bir yıldız haritasını tamir etmek için uzay gemileriyle Samanyolu galaksisinde gizemli bir parçanın peşine düşerler.',
+    voice: 'Iapetus', voiceName: 'Orman Muhafızı', genre: 'Bilim Kurgu', style: '3D Pixar Stili', age: '6-10'
   },
   {
     characters: ['Sevimli Ayı Pofuduk', 'Bilge Baykuş'],
-    prompt: 'Ayı Pofuduk, kış uykusuna yatmadan önce ormandaki en büyük bal kovanının haritasını bulmak için Bilge Baykuş ile bir maceraya atılır.'
+    prompt: 'Ayı Pofuduk, kış uykusuna yatmadan önce ormandaki en büyük bal kovanının haritasını bulmak için Bilge Baykuş ile bir maceraya atılır.',
+    voice: 'Aoede', voiceName: 'Bilge Anne', genre: 'Masal', style: 'Pastel Düşler', age: '2-4'
   },
   {
     characters: ['Prenses Ada', 'Uçan At Kanat'],
-    prompt: 'Prenses Ada, krallığın üzerinden hiç eksilmeyen yağmur bulutlarını dağıtmak için Uçan Atı Kanat ile güneşin doğduğu diyara uçar.'
+    prompt: 'Prenses Ada, krallığın üzerinden hiç eksilmeyen yağmur bulutlarını dağıtmak için Uçan Atı Kanat ile güneşin doğduğu diyara uçar.',
+    voice: 'Gacrux', voiceName: 'Gizemli Prenses', genre: 'Fantastik', style: 'Anime', age: '6-10'
   },
   {
     characters: ['Minik Tavşan Pamuk', 'Hızlı Kaplumbağa'],
-    prompt: 'Pamuk ve Kaplumbağa, ormanda düzenlenen yıllık büyük piknik için en lezzetli havuçları toplamak üzere gizli bahçeye giderler.'
+    prompt: 'Pamuk ve Kaplumbağa, ormanda düzenlenen yıllık büyük piknik için en lezzetli havuçları toplamak üzere gizli bahçeye giderler.',
+    voice: 'Algenib', voiceName: 'Gezgin Tavşan', genre: 'Fabl', style: 'Sulu Boya', age: '1-2'
   },
   {
     characters: ['Cesur İtfaiyeci Kerem', 'Yavru Kedi Duman'],
-    prompt: 'İtfaiyeci Kerem, bir ağacın en tepesinde mahsur kalan Duman\'ı kurtarmaya çalışırken, ikisi birden sihirli bir tünelden başka bir diyara geçerler.'
+    prompt: 'İtfaiyeci Kerem, bir ağacın en tepesinde mahsur kalan Duman\'ı kurtarmaya çalışırken, ikisi birden sihirli bir tünelden başka bir diyara geçerler.',
+    voice: 'Algieba', voiceName: 'Cesur Şövalye', genre: 'Macera', style: 'Çizgi Film', age: '4-6'
   },
   {
     characters: ['Dedektif Can', 'Konuşan Köpek Tarçın'],
-    prompt: 'Dedektif Can ve Tarçın, müzedeki en değerli elmasın neden sadece geceleri parladığını çözmek için gizemli bir ipucunu takip ederler.'
+    prompt: 'Dedektif Can ve Tarçın, müzedeki en değerli elmasın neden sadece geceleri parladığını çözmek için gizemli bir ipucunu takip ederler.',
+    voice: 'Callirrhoe', voiceName: 'Masalcı Kadın', genre: 'Macera', style: 'Pop Art', age: '10-13'
   },
   {
     characters: ['Minik Peri Işıltı', 'Dev Arı Vızvız'],
-    prompt: 'Peri Işıltı, kanatlarındaki tozun azalması üzerine, dünyanın en nadir çiçeğinden polen toplamak için Dev Arı Vızvız\'ın sırtında bir yolculuğa çıkar.'
+    prompt: 'Peri Işıltı, kanatlarındaki tozun azalması üzerine, dünyanın en nadir çiçeğinden polen toplamak için Dev Arı Vızvız\'ın sırtında bir yolculuğa çıkar.',
+    voice: 'Fenrir', voiceName: 'Sihirli Peri', genre: 'Masal', style: 'Yağlı Boya', age: '2-4'
   },
   {
     characters: ['Süper Çocuk Mert', 'Gölge Adam'],
-    prompt: 'Mert, şehri ele geçirmeye çalışan Gölge Adam\'ı iyilik ve neşe ile durdurmak için mahalledeki tüm çocuklarla bir plan yapar.'
+    prompt: 'Mert, şehri ele geçirmeye çalışan Gölge Adam\'ı iyilik ve neşe ile durdurmak için mahalledeki tüm çocuklarla bir plan yapar.',
+    voice: 'Charon', voiceName: 'Heyecanlı Baba', genre: 'Fantastik', style: '3D Pixar Stili', age: '6-10'
   },
   {
     characters: ['Mavi Ejderha Alev', 'Küçük Viking'],
-    prompt: 'Alev, ateş püskürtemediği için üzüldüğünde, Küçük Viking ona acı biberlerin ve dostluğun sırrını anlatarak yardım eder.'
+    prompt: 'Alev, ateş püskürtemediği için üzüldüğünde, Küçük Viking ona acı biberlerin ve dostluğun sırrını anlatarak yardım eder.',
+    voice: 'Achird', voiceName: 'Bilge Dede', genre: 'Masal', style: 'Vintage Retro', age: '4-6'
   }
 ]
 
@@ -250,16 +260,17 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   }
 
   const handleRandomize = () => {
+    const randomScenario = STORY_SCENARIOS[Math.floor(Math.random() * STORY_SCENARIOS.length)]
+
     if (!isPro && !isPremium) {
       // Freemium Caching Optimizations:
-      // Sabit ayarlar ile hazır senaryo eşleşme oranını %100'e çıkarıyoruz
-      setVoice('Aoede') // Bilge Anne
-      setVoiceName('Bilge Anne')
-      setGenre('Masal')
-      setImageStyle('Sulu Boya')
-      setAgeGroup('2-4')
+      // Her konu için özel belirlenmiş sabit ayarları kullanıyoruz ki kopyalama çalışsın
+      setVoice(randomScenario.voice || 'Aoede')
+      setVoiceName(randomScenario.voiceName || 'Bilge Anne')
+      setGenre(randomScenario.genre || 'Masal')
+      setImageStyle(randomScenario.style || 'Sulu Boya')
+      setAgeGroup(randomScenario.age || '2-4')
       
-      const randomScenario = STORY_SCENARIOS[Math.floor(Math.random() * STORY_SCENARIOS.length)]
       setPrompt(randomScenario.prompt)
       setCharacters(randomScenario.characters)
       return
