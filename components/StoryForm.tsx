@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, Image as ImageIcon, Shuffle, X, Plus } from 'lucide-react'
-import { generateStoryAction } from '@/app/actions/generateStory'
+import { backgroundStoryAction } from '@/app/actions/backgroundStoryAction'
 import { saveStoryMetadata } from '@/app/actions/metadata'
 import { createClient } from '@/utils/supabase/client'
 import { useEffect } from 'react'
@@ -46,6 +46,17 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   const [educationalValue, setEducationalValue] = useState<string>('Dürüstlük')
 
   const supabase = createClient()
+  const [jobId, setJobId] = useState<string | null>(null)
+  
+  interface JobStatus {
+    status: string;
+    progress: number;
+    master_ref_data?: string;
+    story_id?: string;
+    error_message?: string;
+    id: string;
+  }
+  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
 
   useEffect(() => {
     const fetchClonedVoices = async () => {
@@ -54,6 +65,38 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     }
     fetchClonedVoices()
   }, [])
+
+  useEffect(() => {
+    if (!jobId) return
+
+    const channel = supabase
+      .channel(`job-${jobId}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'generation_jobs',
+        filter: `id=eq.${jobId}` 
+      }, async (payload) => {
+        const newStatus = payload.new as JobStatus;
+        setJobStatus(newStatus)
+
+        if (newStatus.status === 'completed' && newStatus.story_id) {
+          // 🛡️ METADATA KAYDI (BORU HATTI DIŞI)
+          await saveStoryMetadata(newStatus.story_id, {
+            voice_name: voiceName,
+            genre: genre,
+            style: imageStyle,
+            age_group: ageGroup,
+            educational_value: tab === 'egitici' ? educationalValue : null,
+            characters: characters.filter(c => c.trim() !== '')
+          });
+          window.location.href = `/story/${newStatus.story_id}`
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [jobId, voiceName, genre, imageStyle, ageGroup, tab, educationalValue, characters])
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section)
@@ -127,38 +170,31 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       const egitici = tab === 'egitici' ? ` Eğitici Değer: ${educationalValue}.` : ''
       const fullTheme = `${genre} tarzında. Konu: ${prompt}. Çizim Stili: ${imageStyle}. Ses Seçimi: ${voice}. Karakterler: ${chars}.${egitici}`
       
-      const response = await generateStoryAction({
+      const response = await backgroundStoryAction({
         childName: 'Kullanıcı',
         hero: chars,
         theme: fullTheme,
-        age: ageGroup, // Artık string olarak gönderiliyor (0-1, 1-2 vb.)
+        age: ageGroup,
         voiceOption: voice === 'Sessiz' ? 'Sessiz' : 'AI',
         elevenVoiceId: voice !== 'Sessiz' ? voice : undefined,
         style: imageStyle
       })
       
-      if (response.success && response.id) {
-        // 🛡️ METADATA KAYDI (BORU HATTI DIŞI)
-        // Boru hattına dokunmadan, masalın yan bilgilerini sessizce kaydediyoruz.
-        await saveStoryMetadata(response.id, {
-          voice_name: voiceName,
-          genre: genre,
-          style: imageStyle,
-          age_group: ageGroup,
-          educational_value: tab === 'egitici' ? educationalValue : null,
-          characters: characters.filter(c => c.trim() !== '')
-        });
-
-        window.location.href = `/story/${response.id}`
+      if (response.success && response.jobId) {
+        setJobId(response.jobId)
+        // İlk durumu al
+        const { data } = await supabase.from('generation_jobs').select('*').eq('id', response.jobId).single()
+        setJobStatus(data)
       } else {
         alert(response.error || 'Bilinmeyen bir hata oluştu.')
+        setIsGenerating(false)
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Bir hata oluştu'
       alert(errorMessage)
-    } finally {
       setIsGenerating(false)
     }
+    // NOT: setIsGenerating(false) işlemini başarılı durumda yapmıyoruz çünkü modalın görünmesini ve sürecin devam etmesini istiyoruz.
   }
 
   return (
@@ -478,6 +514,96 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
           </button>
         </div>
       </form>
+
+      {/* Progress Modal Overlay */}
+      {jobId && jobStatus && (
+        <div className="fixed inset-0 bg-[#fdfaf3]/95 backdrop-blur-sm z-[200] flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto">
+          <div className="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl border-4 border-[#b3593b] relative animate-in zoom-in duration-500">
+            {jobStatus.status === 'failed' && (
+              <button 
+                onClick={() => {
+                  setJobId(null);
+                  setJobStatus(null);
+                  setIsGenerating(false);
+                }} 
+                className="absolute top-6 right-6 p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full transition"
+              >
+                <X size={24} />
+              </button>
+            )}
+
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-lora font-bold text-[#2d2d2d] mb-2">
+                Sihirli Masalınız Hazırlanıyor... ✨
+              </h2>
+              <p className="text-[#8c462e] font-medium">Lütfen bu sayfayı kapatmayın, süreç 1-2 dakika sürebilir.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              {/* Progress Panel */}
+              <div className="flex flex-col justify-center space-y-6">
+                <div>
+                  <div className="flex justify-between mb-3">
+                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Durum: {jobStatus.status}</span>
+                    <span className="text-lg font-black text-[#b3593b]">{jobStatus.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 h-6 rounded-full overflow-hidden shadow-inner">
+                    <div 
+                      className="bg-gradient-to-r from-[#e6b17e] to-[#b3593b] h-full transition-all duration-1000 ease-out"
+                      style={{ width: `${jobStatus.progress}%` }}
+                    />
+                  </div>
+                </div>
+                
+                <ul className="space-y-4 bg-amber-50/50 p-6 rounded-2xl border border-amber-100/50">
+                  <li className={`flex items-center gap-3 font-bold ${jobStatus.progress >= 10 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                    <span className="text-xl">{jobStatus.progress >= 10 ? '✅' : '⏳'}</span> Senaryo ve Metin Yazımı
+                  </li>
+                  <li className={`flex items-center gap-3 font-bold ${jobStatus.progress >= 20 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                    <span className="text-xl">{jobStatus.progress >= 20 ? '✅' : '⏳'}</span> Karakterler Çiziliyor (Master Pafta)
+                  </li>
+                  <li className={`flex items-center gap-3 font-bold ${jobStatus.progress >= 80 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                    <span className="text-xl">{jobStatus.progress >= 80 ? '✅' : '⏳'}</span> 12 Sahne Resimleniyor
+                  </li>
+                  <li className={`flex items-center gap-3 font-bold ${jobStatus.progress >= 100 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                    <span className="text-xl">{jobStatus.progress >= 100 ? '✅' : '⏳'}</span> Seslendirme ve Son Rötuşlar
+                  </li>
+                </ul>
+
+                {jobStatus.status === 'completed' && (
+                  <div className="p-4 bg-emerald-50 text-emerald-700 rounded-2xl text-center font-bold text-lg border border-emerald-200">
+                    🎉 Masalınız Tamamlandı! Yönlendiriliyorsunuz...
+                  </div>
+                )}
+
+                {jobStatus.status === 'failed' && (
+                  <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm border border-red-200 font-bold">
+                    ❌ Eyvah, bir hata oluştu: {jobStatus.error_message}
+                  </div>
+                )}
+              </div>
+
+              {/* Visual Reference Panel */}
+              <div className="bg-[#fcfaf7] rounded-3xl p-6 border-2 border-dashed border-[#e6b17e] flex flex-col items-center justify-center min-h-[300px]">
+                <h4 className="text-sm font-bold text-amber-700 uppercase tracking-widest mb-4">Karakter Referansınız</h4>
+                {jobStatus.master_ref_data ? (
+                  <img 
+                    src={jobStatus.master_ref_data.startsWith('http') ? jobStatus.master_ref_data : `data:image/png;base64,${jobStatus.master_ref_data}`} 
+                    className="w-full rounded-2xl shadow-xl border-4 border-white transform rotate-2 hover:rotate-0 transition-transform"
+                    alt="Master Reference"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center text-center text-amber-900/40">
+                    <ImageIcon size={48} className="mb-4 opacity-50" />
+                    <p className="font-bold">Ana karakterler henüz oluşturulmadı...</p>
+                    <p className="text-sm mt-2">Yapay zeka şu an senaryoyu kurguluyor.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
