@@ -121,10 +121,10 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
   return (
     <div className="max-w-6xl mx-auto">
       {/* Kitap container */}
-      <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-amber-100 flex flex-col md:flex-row min-h-[640px]">
+      <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-sky-100 flex flex-col md:flex-row min-h-[640px]">
 
         {/* Sol — Görsel */}
-        <div className="w-full md:w-1/2 relative bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center p-8 border-r border-amber-100">
+        <div className="w-full md:w-1/2 relative bg-gradient-to-br from-sky-50 to-orange-50 flex items-center justify-center p-8 border-r border-sky-100">
           <div className="w-full aspect-square relative">
             {currentDisplayImage ? (
               <img
@@ -134,7 +134,7 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
                 className="w-full h-full object-cover rounded-3xl shadow-xl border-4 border-white animate-in fade-in zoom-in duration-500"
               />
             ) : (
-              <div className="w-full h-full bg-amber-100/60 rounded-3xl flex flex-col items-center justify-center text-amber-300">
+              <div className="w-full h-full bg-sky-100/60 rounded-3xl flex flex-col items-center justify-center text-amber-300">
                 <BookOpen size={64} className="mb-3 opacity-40" />
                 <p className="font-bold text-lg opacity-50">Görsel yükleniyor...</p>
               </div>
@@ -142,8 +142,8 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
           </div>
 
           {/* Sayfa numarası rozeti */}
-          <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md border border-amber-100">
-            <span className="text-amber-800 font-black text-sm tracking-wider">
+          <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md border border-sky-100">
+            <span className="text-sky-800 font-black text-sm tracking-wider">
               {currentPage + 1} / {bookPages.length}
             </span>
           </div>
@@ -154,7 +154,7 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
               <audio ref={audioRef} src={audioUrl} />
               <button
                 onClick={togglePlay}
-                className="w-16 h-16 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 border-4 border-white"
+                className="w-16 h-16 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 border-4 border-white"
               >
                 {isPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
               </button>
@@ -163,9 +163,9 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
 
           {/* Progress bar */}
           {audioUrl && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-amber-100">
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-sky-100">
               <div
-                className="h-full bg-amber-500 transition-all duration-300"
+                className="h-full bg-sky-500 transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -176,7 +176,7 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
         <div className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-between bg-[#FFFDF8]">
           <div>
             {/* Başlık */}
-            <h1 className="text-2xl md:text-3xl font-black text-amber-900 mb-8 leading-tight pb-5 border-b-2 border-amber-100">
+            <h1 className="text-2xl md:text-3xl font-black text-sky-900 mb-8 leading-tight pb-5 border-b-2 border-sky-100">
               {title}
             </h1>
 
@@ -200,15 +200,15 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
                   setIsPlaying(false)
                 }}
                 disabled={currentPage === 0}
-                className="flex-1 py-4 bg-white text-amber-800 rounded-2xl font-bold text-lg disabled:opacity-25 border-2 border-amber-200 shadow-sm hover:bg-amber-50 hover:border-amber-300 transition-all"
+                className="flex-1 py-4 bg-white text-sky-800 rounded-2xl font-bold text-lg disabled:opacity-25 border-2 border-sky-200 shadow-sm hover:bg-sky-50 hover:border-amber-300 transition-all"
               >
                 ← Geri
               </button>
 
               <div className="flex flex-col items-center px-4">
-                <span className="text-amber-900 font-black text-xl">{currentPage + 1}</span>
+                <span className="text-sky-900 font-black text-xl">{currentPage + 1}</span>
                 <span className="text-amber-400 text-[10px] font-bold uppercase tracking-widest">sayfa</span>
-                <span className="text-amber-900 font-black text-xl">{bookPages.length}</span>
+                <span className="text-sky-900 font-black text-xl">{bookPages.length}</span>
               </div>
 
               <button
@@ -218,7 +218,7 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
                   setIsPlaying(false)
                 }}
                 disabled={currentPage === bookPages.length - 1}
-                className="flex-1 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold text-lg disabled:opacity-25 shadow-lg transition-all"
+                className="flex-1 py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-bold text-lg disabled:opacity-25 shadow-lg transition-all"
               >
                 İleri →
               </button>
@@ -232,8 +232,8 @@ export default function StoryPlayer({ title, content, imageUrl, audioUrl, pages 
                   onClick={() => setCurrentPage(i)}
                   className={`rounded-full transition-all ${
                     i === currentPage
-                      ? 'w-6 h-2.5 bg-amber-500'
-                      : 'w-2.5 h-2.5 bg-amber-200 hover:bg-amber-300'
+                      ? 'w-6 h-2.5 bg-sky-500'
+                      : 'w-2.5 h-2.5 bg-sky-200 hover:bg-amber-300'
                   }`}
                 />
               ))}

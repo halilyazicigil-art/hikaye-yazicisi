@@ -19,20 +19,20 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fdfaf3] text-[#3d3d3d] overflow-x-hidden font-nunito relative">
+    <main className="min-h-screen bg-[#EFEBED] text-[#3d3d3d] overflow-x-hidden font-nunito relative">
       {/* Decorative watercolor background blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#f4dcb5] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
       <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-[#f7d6c4] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
 
       {/* Hero and Navbar Wrapper with Background */}
       <div className="relative w-full bg-[url('/images/hero_bg.png')] bg-cover bg-center bg-no-repeat pb-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#fdfaf3]/90 via-[#fdfaf3]/70 to-[#fdfaf3]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#EFEBED]/90 via-[#EFEBED]/70 to-[#EFEBED]"></div>
         
         {/* Navbar */}
         <nav className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center relative z-20">
           <div className="flex items-center gap-2">
             <span className="text-3xl">🐝</span>
-            <span className="text-3xl font-lora font-bold tracking-tight text-[#b3593b]">MyStory</span>
+            <span className="text-3xl font-lora font-bold tracking-tight text-[#84B1D9]">MyStory</span>
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
             {user ? (
@@ -40,17 +40,17 @@ export default async function Home() {
                 {user.email === 'halilibrahimyazicigil@gmail.com' && (
                   <Link href="/admin" className="font-bold text-emerald-600 hover:text-emerald-700 transition">Admin</Link>
                 )}
-                <Link href="/parent" className="font-bold text-[#b3593b] hover:text-[#8c462e] transition">Panele Dön</Link>
+                <Link href="/parent" className="font-bold text-[#84B1D9] hover:text-[#84B1D9] transition">Panele Dön</Link>
                 <form action="/auth/signout" method="post">
-                  <button type="submit" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
+                  <button type="submit" className="bg-[#84B1D9] hover:bg-[#84B1D9] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
                     Çıkış Yap
                   </button>
                 </form>
               </>
             ) : (
               <>
-                <Link href="/register" className="font-bold text-[#b3593b] hover:text-[#8c462e] transition hidden sm:inline-block">Üye Ol</Link>
-                <Link href="/login" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
+                <Link href="/register" className="font-bold text-[#84B1D9] hover:text-[#84B1D9] transition hidden sm:inline-block">Üye Ol</Link>
+                <Link href="/login" className="bg-[#84B1D9] hover:bg-[#84B1D9] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
                   Giriş Yap
                 </Link>
               </>
@@ -68,7 +68,7 @@ export default async function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-10">
-            <a href="#create" className="bg-[#b3593b] hover:bg-[#8c462e] text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto hover:scale-105">
+            <a href="#create" className="bg-[#84B1D9] hover:bg-[#84B1D9] text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto hover:scale-105">
               Masal Üretmeye Başla
             </a>
             <a href="#pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#3d3d3d] px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto border border-gray-200 hover:scale-105">
@@ -79,7 +79,7 @@ export default async function Home() {
           <div className="flex flex-wrap justify-center gap-6 text-sm font-bold text-emerald-700 mb-6 drop-shadow-sm">
             <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Güvenli ve Reklamsız</span>
             <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Pedagojik Filtreler</span>
-            <span className="flex items-center gap-1 text-amber-600 bg-white/50 px-3 py-1 rounded-full">⭐ Yüzlerce Mutlu Aile</span>
+            <span className="flex items-center gap-1 text-sky-600 bg-white/50 px-3 py-1 rounded-full">⭐ Yüzlerce Mutlu Aile</span>
           </div>
         </section>
       </div>
@@ -87,7 +87,7 @@ export default async function Home() {
       {/* Form Section */}
       <section id="create" className="relative z-10 pb-20 px-4 -mt-10">
         <div className="text-center mb-8">
-          <p className="text-amber-600 font-bold mb-4 tracking-widest text-sm uppercase">✨ İlk Adımı Birlikte Atın</p>
+          <p className="text-sky-600 font-bold mb-4 tracking-widest text-sm uppercase">✨ İlk Adımı Birlikte Atın</p>
           <h2 className="text-4xl font-lora font-bold text-[#2d2d2d] mb-4">Macerayı Sen Belirle</h2>
           <p className="text-xl text-gray-600">Sadece birkaç kelimeyle kahramanınızı yönlendirin, gerisini bize bırakın.</p>
         </div>
@@ -95,9 +95,9 @@ export default async function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-6 py-20 border-t border-amber-900/5 relative z-10">
+      <section className="max-w-7xl mx-auto px-6 py-20 border-t border-sky-900/5 relative z-10">
         <div className="text-center mb-16">
-          <span className="text-[#b3593b] font-bold tracking-widest uppercase text-sm">MyStory Ayrıcalıkları</span>
+          <span className="text-[#84B1D9] font-bold tracking-widest uppercase text-sm">MyStory Ayrıcalıkları</span>
           <h2 className="text-4xl md:text-5xl font-lora font-bold text-[#2d2d2d] mt-4 mb-4">
             Her Gece Yeni Bir Dünyaya Uyanın
           </h2>
@@ -106,7 +106,7 @@ export default async function Home() {
 
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
-            <div className="w-full h-48 bg-amber-100 rounded-2xl mb-6 bg-[url('/images/visual_feast.png')] bg-cover bg-center"></div>
+            <div className="w-full h-48 bg-sky-100 rounded-2xl mb-6 bg-[url('/images/visual_feast.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Görsel Şölen ve Doğal Seslendirme</h3>
             <p className="text-gray-600 mb-6 flex-grow">Her sayfasına özel üretilen yüksek kaliteli resimler ve stüdyo kalitesindeki seslendirmeler ile hikayeler artık çok canlı.</p>
             <ul className="text-left w-full space-y-2 mb-6">
@@ -148,9 +148,9 @@ export default async function Home() {
 
         <div className="grid md:grid-cols-3 gap-6 items-center">
           {/* Free Plan */}
-          <div className="bg-[#fcfaf7] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full opacity-80 scale-95">
+          <div className="bg-[#EFEBED] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full opacity-80 scale-95">
             <h3 className="text-2xl font-lora font-bold mb-2">Başlangıç Kovanı</h3>
-            <div className="text-4xl font-bold text-[#b3593b] mb-8">Ücretsiz</div>
+            <div className="text-4xl font-bold text-[#84B1D9] mb-8">Ücretsiz</div>
             <ul className="space-y-4 text-sm font-bold text-gray-700 flex-grow">
               <li className="flex justify-between border-b pb-2"><span>Hikaye Uzunluğu</span> <span>Standart</span></li>
               <li className="flex justify-between border-b pb-2"><span>Kullanım</span> <span>3/Ay</span></li>
@@ -162,14 +162,14 @@ export default async function Home() {
           </div>
 
           {/* Pro Plan */}
-          <div className={`bg-white border-2 border-[#e6b17e] rounded-[2rem] p-8 shadow-xl flex flex-col h-full relative z-10 ${isPro ? 'ring-4 ring-amber-500/30' : ''}`}>
+          <div className={`bg-white border-2 border-[#BDD9F2] rounded-[2rem] p-8 shadow-xl flex flex-col h-full relative z-10 ${isPro ? 'ring-4 ring-sky-500/30' : ''}`}>
             {isPro ? (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 🍯</div>
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-sky-500 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 🍯</div>
             ) : (
-              <div className="absolute -top-4 right-8 bg-[#f5c345] text-amber-900 font-bold px-4 py-1 rounded-full text-sm">En Popüler</div>
+              <div className="absolute -top-4 right-8 bg-[#f5c345] text-sky-900 font-bold px-4 py-1 rounded-full text-sm">En Popüler</div>
             )}
             <h3 className="text-2xl font-lora font-bold mb-2">Tatlı Bal (Pro)</h3>
-            <div className="text-4xl font-bold text-[#b3593b] mb-8">15 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
+            <div className="text-4xl font-bold text-[#84B1D9] mb-8">15 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
             <ul className="space-y-3 text-xs font-bold text-gray-700 flex-grow">
               <li className="flex justify-between border-b pb-1"><span>Aylık Masal</span> <span>40 Adet</span></li>
               <li className="flex justify-between border-b pb-1"><span>Sesli Masal</span> <span>20 Adet</span></li>
@@ -181,19 +181,19 @@ export default async function Home() {
             </ul>
             <Link 
               href={isPro || isPremium ? "/parent" : "/settings"} 
-              className={`w-full mt-6 py-4 rounded-xl font-bold text-center transition shadow-md ${isPro || isPremium ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-[#b3593b] hover:bg-[#8c462e] text-white'}`}
+              className={`w-full mt-6 py-4 rounded-xl font-bold text-center transition shadow-md ${isPro || isPremium ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-[#84B1D9] hover:bg-[#84B1D9] text-white'}`}
             >
               {isPro || isPremium ? 'Panele Dön' : 'Hemen Başla'}
             </Link>
           </div>
 
           {/* Premium Plan */}
-          <div className={`bg-[#fcfaf7] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full relative ${isPremium ? 'ring-4 ring-purple-500/30 opacity-100 scale-100 border-purple-200 bg-white' : 'opacity-80 scale-95'}`}>
+          <div className={`bg-[#EFEBED] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full relative ${isPremium ? 'ring-4 ring-purple-500/30 opacity-100 scale-100 border-purple-200 bg-white' : 'opacity-80 scale-95'}`}>
             {isPremium && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 👑</div>
             )}
             <h3 className="text-2xl font-lora font-bold mb-2">Kraliçe Arı (Premium)</h3>
-            <div className="text-4xl font-bold text-[#b3593b] mb-8">40 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
+            <div className="text-4xl font-bold text-[#84B1D9] mb-8">40 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
             <ul className="space-y-3 text-xs font-bold text-gray-700 flex-grow">
               <li className="flex justify-between border-b pb-1"><span>Aylık Masal</span> <span>80 Adet</span></li>
               <li className="flex justify-between border-b pb-1"><span>Sesli Masal</span> <span>40 Adet</span></li>

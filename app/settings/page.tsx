@@ -78,7 +78,7 @@ export default function SettingsPage() {
                   {sub?.plan_id !== 'pro' && (
                     <button 
                       onClick={() => handleUpgrade('pro')}
-                      className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                      className="flex-1 bg-gradient-to-r from-sky-500 to-orange-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
                     >
                       MyStory Pro ($15/ay)
                     </button>
