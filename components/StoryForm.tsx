@@ -106,8 +106,45 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     id: string;
   }
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
+  const [remainingStories, setRemainingStories] = useState<number | null>(null)
 
   useEffect(() => {
+    const fetchQuota = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // 1. Abonelik ve Profil Bilgilerini Çek
+      const [{ data: sub }, { data: profiles }] = await Promise.all([
+        supabase.from('subscriptions').select('plan_id, current_period_end').eq('user_id', user.id).maybeSingle(),
+        supabase.from('profiles').select('id').eq('user_id', user.id)
+      ])
+
+      const profileIds = profiles?.map(p => p.id) || []
+      const isPremiumUser = sub?.plan_id === 'premium'
+      const isProUser = sub?.plan_id === 'pro'
+      const storyLimit = isPremiumUser ? 90 : (isProUser ? 40 : 3)
+
+      // 2. Mevcut Dönem Başlangıcını Bul (Sert Sıfırlama)
+      let startDate = new Date()
+      startDate.setDate(1)
+      startDate.setHours(0, 0, 0, 0)
+      if (sub?.current_period_end) {
+        startDate = new Date(sub.current_period_end)
+        startDate.setDate(startDate.getDate() - 30)
+      }
+
+      // 3. Kullanımı Say
+      const { count } = await supabase
+        .from('stories')
+        .select('*', { count: 'exact', head: true })
+        .in('profile_id', profileIds)
+        .gte('created_at', startDate.toISOString())
+
+      setRemainingStories(Math.max(0, storyLimit - (count || 0)))
+    }
+
+    fetchQuota()
+    
     const fetchClonedVoices = async () => {
       const { data } = await supabase.from('cloned_voices').select('*')
       if (data) setClonedVoices(data)
@@ -130,6 +167,9 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         setJobStatus(newStatus)
 
         if (newStatus.status === 'completed' && newStatus.story_id) {
+          // Başarılı üretim sonrası sayacı düşür (iyimser güncelleme)
+          setRemainingStories(prev => (prev !== null ? prev - 1 : 0))
+          
           // 🛡️ METADATA KAYDI (BORU HATTI DIŞI)
           await saveStoryMetadata(newStatus.story_id, {
             voice_name: voiceName,
@@ -607,16 +647,25 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         </div>
 
         {/* Submit Button */}
-        <div className="mt-8 flex justify-center pb-4">
+        <div className="mt-8 flex flex-col items-center pb-4">
           <button
             type="submit"
-            disabled={isGenerating}
-            className="bg-[#84B1D9] hover:bg-[#8FBDD9] text-white px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-md flex items-center justify-center disabled:opacity-70 w-64"
+            disabled={isGenerating || (remainingStories !== null && remainingStories <= 0)}
+            className={`px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-md flex items-center justify-center w-64 ${
+              (remainingStories !== null && remainingStories <= 0) 
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+              : 'bg-[#84B1D9] hover:bg-[#8FBDD9] text-white'
+            } disabled:opacity-70`}
           >
             {isGenerating ? (
               <span className="flex items-center animate-pulse">
                 <Sparkles className="animate-spin mr-2" size={20} />
                 Sihir Yapılıyor...
+              </span>
+            ) : (remainingStories !== null && remainingStories <= 0) ? (
+              <span className="flex items-center">
+                <X className="mr-2" size={20} />
+                Limit Doldu
               </span>
             ) : (
               <span className="flex items-center">
@@ -625,6 +674,18 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               </span>
             )}
           </button>
+          
+          {(remainingStories !== null && remainingStories <= 0) && (
+            <p className="mt-4 text-red-500 font-bold text-sm bg-red-50 px-4 py-2 rounded-full border border-red-100">
+              ⚠️ Aylık hikaye limitinize ulaştınız.
+            </p>
+          )}
+          
+          {remainingStories !== null && remainingStories > 0 && remainingStories <= 5 && (
+            <p className="mt-4 text-orange-600 font-bold text-sm bg-orange-50 px-4 py-2 rounded-full border border-orange-100">
+              Dikkat! Sadece {remainingStories} masal hakkınız kaldı.
+            </p>
+          )}
         </div>
       </form>
 

@@ -26,8 +26,8 @@ async function getQuotaStats(supabase: any, profileIds: string[], sub: any, isPr
     usedStories = monthStories?.length || 0
     const usedVoiceStories = monthStories?.filter((s: any) => s.audio_url).length || 0
 
-    const storyLimit = isPremium ? 80 : (isPro ? 40 : 3)
-    const voiceLimit = isPremium ? 40 : (isPro ? 20 : 1)
+    const storyLimit = isPremium ? 90 : (isPro ? 40 : 3)
+    const voiceLimit = isPremium ? 50 : (isPro ? 20 : 1)
 
     const remainingText = `${Math.max(0, storyLimit - usedStories)} / ${storyLimit}`
     const remainingVoiceText = `${Math.max(0, voiceLimit - usedVoiceStories)} / ${voiceLimit}`
@@ -80,8 +80,17 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   const { data: profiles } = await supabase.from('profiles').select('id, name').eq('user_id', user.id)
   const profileIds = profiles?.map(p => p.id) || []
 
-  let recentStories: any[] = []
+  let totalStories = 0
   if (profileIds.length > 0) {
+    // Toplam Arşiv Sayısı (Kısıtlamasız)
+    const { count } = await supabase
+      .from('stories')
+      .select('*', { count: 'exact', head: true })
+      .in('profile_id', profileIds)
+    
+    totalStories = count || 0
+
+    // Son Masallar (Görsel Liste için)
     const { data: stories } = await supabase
       .from('stories')
       .select('id, title, created_at, content_json, metadata, profiles(name)')
@@ -111,7 +120,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
             )}
             {isPro && !isPremium && (
                <span className="hidden sm:inline-flex items-center bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-sm font-bold border border-sky-200">
-                 🍯 Tatlı Bal
+                 ☁️ Gümüş Gökyüzü
                </span>
             )}
             {user.email === 'halilibrahimyazicigil@gmail.com' && (
@@ -147,9 +156,9 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between p-4 bg-[#BDD9F2] border border-sky-100 rounded-2xl">
                   <div className="flex items-center text-[#84B1D9] font-semibold">
-                    <BookHeart className="mr-3" size={24} /> Okunan Masallar
+                    <BookHeart className="mr-3" size={24} /> Arşivlenen Masallar
                   </div>
-                  <span className="text-2xl font-black text-[#84B1D9]">{recentStories.length}</span>
+                  <span className="text-2xl font-black text-[#84B1D9]">{totalStories}</span>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">

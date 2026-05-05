@@ -18,7 +18,39 @@ export async function backgroundStoryAction(formData: {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Oturum açılmadı.");
 
-        // 1. İş Kuyruğuna Ekle (Pending)
+        // 1. Abonelik ve Profil Bilgilerini Çek (KOTA KONTROLÜ İÇİN)
+        const [{ data: sub }, { data: profiles }] = await Promise.all([
+            supabase.from('subscriptions').select('plan_id, current_period_end').eq('user_id', user.id).maybeSingle(),
+            supabase.from('profiles').select('id').eq('user_id', user.id)
+        ]);
+
+        const profileIds = profiles?.map(p => p.id) || [];
+        const isPremium = sub?.plan_id === 'premium';
+        const isPro = sub?.plan_id === 'pro';
+        const storyLimit = isPremium ? 90 : (isPro ? 40 : 3);
+
+        // 2. Mevcut Fatura Dönemindeki Kullanımı Hesapla (Sert Sıfırlama Mantığı)
+        let startDate = new Date();
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+
+        if (sub?.current_period_end) {
+            startDate = new Date(sub.current_period_end);
+            startDate.setDate(startDate.getDate() - 30);
+        }
+
+        const { count: usedStories } = await supabase
+            .from('stories')
+            .select('*', { count: 'exact', head: true })
+            .in('profile_id', profileIds)
+            .gte('created_at', startDate.toISOString());
+
+        // 🚨 KOTA ENGELLEME (GÜVENLİK DUVARI)
+        if ((usedStories || 0) >= storyLimit) {
+            throw new Error(`Aylık hikaye limitinize ulaştınız (${storyLimit}/${storyLimit}). Yeni haklarınız dönem sonunda yenilenecektir.`);
+        }
+
+        // 3. İş Kuyruğuna Ekle (Sadece Kota Varsa)
         const { data: job, error: jobErr } = await supabase.from('generation_jobs').insert({
             user_id: user.id,
             status: 'pending',
