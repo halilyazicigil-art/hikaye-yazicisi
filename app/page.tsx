@@ -19,7 +19,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#BDD9F2] text-[#EFEBED] overflow-x-hidden font-nunito relative">
+    <main className="min-h-screen bg-[#BDD9F2] text-[#052159] overflow-x-hidden font-nunito relative">
       {/* Decorative watercolor background blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#84B1D9] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
       <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-[#8FBDD9] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
@@ -63,10 +63,10 @@ export default async function Home() {
 
         {/* Hero Section */}
         <section className="max-w-5xl mx-auto px-6 pt-16 pb-10 text-center relative z-20">
-          <h1 className="text-5xl md:text-7xl font-lora font-bold text-[#EFEBED] leading-tight mb-6 drop-shadow-sm">
+          <h1 className="text-5xl md:text-7xl font-lora font-bold text-[#052159] leading-tight mb-6 drop-shadow-sm">
             Hayallerini Süsleyen Masalları Beraber Yazın
           </h1>
-          <p className="text-xl md:text-2xl text-[#EFEBED] mb-10 max-w-3xl mx-auto font-medium drop-shadow-sm">
+          <p className="text-xl md:text-2xl text-[#052159] mb-10 max-w-3xl mx-auto font-medium drop-shadow-sm">
             Çocuğunuzun ismini, en sevdiği karakteri ve temayı seçin. Geri kalan tüm sihri yapay zeka halletsin. Resimli, sesli ve sadece ona özel uyku öncesi serüvenleri yaratın.
           </p>
           
@@ -74,7 +74,7 @@ export default async function Home() {
             <a href="#create" className="bg-[#84B1D9] hover:bg-[#84B1D9] text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto hover:scale-105">
               Masal Üretmeye Başla
             </a>
-            <a href="#pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#EFEBED] px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto border border-gray-200 hover:scale-105">
+            <a href="#pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#052159] px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto border border-gray-200 hover:scale-105">
               Abonelik Planları
             </a>
           </div>
@@ -91,8 +91,8 @@ export default async function Home() {
       <section id="create" className="relative z-10 pb-20 px-4 -mt-10">
         <div className="text-center mb-8">
           <p className="text-sky-600 font-bold mb-4 tracking-widest text-sm uppercase">✨ İlk Adımı Birlikte Atın</p>
-          <h2 className="text-4xl font-lora font-bold text-[#EFEBED] mb-4">Macerayı Sen Belirle</h2>
-          <p className="text-xl text-[#EFEBED]">Sadece birkaç kelimeyle kahramanınızı yönlendirin, gerisini bize bırakın.</p>
+          <h2 className="text-4xl font-lora font-bold text-[#052159] mb-4">Macerayı Sen Belirle</h2>
+          <p className="text-xl text-[#052159]">Sadece birkaç kelimeyle kahramanınızı yönlendirin, gerisini bize bırakın.</p>
         </div>
         <StoryForm isPro={isPro} isPremium={isPremium} />
       </section>
@@ -101,17 +101,17 @@ export default async function Home() {
       <section className="max-w-7xl mx-auto px-6 py-20 border-t border-sky-900/5 relative z-10">
         <div className="text-center mb-16">
           <span className="text-[#84B1D9] font-bold tracking-widest uppercase text-sm">MyStory Ayrıcalıkları</span>
-          <h2 className="text-4xl md:text-5xl font-lora font-bold text-[#EFEBED] mt-4 mb-4">
+          <h2 className="text-4xl md:text-5xl font-lora font-bold text-[#052159] mt-4 mb-4">
             Her Gece Yeni Bir Dünyaya Uyanın
           </h2>
-          <p className="text-xl text-[#EFEBED]">Gelişmiş teknolojilerle çocuğunuzun hayal gücünü besleyen en güvenilir araç seti.</p>
+          <p className="text-xl text-[#052159]">Gelişmiş teknolojilerle çocuğunuzun hayal gücünü besleyen en güvenilir araç seti.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
             <div className="w-full h-48 bg-sky-100 rounded-2xl mb-6 bg-[url('/images/visual_feast.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Görsel Şölen ve Doğal Seslendirme</h3>
-            <p className="text-[#EFEBED] mb-6 flex-grow">Her sayfasına özel üretilen yüksek kaliteli resimler ve stüdyo kalitesindeki seslendirmeler ile hikayeler artık çok canlı.</p>
+            <p className="text-[#052159] mb-6 flex-grow">Her sayfasına özel üretilen yüksek kaliteli resimler ve stüdyo kalitesindeki seslendirmeler ile hikayeler artık çok canlı.</p>
             <ul className="text-left w-full space-y-2 mb-6">
               <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Farklı çizim stilleri</li>
               <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Profesyonel okuyucu modları</li>
@@ -121,7 +121,7 @@ export default async function Home() {
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
             <div className="w-full h-48 bg-blue-100 rounded-2xl mb-6 bg-[url('/images/parent_reading.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Sizin Sesinizden Düşlere Doğru</h3>
-            <p className="text-[#EFEBED] mb-6 flex-grow">Masalları sizden dinlemeyi seven minikler için, kendi sesinizi sisteme tanıtın ve tüm hikayeler sizin sesinizden okunsun.</p>
+            <p className="text-[#052159] mb-6 flex-grow">Masalları sizden dinlemeyi seven minikler için, kendi sesinizi sisteme tanıtın ve tüm hikayeler sizin sesinizden okunsun.</p>
             <ul className="text-left w-full space-y-2 mb-6">
               <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Premium: Ses Klonlama</li>
               <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Daima yanında hissettir</li>
@@ -131,7 +131,7 @@ export default async function Home() {
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
             <div className="w-full h-48 bg-pink-100 rounded-2xl mb-6 bg-[url('/images/values_education.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Değerler Eğitimi ve Güvenlik</h3>
-            <p className="text-[#EFEBED] mb-6 flex-grow">Sadece eğlenceli değil, aynı zamanda öğretici. Dostluk, dürüstlük veya paylaşma gibi dilediğiniz bir dersi seçerek masalın ana fikrini belirleyin.</p>
+            <p className="text-[#052159] mb-6 flex-grow">Sadece eğlenceli değil, aynı zamanda öğretici. Dostluk, dürüstlük veya paylaşma gibi dilediğiniz bir dersi seçerek masalın ana fikrini belirleyin.</p>
             <ul className="text-left w-full space-y-2 mb-6">
               <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Eğitici Mod seçeneği</li>
               <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Yaşa uygun içerik denetimi</li>
@@ -143,10 +143,10 @@ export default async function Home() {
       {/* Pricing Section */}
       <section id="pricing" className="max-w-5xl mx-auto px-6 py-20 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-lora font-bold text-[#EFEBED] mt-4 mb-4">
+          <h2 className="text-4xl md:text-5xl font-lora font-bold text-[#052159] mt-4 mb-4">
             Size Uygun Planı Seçin
           </h2>
-          <p className="text-xl text-[#EFEBED]">Maceraya katılmak için bütçenize en uygun Kovanı seçin.</p>
+          <p className="text-xl text-[#052159]">Maceraya katılmak için bütçenize en uygun Kovanı seçin.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 items-center">
@@ -159,7 +159,7 @@ export default async function Home() {
               <li className="flex justify-between border-b pb-2"><span>Kullanım</span> <span>3/Ay</span></li>
               <li className="flex justify-between border-b pb-2"><span>Yapay Zeka Seslendirme</span> <span>Sınırlı</span></li>
             </ul>
-            <Link href={user ? "/parent" : "/register"} className="w-full mt-8 py-3 bg-gray-200 hover:bg-gray-300 text-[#EFEBED] rounded-xl font-bold text-center transition">
+            <Link href={user ? "/parent" : "/register"} className="w-full mt-8 py-3 bg-gray-200 hover:bg-gray-300 text-[#052159] rounded-xl font-bold text-center transition">
               {user ? 'Panelime Git' : 'Kayıt Ol'}
             </Link>
           </div>
@@ -208,7 +208,7 @@ export default async function Home() {
             </ul>
             <Link 
               href={isPremium ? "/parent" : "/settings"} 
-              className={`w-full mt-6 py-3 rounded-xl font-bold text-center transition ${isPremium ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-gray-200 hover:bg-gray-300 text-[#EFEBED]'}`}
+              className={`w-full mt-6 py-3 rounded-xl font-bold text-center transition ${isPremium ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-gray-200 hover:bg-gray-300 text-[#052159]'}`}
             >
               {isPremium ? 'Panele Dön' : 'Yükselt'}
             </Link>
