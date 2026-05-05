@@ -215,20 +215,20 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden mt-12 mb-20 border border-amber-50">
+    <div className="w-full max-w-3xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden mt-12 mb-20 border border-sky-50">
       {/* Tabs */}
       <div className="flex border-b border-gray-100">
         <button
           type="button"
           onClick={() => handleTabSelect('normal')}
-          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors ${tab === 'normal' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors ${tab === 'normal' ? 'text-sky-700 border-b-4 border-sky-600 bg-sky-50/30' : 'text-gray-400 hover:text-gray-600'}`}
         >
           Normal Hikayeler
         </button>
         <button
           type="button"
           onClick={() => handleTabSelect('egitici')}
-          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors flex items-center justify-center gap-2 ${tab === 'egitici' ? 'text-amber-700 border-b-4 border-amber-600 bg-amber-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors flex items-center justify-center gap-2 ${tab === 'egitici' ? 'text-sky-700 border-b-4 border-sky-600 bg-sky-50/30' : 'text-gray-400 hover:text-gray-600'}`}
         >
           Eğitici Hikayeler
           {!isPro && !isPremium && <span className="text-xs bg-gray-200 text-gray-500 px-2 py-1 rounded-full">Pro</span>}
@@ -249,7 +249,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             {prompt.length} / {maxChars}
           </div>
           <div className="absolute bottom-2 left-2 flex items-center gap-4">
-            <label className={`p-2 rounded-lg transition cursor-pointer flex items-center gap-2 ${uploadedRefFile ? 'bg-indigo-100 text-indigo-700' : 'text-amber-700/60 hover:bg-amber-50'}`}>
+            <label className={`p-2 rounded-lg transition cursor-pointer flex items-center gap-2 ${uploadedRefFile ? 'bg-indigo-100 text-indigo-700' : 'text-sky-700/60 hover:bg-sky-50'}`}>
               <input 
                 type="file" 
                 accept="image/*" 
@@ -263,7 +263,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               <ImageIcon size={20} />
               {uploadedRefFile && <span className="text-xs font-bold whitespace-nowrap overflow-hidden max-w-[120px] text-ellipsis">{uploadedRefFile.name}</span>}
             </label>
-            <button type="button" className="p-2 text-amber-700/60 hover:bg-amber-50 rounded-lg transition"><Shuffle size={20} /></button>
+            <button type="button" className="p-2 text-sky-700/60 hover:bg-sky-50 rounded-lg transition"><Shuffle size={20} /></button>
             {uploadedRefFile && (
               <button type="button" onClick={() => setUploadedRefFile(null)} className="p-1 text-red-400 hover:text-red-600 transition">
                 <X size={16} />
@@ -280,8 +280,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('voice')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Ses</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{voiceName}</span>
-                {openSection === 'voice' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{voiceName}</span>
+                {openSection === 'voice' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
             {openSection === 'voice' && (
@@ -289,7 +289,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                 {/* Sessiz Seçeneği */}
                 <div 
                   onClick={() => handleVoiceSelect('Sessiz', 'Sessiz')}
-                  className={`p-4 rounded-xl cursor-pointer border-2 transition text-center ${voice === 'Sessiz' ? 'border-[#b3593b] bg-[#fdfaf3]' : 'border-transparent bg-white shadow-sm'}`}
+                  className={`p-4 rounded-xl cursor-pointer border-2 transition text-center ${voice === 'Sessiz' ? 'border-[#84B1D9] bg-[#EFEBED]' : 'border-transparent bg-white shadow-sm'}`}
                 >
                   <span className="font-bold">Sessiz (Sadece Metin)</span>
                 </div>
@@ -302,7 +302,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                       <div 
                         key={v.id} 
                         onClick={() => handleVoiceSelect(v.id, v.name)}
-                        className={`p-3 rounded-xl cursor-pointer border-2 transition flex flex-col items-center ${voice === v.id ? 'border-[#b3593b] bg-[#fdfaf3]' : 'border-transparent bg-white shadow-sm'}`}
+                        className={`p-3 rounded-xl cursor-pointer border-2 transition flex flex-col items-center ${voice === v.id ? 'border-[#84B1D9] bg-[#EFEBED]' : 'border-transparent bg-white shadow-sm'}`}
                       >
                         <span className="font-bold text-sm text-center">{v.name}</span>
                         <span className="text-[10px] text-gray-400 text-center">{v.desc}</span>
@@ -319,7 +319,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                       <div 
                         key={v.eleven_voice_id} 
                         onClick={() => handleVoiceSelect(v.eleven_voice_id, v.name)}
-                        className={`p-3 rounded-xl cursor-pointer border-2 transition flex flex-col items-center ${voice === v.eleven_voice_id ? 'border-[#b3593b] bg-[#fdfaf3]' : 'border-transparent bg-white shadow-sm'}`}
+                        className={`p-3 rounded-xl cursor-pointer border-2 transition flex flex-col items-center ${voice === v.eleven_voice_id ? 'border-[#84B1D9] bg-[#EFEBED]' : 'border-transparent bg-white shadow-sm'}`}
                       >
                         <span className="font-bold text-sm text-center">{v.name}</span>
                         <span className="text-[10px] text-emerald-500">Kendi Sesin</span>
@@ -361,8 +361,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                   <p className="text-gray-500 mt-2">Masalları senin sesinle okuyalım!</p>
                 </div>
 
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
-                  <p className="text-sm text-amber-800 font-bold flex items-start gap-2">
+                <div className="bg-sky-50 border border-sky-200 rounded-2xl p-4 mb-6">
+                  <p className="text-sm text-sky-800 font-bold flex items-start gap-2">
                     <span className="text-lg">⚠️</span>
                     Kural: En gerçekçi sonuç için en az 5 dakikalık, arkada gürültü olmayan net bir ses kaydı yüklemelisiniz.
                   </p>
@@ -415,14 +415,14 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('genre')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Tür</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{genre}</span>
-                {openSection === 'genre' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{genre}</span>
+                {openSection === 'genre' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
             {openSection === 'genre' && (
               <div className="p-4 bg-gray-50/50 rounded-xl mt-2 flex flex-wrap gap-2">
                 {['Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl'].map(g => (
-                  <button type="button" key={g} onClick={() => setGenre(g)} className={`px-4 py-2 rounded-full font-bold transition ${genre === g ? 'bg-[#b3593b] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
+                  <button type="button" key={g} onClick={() => setGenre(g)} className={`px-4 py-2 rounded-full font-bold transition ${genre === g ? 'bg-[#84B1D9] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
                     {g}
                   </button>
                 ))}
@@ -435,14 +435,14 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('style')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Görüntü Stili</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{imageStyle}</span>
-                {openSection === 'style' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{imageStyle}</span>
+                {openSection === 'style' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
             {openSection === 'style' && (
               <div className="p-4 bg-gray-50/50 rounded-xl mt-2 flex flex-wrap gap-2">
                 {['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Anime', 'Yağlı Boya', 'Pop Art', 'Çizgi Film', 'Vintage Retro'].map(s => (
-                  <button type="button" key={s} onClick={() => setImageStyle(s)} className={`px-4 py-2 rounded-full font-bold transition ${imageStyle === s ? 'bg-[#b3593b] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
+                  <button type="button" key={s} onClick={() => setImageStyle(s)} className={`px-4 py-2 rounded-full font-bold transition ${imageStyle === s ? 'bg-[#84B1D9] text-white' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'}`}>
                     {s}
                   </button>
                 ))}
@@ -455,8 +455,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('age')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Yaş Grubu</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{ageGroup} Yaş</span>
-                {openSection === 'age' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{ageGroup} Yaş</span>
+                {openSection === 'age' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
             {openSection === 'age' && (
@@ -469,7 +469,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                       onClick={() => setAgeGroup(range)}
                       className={`px-5 py-3 rounded-xl font-bold transition-all border-2 ${
                         ageGroup === range
-                          ? 'bg-[#b3593b] text-white border-[#b3593b] shadow-lg scale-105'
+                          ? 'bg-[#84B1D9] text-white border-[#84B1D9] shadow-lg scale-105'
                           : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
                       }`}
                     >
@@ -489,8 +489,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('characters')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Karakterler</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#f0e6dd] text-[#8c6239] px-3 py-1 rounded-full text-sm font-bold">{characters.length} Karakter</span>
-                {openSection === 'characters' ? <ChevronUp className="text-[#8c6239]" /> : <ChevronDown className="text-gray-400" />}
+                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{characters.length} Karakter</span>
+                {openSection === 'characters' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
             {openSection === 'characters' && (
@@ -505,7 +505,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                         newChars[index] = e.target.value
                         setCharacters(newChars)
                       }}
-                      className="flex-grow p-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#b3593b]"
+                      className="flex-grow p-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#84B1D9]"
                       placeholder={`Karakter ${index + 1} detayları...`}
                     />
                     {characters.length > 1 && (
@@ -518,7 +518,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                   </div>
                 ))}
                 {characters.length < 3 && (
-                  <button type="button" onClick={() => setCharacters([...characters, ''])} className="text-[#b3593b] font-bold text-sm flex items-center p-2 hover:bg-[#f0e6dd] rounded-lg transition">
+                  <button type="button" onClick={() => setCharacters([...characters, ''])} className="text-[#84B1D9] font-bold text-sm flex items-center p-2 hover:bg-[#C7DAEB] rounded-lg transition">
                     <Plus size={16} className="mr-1"/> Karakter Ekle
                   </button>
                 )}
@@ -533,7 +533,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
           <button
             type="submit"
             disabled={isGenerating}
-            className="bg-[#c28d75] hover:bg-[#a6745f] text-white px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-md flex items-center justify-center disabled:opacity-70 w-64"
+            className="bg-[#84B1D9] hover:bg-[#8FBDD9] text-white px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-md flex items-center justify-center disabled:opacity-70 w-64"
           >
             {isGenerating ? (
               <span className="flex items-center animate-pulse">
@@ -552,8 +552,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
       {/* Progress Modal Overlay */}
       {jobId && jobStatus && (
-        <div className="fixed inset-0 bg-[#fdfaf3]/95 backdrop-blur-sm z-[200] flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto">
-          <div className="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl border-4 border-[#b3593b] relative animate-in zoom-in duration-500">
+        <div className="fixed inset-0 bg-[#EFEBED]/95 backdrop-blur-sm z-[200] flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto">
+          <div className="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl border-4 border-[#84B1D9] relative animate-in zoom-in duration-500">
             {jobStatus.status === 'failed' && (
               <button 
                 onClick={() => {
@@ -571,7 +571,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               <h2 className="text-3xl font-lora font-bold text-[#2d2d2d] mb-2">
                 Sihirli Masalınız Hazırlanıyor... ✨
               </h2>
-              <p className="text-[#8c462e] font-medium">Lütfen bu sayfayı kapatmayın, süreç 1-2 dakika sürebilir.</p>
+              <p className="text-[#84B1D9] font-medium">Lütfen bu sayfayı kapatmayın, süreç 1-2 dakika sürebilir.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -580,17 +580,17 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                 <div>
                   <div className="flex justify-between mb-3">
                     <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Durum: {jobStatus.status}</span>
-                    <span className="text-lg font-black text-[#b3593b]">{jobStatus.progress}%</span>
+                    <span className="text-lg font-black text-[#84B1D9]">{jobStatus.progress}%</span>
                   </div>
                   <div className="w-full bg-gray-100 h-6 rounded-full overflow-hidden shadow-inner">
                     <div 
-                      className="bg-gradient-to-r from-[#e6b17e] to-[#b3593b] h-full transition-all duration-1000 ease-out"
+                      className="bg-gradient-to-r from-[#BDD9F2] to-[#84B1D9] h-full transition-all duration-1000 ease-out"
                       style={{ width: `${jobStatus.progress}%` }}
                     />
                   </div>
                 </div>
                 
-                <ul className="space-y-4 bg-amber-50/50 p-6 rounded-2xl border border-amber-100/50">
+                <ul className="space-y-4 bg-sky-50/50 p-6 rounded-2xl border border-sky-100/50">
                   <li className={`flex items-center gap-3 font-bold ${jobStatus.progress >= 10 ? 'text-emerald-600' : 'text-gray-400'}`}>
                     <span className="text-xl">{jobStatus.progress >= 10 ? '✅' : '⏳'}</span> Senaryo ve Metin Yazımı
                   </li>
@@ -619,8 +619,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               </div>
 
               {/* Visual Reference Panel */}
-              <div className="bg-[#fcfaf7] rounded-3xl p-6 border-2 border-dashed border-[#e6b17e] flex flex-col items-center justify-center min-h-[300px]">
-                <h4 className="text-sm font-bold text-amber-700 uppercase tracking-widest mb-4">Karakter Referansınız</h4>
+              <div className="bg-[#EFEBED] rounded-3xl p-6 border-2 border-dashed border-[#BDD9F2] flex flex-col items-center justify-center min-h-[300px]">
+                <h4 className="text-sm font-bold text-sky-700 uppercase tracking-widest mb-4">Karakter Referansınız</h4>
                 {jobStatus.master_ref_data ? (
                   <img 
                     src={jobStatus.master_ref_data.startsWith('http') ? jobStatus.master_ref_data : `data:image/png;base64,${jobStatus.master_ref_data}`} 
@@ -628,7 +628,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                     alt="Master Reference"
                   />
                 ) : (
-                  <div className="flex flex-col items-center text-center text-amber-900/40">
+                  <div className="flex flex-col items-center text-center text-sky-900/40">
                     <ImageIcon size={48} className="mb-4 opacity-50" />
                     <p className="font-bold">Ana karakterler henüz oluşturulmadı...</p>
                     <p className="text-sm mt-2">Yapay zeka şu an senaryoyu kurguluyor.</p>

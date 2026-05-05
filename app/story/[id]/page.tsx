@@ -22,15 +22,15 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
 
   if (!story) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-amber-50/30">
-        <h1 className="text-2xl font-bold mb-4 text-amber-900">Masal bulunamadı</h1>
-        <Link href="/parent" className="text-amber-600 underline font-semibold">Kütüphaneye Dön</Link>
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-sky-50/30">
+        <h1 className="text-2xl font-bold mb-4 text-sky-900">Masal bulunamadı</h1>
+        <Link href="/parent" className="text-sky-600 underline font-semibold">Kütüphaneye Dön</Link>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50/60 to-orange-50/20 p-4 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50/60 to-orange-50/20 p-4 sm:p-8">
       <div className="w-full max-w-6xl mx-auto">
 
         {/* Üst bar */}
@@ -38,7 +38,7 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
           {/* Geri butonu */}
           <Link
             href="/parent"
-            className="inline-flex items-center gap-2 bg-white px-5 py-3 rounded-2xl shadow-sm border border-amber-100 font-bold text-amber-800 hover:bg-amber-50 hover:border-amber-200 transition-all text-sm"
+            className="inline-flex items-center gap-2 bg-white px-5 py-3 rounded-2xl shadow-sm border border-sky-100 font-bold text-sky-800 hover:bg-sky-50 hover:border-sky-200 transition-all text-sm"
           >
             ← Kütüphaneye Dön
           </Link>
@@ -48,7 +48,7 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
             {/* Kitap İndir */}
             <a
               href={`/api/download-book?id=${story.id}`}
-              className="inline-flex items-center gap-2 bg-white px-5 py-3 rounded-2xl shadow-sm border border-amber-200 font-bold text-amber-800 hover:bg-amber-50 hover:border-amber-300 transition-all text-sm"
+              className="inline-flex items-center gap-2 bg-white px-5 py-3 rounded-2xl shadow-sm border border-sky-200 font-bold text-sky-800 hover:bg-sky-50 hover:border-amber-300 transition-all text-sm"
             >
               <Download size={16} />
               Kitabı İndir
@@ -75,7 +75,7 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
                 download={`${story.title}.mp3`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-3 rounded-2xl font-bold shadow-md transition-all text-sm"
+                className="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-2xl font-bold shadow-md transition-all text-sm"
               >
                 <Music size={16} />
                 Podcast İndir
