@@ -45,9 +45,32 @@ export async function backgroundStoryAction(formData: {
             .in('profile_id', profileIds)
             .gte('created_at', startDate.toISOString());
 
-        // 🚨 KOTA ENGELLEME (GÜVENLİK DUVARI)
+        // 🚨 KOTA ENGELLEME (GÜVENLİK DUVARI) - AYLIK ÜRETİM LİMİTİ
         if ((usedStories || 0) >= storyLimit) {
             throw new Error(`Aylık hikaye limitinize ulaştınız (${storyLimit}/${storyLimit}). Yeni haklarınız dönem sonunda yenilenecektir.`);
+        }
+
+        // 🧹 ARŞİV TEMİZLEME (YENİ KURAL)
+        const archiveLimit = isPremium ? 100 : (isPro ? 50 : 3);
+        const { count: totalArchiveCount } = await supabase
+            .from('stories')
+            .select('*', { count: 'exact', head: true })
+            .in('profile_id', profileIds);
+
+        if ((totalArchiveCount || 0) >= archiveLimit) {
+            // En eski hikayeyi bul ve sil
+            const { data: oldestStory } = await supabase
+                .from('stories')
+                .select('id')
+                .in('profile_id', profileIds)
+                .order('created_at', { ascending: true })
+                .limit(1)
+                .single();
+
+            if (oldestStory) {
+                await supabase.from('stories').delete().eq('id', oldestStory.id);
+                console.log(`>>> [ARŞİV TEMİZLİĞİ]: Limit dolduğu için en eski hikaye (${oldestStory.id}) silindi.`);
+            }
         }
 
         // 3. İş Kuyruğuna Ekle (Sadece Kota Varsa)
