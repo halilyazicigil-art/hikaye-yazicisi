@@ -16,14 +16,17 @@ export default async function LandingPage() {
     <main className="min-h-screen bg-[#BDD9F2] text-[#052159] overflow-x-hidden font-nunito relative">
       
       {/* 1. KAHRAMAN BÖLÜMÜ (Hero) - Uyuyan Çocuk Görseli */}
-      <div className="relative w-full min-h-[90vh] flex flex-col bg-[url('/images/sleeping_child_on_clouds_hero_1778006918346.png')] bg-cover bg-center bg-no-repeat">
-        {/* Navbar */}
+      <div className="relative w-full min-h-[85vh] flex flex-col overflow-hidden">
+        {/* Görsel Katmanı */}
+        <div className="absolute inset-0 bg-[url('/images/hero-sleeping.png')] bg-cover bg-center bg-no-repeat z-0"></div>
+        {/* Yumuşak Geçiş Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#BDD9F2] z-10"></div>
+        
         <div className="relative z-50">
           <Navbar user={user} />
         </div>
         
-        {/* İçerik ve Yumuşak Geçiş */}
-        <div className="flex-grow flex flex-col justify-center relative z-10">
+        <div className="flex-grow flex flex-col justify-center relative z-20">
           <section className="max-w-5xl mx-auto px-6 py-20 text-center">
             <h1 className="text-5xl md:text-7xl font-lora font-bold text-[#052159] leading-tight mb-6 drop-shadow-md">
               Hayallerini Süsleyen Masalları Beraber Yazın
@@ -36,7 +39,7 @@ export default async function LandingPage() {
               <a href="#create" className="bg-[#84B1D9] hover:bg-[#8FBDD9] text-white px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl w-full sm:w-auto hover:scale-105">
                 Masal Üretmeye Başla
               </a>
-              <Link href="/pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#052159] px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl w-full sm:w-auto border border-gray-100 hover:scale-105 text-center">
+              <Link href="/pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#052159] px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl w-full sm:w-auto border border-gray-200 hover:scale-105 text-center">
                 Abonelik Planları
               </Link>
             </div>
@@ -48,15 +51,14 @@ export default async function LandingPage() {
             </div>
           </section>
         </div>
-
-        {/* Hero biterken mavi zemine yumuşak geçiş */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#BDD9F2]"></div>
       </div>
 
-      {/* 2. SİHİRLİ ARKA PLANIN BAŞLADIĞI ALAN (Tam olarak formdan itibaren) */}
-      <div className="relative bg-[url('/images/whimsical-bg.png')] bg-fixed bg-cover bg-center">
-        {/* Sayfa geneli mavi tonu korumak için overlay */}
-        <div className="absolute inset-0 bg-[#BDD9F2]/70 pointer-events-none"></div>
+      {/* 2. SİHİRLİ ARKA PLANIN BAŞLADIĞI ALAN */}
+      <div className="relative overflow-hidden">
+        {/* Arka Plan Katmanı (Fixed div for maximum stability) */}
+        <div className="absolute inset-0 bg-[url('/images/whimsical-bg.png')] bg-cover bg-center bg-no-repeat opacity-40 pointer-events-none z-0"></div>
+        {/* Mavi tonu korumak için overlay */}
+        <div className="absolute inset-0 bg-[#BDD9F2]/80 pointer-events-none z-1"></div>
 
         <div className="relative z-10">
           {/* Form Section */}
