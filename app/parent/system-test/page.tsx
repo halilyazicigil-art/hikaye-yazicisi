@@ -196,7 +196,7 @@ export default function SystemTestPage() {
                 <h4 className="text-xs font-bold text-[#8C7B7B] uppercase mb-4">Master Karakter Paftası (Referans)</h4>
                 {jobStatus.master_ref_data ? (
                   <img 
-                    src={`data:image/png;base64,${jobStatus.master_ref_data}`} 
+                    src={jobStatus.master_ref_data.startsWith('http') ? jobStatus.master_ref_data : `data:image/png;base64,${jobStatus.master_ref_data}`} 
                     className="w-full rounded-xl shadow-lg border-4 border-white"
                     alt="Master Reference"
                   />

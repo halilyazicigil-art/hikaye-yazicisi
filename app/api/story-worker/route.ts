@@ -188,10 +188,15 @@ export async function POST(req: NextRequest) {
         const masterMedia = await generateImagePro(masterPrompt, projectId, token);
         if (!masterMedia) throw new Error("Master Pafta üretilemedi");
         
+        // Supabase Realtime 1MB Payload sınırına takılmamak için master görselini Storage'a yüklüyoruz
+        const masterFileName = `master_${jobId}.png`;
+        await supabase.storage.from('story_assets').upload(`images/${masterFileName}`, Buffer.from(masterMedia.data, 'base64'), { contentType: 'image/png' });
+        const { data: { publicUrl: masterUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${masterFileName}`);
+        
         // Master Karakter işlemi tamamlandı
-        await supabase.from('generation_jobs').update({ status: 'master_ready', progress: 20, master_ref_data: masterMedia.data }).eq('id', jobId);
+        await supabase.from('generation_jobs').update({ status: 'master_ready', progress: 20, master_ref_data: masterUrl }).eq('id', jobId);
 
-        // 4. ADIM: 12 SAHNE KADEMELİ PARALEL ÇİZİM (%30-80)
+        // 4. ADIM: 12 SAHNE ÇİZİMİ (%30-80) (Eski Sıralı Sistem)
         await supabase.from('generation_jobs').update({ status: 'processing', progress: 30 }).eq('id', jobId);
         
         interface Scene {
@@ -199,39 +204,29 @@ export async function POST(req: NextRequest) {
             visualHook: string;
         }
 
-        let completedScenes = 0;
+        const pagesWithImages = [];
         
-        // Sahneleri "Staggered" (Kademeli) Paralel İşleme sokuyoruz
-        const scenePromises = storyData.scenes.map(async (scene: Scene, idx: number) => {
-            // ÖNEMLİ: Her sahnenin başlaması için index * 4000ms bekletiyoruz.
-            // 0. sahne anında, 1. sahne 4s sonra, 2. sahne 8s sonra başlar.
-            // Kota sınırlarını aşmamak için aralığı biraz daha genişlettik (15 RPM)
-            if (idx > 0) {
-                await delay(idx * 4000);
-            }
-
-            const scenePrompt = `[SCENE ${idx+1}] Style: ${payload.style}. Content: ${scene.visualHook}. Characters from reference image.`;
-            // Exponential backoff try-catch bloğumuz zaten generateImagePro içinde var!
+        // Gelen talep üzerine eski sırayla işleme (bir görsel bitmeden diğerine geçmeme) sistemine dönüldü
+        for (let i = 0; i < storyData.scenes.length; i++) {
+            const scene = storyData.scenes[i];
+            const scenePrompt = `[SCENE ${i+1}] Style: ${payload.style}. Content: ${scene.visualHook}. Characters from reference image.`;
             const media = await generateImagePro(scenePrompt, projectId, token, [{ name: 'master', data: masterMedia.data }]);
             
-            const fileName = `bg_img_${jobId}_${idx}.png`;
+            const fileName = `bg_img_${jobId}_${i}.png`;
             await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(media!.data, 'base64'), { contentType: 'image/png' });
             const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
             
-            // İlerlemeyi say ve güncelle
-            completedScenes++;
-            const currentProgress = 30 + Math.floor((completedScenes / storyData.scenes.length) * 50);
+            // İlerlemeyi güncelle
+            const currentProgress = 30 + Math.floor(((i + 1) / storyData.scenes.length) * 50);
             await supabase.from('generation_jobs').update({ progress: currentProgress }).eq('id', jobId);
             
-            return { idx, text: scene.text, image_url: publicUrl };
-        });
-
-        // Bütün sahnelerin asenkron olarak tamamlanmasını bekle
-        const results = await Promise.all(scenePromises);
-        
-        // Sonuçları doğru sıraya diz
-        results.sort((a, b) => a.idx - b.idx);
-        const pagesWithImages = results.map(r => ({ text: r.text, image_url: r.image_url }));
+            pagesWithImages.push({ text: scene.text, image_url: publicUrl });
+            
+            // Kota aşımını önlemek için her sahne arasında bekleme
+            if (i < storyData.scenes.length - 1) {
+                await delay(2000);
+            }
+        }
 
         // 5. ADIM: SESLENDİRME (%90)
         await supabase.from('generation_jobs').update({ status: 'generating_audio', progress: 80 }).eq('id', jobId);
