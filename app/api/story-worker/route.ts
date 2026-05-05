@@ -100,7 +100,11 @@ async function generateImagePro(prompt: string, projectId: string, token: string
                 throw new Error(isRateLimit ? `Rate Limit 429: ${data.error?.message}` : (data.error?.message || `HTTP Error ${response.status}: Görsel Hatası`));
             }
             
-            return extractMediaData(data.candidates || []);
+            const extracted = extractMediaData(data.candidates || []);
+            if (!extracted) {
+                throw new Error("Görsel boş döndü veya güvenlik filtresine takıldı (Empty candidate).");
+            }
+            return extracted;
         } catch (error: any) {
             lastError = error;
             const isRateLimit = error.message.includes('429') || error.message.includes('Resource exhausted');
@@ -190,7 +194,9 @@ export async function POST(req: NextRequest) {
         
         // Supabase Realtime 1MB Payload sınırına takılmamak için master görselini Storage'a yüklüyoruz
         const masterFileName = `master_${jobId}.png`;
-        await supabase.storage.from('story_assets').upload(`images/${masterFileName}`, Buffer.from(masterMedia.data, 'base64'), { contentType: 'image/png' });
+        const { error: masterUploadErr } = await supabase.storage.from('story_assets').upload(`images/${masterFileName}`, Buffer.from(masterMedia.data, 'base64'), { contentType: 'image/png' });
+        if (masterUploadErr) throw new Error("Master görsel yüklenemedi: " + masterUploadErr.message);
+        
         const { data: { publicUrl: masterUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${masterFileName}`);
         
         // Master Karakter işlemi tamamlandı
@@ -209,11 +215,20 @@ export async function POST(req: NextRequest) {
         // Gelen talep üzerine eski sırayla işleme (bir görsel bitmeden diğerine geçmeme) sistemine dönüldü
         for (let i = 0; i < storyData.scenes.length; i++) {
             const scene = storyData.scenes[i];
-            const scenePrompt = `[SCENE ${i+1}] Style: ${payload.style}. Content: ${scene.visualHook}. Characters from reference image.`;
+            
+            // PROMPT ENGINEERING: Referansın aynısını çizmesini engellemek ve yazıları yasaklamak için güçlü yönlendirme
+            const scenePrompt = `[SCENE ${i+1}] Style: ${payload.style}. 
+NEW ACTION/SCENE TO DRAW: ${scene.visualHook}. 
+CHARACTER REFERENCE: Use the provided reference image ONLY for character design and face consistency. 
+CRITICAL INSTRUCTION 1: Do NOT reproduce the reference image exactly. You MUST draw the characters performing the NEW ACTION/SCENE described above. Change their poses and environment to match the new scene.
+CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, watermarks, signatures, or typography. Clean visual art only.`;
+
             const media = await generateImagePro(scenePrompt, projectId, token, [{ name: 'master', data: masterMedia.data }]);
             
             const fileName = `bg_img_${jobId}_${i}.png`;
-            await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(media!.data, 'base64'), { contentType: 'image/png' });
+            const { error: uploadErr } = await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(media!.data, 'base64'), { contentType: 'image/png' });
+            if (uploadErr) throw new Error(`Sayfa ${i+1} görseli yüklenemedi: ${uploadErr.message}`);
+            
             const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
             
             // İlerlemeyi güncelle
