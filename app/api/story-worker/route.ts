@@ -88,8 +88,7 @@ async function generateImagePro(prompt: string, projectId: string, token: string
                 body: JSON.stringify({
                     contents: [{ role: 'user', parts }],
                     generationConfig: { 
-                        seed: Math.floor(Math.random() * 2147483647),
-                        personGeneration: 'ALLOW_ALL'
+                        seed: Math.floor(Math.random() * 2147483647)
                     }
                 })
             });
