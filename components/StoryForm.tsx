@@ -280,7 +280,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('voice')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Ses</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{voiceName}</span>
+                <span className="bg-[#BDD9F2] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{voiceName}</span>
                 {openSection === 'voice' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
@@ -415,7 +415,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('genre')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Tür</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{genre}</span>
+                <span className="bg-[#BDD9F2] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{genre}</span>
                 {openSection === 'genre' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
@@ -435,7 +435,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('style')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Görüntü Stili</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{imageStyle}</span>
+                <span className="bg-[#BDD9F2] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{imageStyle}</span>
                 {openSection === 'style' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
@@ -455,7 +455,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('age')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Yaş Grubu</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{ageGroup} Yaş</span>
+                <span className="bg-[#BDD9F2] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{ageGroup} Yaş</span>
                 {openSection === 'age' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
@@ -489,7 +489,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <div onClick={() => toggleSection('characters')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
               <span className="font-bold text-gray-800 text-lg">Karakterler</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#C7DAEB] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{characters.length} Karakter</span>
+                <span className="bg-[#BDD9F2] text-[#8FBDD9] px-3 py-1 rounded-full text-sm font-bold">{characters.length} Karakter</span>
                 {openSection === 'characters' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
@@ -518,7 +518,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                   </div>
                 ))}
                 {characters.length < 3 && (
-                  <button type="button" onClick={() => setCharacters([...characters, ''])} className="text-[#84B1D9] font-bold text-sm flex items-center p-2 hover:bg-[#C7DAEB] rounded-lg transition">
+                  <button type="button" onClick={() => setCharacters([...characters, ''])} className="text-[#84B1D9] font-bold text-sm flex items-center p-2 hover:bg-[#BDD9F2] rounded-lg transition">
                     <Plus size={16} className="mr-1"/> Karakter Ekle
                   </button>
                 )}

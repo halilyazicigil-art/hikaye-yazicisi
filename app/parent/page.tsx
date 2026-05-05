@@ -119,7 +119,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                 Admin
               </Link>
             )}
-            <Link href="/settings" className="p-3 bg-[#EFEBED] text-[#84B1D9] rounded-xl hover:bg-[#C7DAEB] transition border border-[#BDD9F2]/30">
+            <Link href="/settings" className="p-3 bg-[#EFEBED] text-[#84B1D9] rounded-xl hover:bg-[#BDD9F2] transition border border-[#BDD9F2]/30">
               <Settings size={24} />
             </Link>
           </div>
@@ -188,7 +188,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                                    (Array.isArray(story.content_json) ? [] : []) // Basit bir fallback
 
                   return (
-                    <Link href={`/story/${story.id}`} key={story.id} className="group relative p-6 bg-[#EFEBED] hover:bg-[#C7DAEB] border border-sky-100 rounded-3xl transition-all cursor-pointer block overflow-hidden">
+                    <Link href={`/story/${story.id}`} key={story.id} className="group relative p-6 bg-[#EFEBED] hover:bg-[#BDD9F2] border border-sky-100 rounded-3xl transition-all cursor-pointer block overflow-hidden">
                       <div className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-sm text-sky-500">
                         <Star size={18} fill="currentColor" />
                       </div>
