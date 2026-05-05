@@ -94,7 +94,7 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
         />
 
         {/* Alt bilgi */}
-        <p className="text-center text-amber-400 text-xs font-medium mt-6 tracking-wide">
+        <p className="text-center text-[#052159] text-xs font-bold mt-6 tracking-wide opacity-70">
           🌟 Bu masal sizin için özel oluşturuldu · MyStory
         </p>
       </div>
