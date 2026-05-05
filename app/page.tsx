@@ -25,7 +25,7 @@ export default async function Home() {
       <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-[#8FBDD9] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 pointer-events-none"></div>
 
       {/* Hero and Navbar Wrapper with Background */}
-      <div className="relative w-full bg-[url('/images/hero_bg.png')] bg-cover bg-center bg-no-repeat pb-10">
+      <div className="relative w-full bg-[url('/images/hero-bg-v2.png')] bg-cover bg-center bg-no-repeat pb-10">
         <div className="absolute inset-0 bg-gradient-to-b from-[#BDD9F2]/90 via-[#BDD9F2]/70 to-[#BDD9F2]"></div>
         
         {/* Navbar */}
