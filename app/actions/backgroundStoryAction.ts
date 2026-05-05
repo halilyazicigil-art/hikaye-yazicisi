@@ -81,54 +81,52 @@ export async function backgroundStoryAction(formData: {
             }
         }
 
-        // 🏆 FREEMIUM CACHING MİMARİSİ (MALİYET SIFIRLAMA)
-        if (!isPro && !isPremium) {
-            const { data: existingJob } = await supabase
-                .from('generation_jobs')
-                .select('story_id')
-                .eq('status', 'completed')
-                .eq('payload->>theme', formData.theme)
-                .not('story_id', 'is', null)
-                .limit(1)
-                .maybeSingle();
+        // 🏆 CACHING MİMARİSİ (TÜM PAKETLER İÇİN MALİYET SIFIRLAMA)
+        const { data: existingJob } = await supabase
+            .from('generation_jobs')
+            .select('story_id')
+            .eq('status', 'completed')
+            .eq('payload->>theme', formData.theme)
+            .not('story_id', 'is', null)
+            .limit(1)
+            .maybeSingle();
 
-            if (existingJob && existingJob.story_id) {
-                const { data: masterStory } = await supabase
+        if (existingJob && existingJob.story_id) {
+            const { data: masterStory } = await supabase
+                .from('stories')
+                .select('*')
+                .eq('id', existingJob.story_id)
+                .single();
+
+            if (masterStory) {
+                const targetProfileId = profileIds.length > 0 ? profileIds[0] : null;
+                if (!targetProfileId) throw new Error("Hikaye oluşturmak için en az bir çocuk profiliniz olmalı.");
+
+                const { data: copiedStory, error: copyErr } = await supabase
                     .from('stories')
-                    .select('*')
-                    .eq('id', existingJob.story_id)
+                    .insert({
+                        profile_id: targetProfileId,
+                        title: masterStory.title,
+                        content_json: masterStory.content_json,
+                        image_url: masterStory.image_url,
+                        audio_url: masterStory.audio_url
+                    })
+                    .select()
                     .single();
 
-                if (masterStory) {
-                    const targetProfileId = profileIds.length > 0 ? profileIds[0] : null;
-                    if (!targetProfileId) throw new Error("Hikaye oluşturmak için en az bir çocuk profiliniz olmalı.");
+                if (copyErr) throw copyErr;
 
-                    const { data: copiedStory, error: copyErr } = await supabase
-                        .from('stories')
-                        .insert({
-                            profile_id: targetProfileId,
-                            title: masterStory.title,
-                            content_json: masterStory.content_json,
-                            image_url: masterStory.image_url,
-                            audio_url: masterStory.audio_url
-                        })
-                        .select()
-                        .single();
+                // UI'da gerçekçi bir bekleme süresi yaratmak için 'cached_processing' durumuyla başlatıyoruz
+                const { data: fakeJob } = await supabase.from('generation_jobs').insert({
+                    user_id: user.id,
+                    status: 'cached_processing',
+                    progress: 0,
+                    story_id: copiedStory.id,
+                    payload: formData
+                }).select().single();
 
-                    if (copyErr) throw copyErr;
-
-                    // UI'ın anında yönlendirme yapabilmesi için sahte bir tamamlanmış iş oluşturuyoruz
-                    const { data: fakeJob } = await supabase.from('generation_jobs').insert({
-                        user_id: user.id,
-                        status: 'completed',
-                        progress: 100,
-                        story_id: copiedStory.id,
-                        payload: formData
-                    }).select().single();
-
-                    console.log(`>>> [FREEMIUM CACHE HIT]: API kullanılmadı! Kopyalanan Story ID: ${copiedStory.id}`);
-                    return { success: true, jobId: fakeJob.id };
-                }
+                console.log(`>>> [CACHE HIT]: API kullanılmadı! Kopyalanan Story ID: ${copiedStory.id}`);
+                return { success: true, jobId: fakeJob.id };
             }
         }
 

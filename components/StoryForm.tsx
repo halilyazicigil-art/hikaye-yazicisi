@@ -114,6 +114,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     story_id?: string;
     error_message?: string;
     id: string;
+    _isFaking?: boolean;
   }
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
   const [remainingStories, setRemainingStories] = useState<number | null>(null)
@@ -200,6 +201,39 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     return () => { supabase.removeChannel(channel) }
   }, [jobId, voiceName, genre, imageStyle, ageGroup, tab, educationalValue, characters])
 
+  // Freemium Caching (Fake Progress Delay)
+  useEffect(() => {
+    if (jobStatus?.status === 'cached_processing' && jobStatus.story_id && !jobStatus._isFaking) {
+      setJobStatus(prev => prev ? { ...prev, _isFaking: true } : null);
+      
+      let currentProgress = 0;
+      // 3 dakika (180 saniye) boyunca %100'e ulaşmak için her 1.8 saniyede bir %1 artır
+      const interval = setInterval(() => {
+        currentProgress += 1;
+        if (currentProgress >= 100) {
+          clearInterval(interval);
+          setJobStatus(prev => prev ? { ...prev, status: 'completed', progress: 100 } : null);
+          setRemainingStories(prev => (prev !== null ? prev - 1 : 0));
+          
+          saveStoryMetadata(jobStatus.story_id!, {
+            voice_name: voiceName,
+            genre: genre,
+            style: imageStyle,
+            age_group: ageGroup,
+            educational_value: tab === 'egitici' ? educationalValue : null,
+            characters: characters.filter(c => c.trim() !== '')
+          }).then(() => {
+            window.location.href = `/story/${jobStatus.story_id}`
+          });
+        } else {
+          setJobStatus(prev => prev ? { ...prev, progress: currentProgress } : null);
+        }
+      }, 1800);
+      
+      return () => clearInterval(interval);
+    }
+  }, [jobStatus?.status, jobStatus?._isFaking, jobStatus?.story_id, voiceName, genre, imageStyle, ageGroup, tab, educationalValue, characters])
+
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section)
   }
@@ -262,35 +296,14 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   const handleRandomize = () => {
     const randomScenario = STORY_SCENARIOS[Math.floor(Math.random() * STORY_SCENARIOS.length)]
 
-    if (!isPro && !isPremium) {
-      // Freemium Caching Optimizations:
-      // Her konu için özel belirlenmiş sabit ayarları kullanıyoruz ki kopyalama çalışsın
-      setVoice(randomScenario.voice || 'Aoede')
-      setVoiceName(randomScenario.voiceName || 'Bilge Anne')
-      setGenre(randomScenario.genre || 'Masal')
-      setImageStyle(randomScenario.style || 'Sulu Boya')
-      setAgeGroup(randomScenario.age || '2-4')
-      
-      setPrompt(randomScenario.prompt)
-      setCharacters(randomScenario.characters)
-      return
-    }
-
-    // Pro & Premium için Rastgele
-    const randomVoice = AI_VOICES[Math.floor(Math.random() * AI_VOICES.length)]
-    setVoice(randomVoice.id)
-    setVoiceName(randomVoice.name)
-
-    const randomGenre = GENRES[Math.floor(Math.random() * GENRES.length)]
-    setGenre(randomGenre)
-
-    const randomStyle = IMAGE_STYLES[Math.floor(Math.random() * IMAGE_STYLES.length)]
-    setImageStyle(randomStyle)
-
-    const randomAge = AGE_GROUPS[Math.floor(Math.random() * AGE_GROUPS.length)]
-    setAgeGroup(randomAge)
-
-    const randomScenario = STORY_SCENARIOS[Math.floor(Math.random() * STORY_SCENARIOS.length)]
+    // Tüm paketler (Pamuk, Gümüş, Altın) için hazır senaryolar özel sabit ayarlarla gelir
+    // Bu sayede Caching mantığı herkes için çalışır ve hazır taslaklar kullanılabilir
+    setVoice(randomScenario.voice || 'Aoede')
+    setVoiceName(randomScenario.voiceName || 'Bilge Anne')
+    setGenre(randomScenario.genre || 'Masal')
+    setImageStyle(randomScenario.style || 'Sulu Boya')
+    setAgeGroup(randomScenario.age || '2-4')
+    
     setPrompt(randomScenario.prompt)
     setCharacters(randomScenario.characters)
   }
