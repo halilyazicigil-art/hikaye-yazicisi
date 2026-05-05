@@ -107,34 +107,44 @@ export default async function Home() {
           <p className="text-xl text-[#052159]">Gelişmiş teknolojilerle çocuğunuzun hayal gücünü besleyen en güvenilir araç seti.</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
             <div className="w-full h-48 bg-sky-100 rounded-2xl mb-6 bg-[url('/images/visual_feast.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Görsel Şölen ve Doğal Seslendirme</h3>
-            <p className="text-[#052159] mb-6 flex-grow">Her sayfasına özel üretilen yüksek kaliteli resimler ve stüdyo kalitesindeki seslendirmeler ile hikayeler artık çok canlı.</p>
+            <p className="text-gray-600 mb-6 flex-grow text-sm">Her sayfasına özel üretilen yüksek kaliteli resimler ve stüdyo kalitesindeki seslendirmeler ile hikayeler artık çok canlı.</p>
             <ul className="text-left w-full space-y-2 mb-6">
-              <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Farklı çizim stilleri</li>
-              <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Profesyonel okuyucu modları</li>
+              <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Farklı çizim stilleri</li>
+              <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Profesyonel okuyucu modları</li>
             </ul>
           </div>
           
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
             <div className="w-full h-48 bg-blue-100 rounded-2xl mb-6 bg-[url('/images/parent_reading.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Sizin Sesinizden Düşlere Doğru</h3>
-            <p className="text-[#052159] mb-6 flex-grow">Masalları sizden dinlemeyi seven minikler için, kendi sesinizi sisteme tanıtın ve tüm hikayeler sizin sesinizden okunsun.</p>
+            <p className="text-gray-600 mb-6 flex-grow text-sm">Masalları sizden dinlemeyi seven minikler için, kendi sesinizi sisteme tanıtın ve tüm hikayeler sizin sesinizden okunsun.</p>
             <ul className="text-left w-full space-y-2 mb-6">
-              <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Premium: Ses Klonlama</li>
-              <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Daima yanında hissettir</li>
+              <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Premium: Ses Klonlama</li>
+              <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Daima yanında hissettir</li>
+            </ul>
+          </div>
+
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
+            <div className="w-full h-48 bg-purple-100 rounded-2xl mb-6 bg-[url('/images/character_continuity.png')] bg-cover bg-center"></div>
+            <h3 className="text-2xl font-lora font-bold mb-4">Sonsuz Serüven, Aynı Kahraman</h3>
+            <p className="text-gray-600 mb-6 flex-grow text-sm">Kendi karakterlerinizi kütüphanenize kaydedin. Aynı kahramanı farklı masallarda oynatın ve her gece yeni bir maceraya çıkın.</p>
+            <ul className="text-left w-full space-y-2 mb-6">
+              <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Karakter kütüphanesi</li>
+              <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Görsel tutarlılık</li>
             </ul>
           </div>
 
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
             <div className="w-full h-48 bg-pink-100 rounded-2xl mb-6 bg-[url('/images/values_education.png')] bg-cover bg-center"></div>
             <h3 className="text-2xl font-lora font-bold mb-4">Değerler Eğitimi ve Güvenlik</h3>
-            <p className="text-[#052159] mb-6 flex-grow">Sadece eğlenceli değil, aynı zamanda öğretici. Dostluk, dürüstlük veya paylaşma gibi dilediğiniz bir dersi seçerek masalın ana fikrini belirleyin.</p>
+            <p className="text-gray-600 mb-6 flex-grow text-sm">Dostluk, dürüstlük veya paylaşma gibi dilediğiniz bir dersi seçerek masalın ana fikrini çocuklarınıza aşılayın.</p>
             <ul className="text-left w-full space-y-2 mb-6">
-              <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Eğitici Mod seçeneği</li>
-              <li className="flex items-center gap-2 text-sm font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={18}/> Yaşa uygun içerik denetimi</li>
+              <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Eğitici Mod seçeneği</li>
+              <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Yaşa uygun içerik denetimi</li>
             </ul>
           </div>
         </div>
