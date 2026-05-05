@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import StoryPlayer from '@/components/StoryPlayer'
 import Link from 'next/link'
 import { Download, Music, ImageIcon } from 'lucide-react'
+import DownloadBookButton from '@/components/DownloadBookButton'
 
 export default async function StoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -45,14 +46,8 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
 
           {/* İndirme butonları */}
           <div className="flex items-center gap-3">
-            {/* Kitap İndir */}
-            <a
-              href={`/api/download-book?id=${story.id}`}
-              className="inline-flex items-center gap-2 bg-white px-5 py-3 rounded-2xl shadow-sm border border-sky-200 font-bold text-sky-800 hover:bg-sky-50 hover:border-amber-300 transition-all text-sm"
-            >
-              <Download size={16} />
-              Kitabı İndir
-            </a>
+            {/* Kitap İndir (PDF) */}
+            <DownloadBookButton story={story} />
 
             {/* Karakter Paftası İndir */}
             {job?.master_ref_data && (
