@@ -63,7 +63,7 @@ function addWavHeader(pcmData: Buffer): Buffer {
 }
 
 // 🎨 GÖRSEL ÜRETİMİ (Pro Model)
-async function generateImagePro(prompt: string, projectId: string, token: string, refs?: CharacterRef[], retries = 3) {
+async function generateImagePro(prompt: string, projectId: string, token: string, refs?: CharacterRef[], retries = 5) {
     const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`;
     
     interface RequestPart {
@@ -93,19 +93,26 @@ async function generateImagePro(prompt: string, projectId: string, token: string
                 })
             });
 
-            const data = await response.json() as { candidates?: Candidate[], error?: { message: string } };
+            const data = await response.json() as { candidates?: Candidate[], error?: { message: string, code?: number } };
             
             if (!response.ok) {
-                throw new Error(data.error?.message || `HTTP Error ${response.status}: Görsel Hatası`);
+                const isRateLimit = response.status === 429 || data.error?.code === 429 || data.error?.message?.includes('Resource exhausted');
+                throw new Error(isRateLimit ? `Rate Limit 429: ${data.error?.message}` : (data.error?.message || `HTTP Error ${response.status}: Görsel Hatası`));
             }
             
             return extractMediaData(data.candidates || []);
         } catch (error: any) {
             lastError = error;
+            const isRateLimit = error.message.includes('429') || error.message.includes('Resource exhausted');
+            
             console.warn(`[Görsel Üretimi] Deneme ${attempt + 1}/${retries + 1} başarısız:`, error.message);
+            
             if (attempt < retries) {
-                const backoff = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
-                console.log(`[Görsel Üretimi] ${backoff}ms bekleniyor...`);
+                // Kota aşımları için (429) çok daha agresif bir bekleme (5 sn baz) + Jitter
+                const baseDelay = isRateLimit ? 6000 : 2000;
+                // Exponential Backoff: 6s, 9s, 13s, 20s, 30s...
+                const backoff = (baseDelay * Math.pow(1.5, attempt)) + (Math.random() * 2000); 
+                console.log(`[Görsel Üretimi] Kota doldu, sistem ${Math.round(backoff)}ms uyutuluyor... (Deneme: ${attempt + 1})`);
                 await delay(backoff);
             }
         }
@@ -196,11 +203,11 @@ export async function POST(req: NextRequest) {
         
         // Sahneleri "Staggered" (Kademeli) Paralel İşleme sokuyoruz
         const scenePromises = storyData.scenes.map(async (scene: Scene, idx: number) => {
-            // ÖNEMLİ: Her sahnenin başlaması için index * 2500ms bekletiyoruz.
-            // 0. sahne hiç beklemez, 1. sahne 2.5s sonra, 2. sahne 5s sonra başlar.
-            // Bu sayede istekler arka arkaya sıralanır, ancak birbirinin *bitmesini* beklemez!
+            // ÖNEMLİ: Her sahnenin başlaması için index * 4000ms bekletiyoruz.
+            // 0. sahne anında, 1. sahne 4s sonra, 2. sahne 8s sonra başlar.
+            // Kota sınırlarını aşmamak için aralığı biraz daha genişlettik (15 RPM)
             if (idx > 0) {
-                await delay(idx * 2500);
+                await delay(idx * 4000);
             }
 
             const scenePrompt = `[SCENE ${idx+1}] Style: ${payload.style}. Content: ${scene.visualHook}. Characters from reference image.`;
