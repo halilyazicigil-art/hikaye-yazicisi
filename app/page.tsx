@@ -37,13 +37,20 @@ export default async function Home() {
             </div>
             <span className="text-3xl font-lora font-bold tracking-tight text-white ml-3">MyStory</span>
           </div>
+          
+          <div className="hidden md:flex items-center gap-8 text-white font-bold">
+            <Link href="/pricing" className="hover:text-[#052159] transition">Fiyatlandırma</Link>
+            <a href="#create" className="hover:text-[#052159] transition">Nasıl Çalışır</a>
+            <a href="#" className="hover:text-[#052159] transition">Masallar</a>
+          </div>
+
           <div className="flex items-center gap-4 sm:gap-6">
             {user ? (
               <>
                 {user.email === 'halilibrahimyazicigil@gmail.com' && (
                   <Link href="/admin" className="font-bold text-emerald-600 hover:text-emerald-700 transition">Admin</Link>
                 )}
-                <Link href="/parent" className="font-bold text-[#84B1D9] hover:text-[#84B1D9] transition">Panele Dön</Link>
+                <Link href="/parent" className="font-bold text-white hover:text-[#052159] transition">Panele Dön</Link>
                 <form action="/auth/signout" method="post">
                   <button type="submit" className="bg-[#84B1D9] hover:bg-[#84B1D9] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
                     Çıkış Yap
@@ -52,7 +59,7 @@ export default async function Home() {
               </>
             ) : (
               <>
-                <Link href="/register" className="font-bold text-[#84B1D9] hover:text-[#84B1D9] transition hidden sm:inline-block">Üye Ol</Link>
+                <Link href="/register" className="font-bold text-white hover:text-[#052159] transition hidden sm:inline-block">Üye Ol</Link>
                 <Link href="/login" className="bg-[#84B1D9] hover:bg-[#84B1D9] text-white px-6 py-2.5 rounded-xl font-bold transition shadow-sm">
                   Giriş Yap
                 </Link>
@@ -74,9 +81,9 @@ export default async function Home() {
             <a href="#create" className="bg-[#84B1D9] hover:bg-[#84B1D9] text-white px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto hover:scale-105">
               Masal Üretmeye Başla
             </a>
-            <a href="#pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#052159] px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto border border-gray-200 hover:scale-105">
+            <Link href="/pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#052159] px-8 py-4 rounded-xl font-bold text-lg transition shadow-xl w-full sm:w-auto border border-gray-200 hover:scale-105 text-center">
               Abonelik Planları
-            </a>
+            </Link>
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 text-sm font-bold text-emerald-700 mb-6 drop-shadow-sm">
@@ -146,82 +153,6 @@ export default async function Home() {
               <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Eğitici Mod seçeneği</li>
               <li className="flex items-center gap-2 text-xs font-bold text-gray-700"><CheckCircle2 className="text-emerald-500" size={16}/> Yaşa uygun içerik denetimi</li>
             </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" className="max-w-5xl mx-auto px-6 py-20 relative z-10">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-lora font-bold text-[#052159] mt-4 mb-4">
-            Size Uygun Planı Seçin
-          </h2>
-          <p className="text-xl text-[#052159]">Maceraya katılmak için bütçenize en uygun Kovanı seçin.</p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 items-center">
-          {/* Free Plan */}
-          <div className="bg-white/70 backdrop-blur-md border border-white/50 rounded-[2rem] p-8 shadow-xl flex flex-col h-full scale-95">
-            <h3 className="text-2xl font-lora font-bold mb-2">Pamuk Bulut</h3>
-            <div className="text-4xl font-bold text-[#84B1D9] mb-8">Ücretsiz</div>
-            <ul className="space-y-4 text-sm font-bold text-gray-700 flex-grow">
-              <li className="flex justify-between border-b pb-2"><span>Hikaye Uzunluğu</span> <span>Standart</span></li>
-              <li className="flex justify-between border-b pb-2"><span>Kullanım</span> <span>3/Ay</span></li>
-              <li className="flex justify-between border-b pb-2"><span>Yapay Zeka Seslendirme</span> <span>Sınırlı</span></li>
-            </ul>
-            <Link href={user ? "/parent" : "/register"} className="w-full mt-8 py-3 bg-gray-200 hover:bg-gray-300 text-[#052159] rounded-xl font-bold text-center transition">
-              {user ? 'Panelime Git' : 'Kayıt Ol'}
-            </Link>
-          </div>
-
-          {/* Pro Plan */}
-          <div className={`bg-white border-2 border-[#BDD9F2] rounded-[2rem] p-8 shadow-xl flex flex-col h-full relative z-10 ${isPro ? 'ring-4 ring-sky-500/30' : ''}`}>
-            {isPro ? (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-sky-500 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 🍯</div>
-            ) : (
-              <div className="absolute -top-4 right-8 bg-[#f5c345] text-sky-900 font-bold px-4 py-1 rounded-full text-sm">En Popüler</div>
-            )}
-            <h3 className="text-2xl font-lora font-bold mb-2">Gümüş Gökyüzü (Pro)</h3>
-            <div className="text-4xl font-bold text-[#84B1D9] mb-8">15 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
-            <ul className="space-y-3 text-xs font-bold text-gray-700 flex-grow">
-              <li className="flex justify-between border-b pb-1"><span>Aylık Masal</span> <span>40 Adet</span></li>
-              <li className="flex justify-between border-b pb-1"><span>Sesli Masal</span> <span>20 Adet</span></li>
-              <li className="flex justify-between border-b pb-1"><span>Ses Klonlama</span> <span>Aktif</span></li>
-              <li className="flex justify-between border-b pb-1"><span>Bölüm Sayısı</span> <span>20 Bölüm</span></li>
-              <li className="flex justify-between border-b pb-1"><span>İstek Sınırı</span> <span>400 Karakter</span></li>
-              <li className="flex justify-between border-b pb-1"><span>Arşiv Kapasitesi</span> <span>80 Masal</span></li>
-              <li className="flex justify-between border-b pb-1 text-emerald-600"><span>Yayın Lisansı</span> <span>Dahil</span></li>
-            </ul>
-            <Link 
-              href={isPro || isPremium ? "/parent" : "/settings"} 
-              className={`w-full mt-6 py-4 rounded-xl font-bold text-center transition shadow-md ${isPro || isPremium ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-[#84B1D9] hover:bg-[#84B1D9] text-white'}`}
-            >
-              {isPro || isPremium ? 'Panele Dön' : 'Hemen Başla'}
-            </Link>
-          </div>
-
-          {/* Premium Plan */}
-          <div className={`bg-[#BDD9F2] border border-gray-200 rounded-[2rem] p-8 shadow-sm flex flex-col h-full relative ${isPremium ? 'ring-4 ring-purple-500/30 opacity-100 scale-100 border-purple-200 bg-white' : 'opacity-80 scale-95'}`}>
-            {isPremium && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-bold px-6 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">Mevcut Planınız 👑</div>
-            )}
-            <h3 className="text-2xl font-lora font-bold mb-2">Altın Güneş (Premium)</h3>
-            <div className="text-4xl font-bold text-[#84B1D9] mb-8">40 $ <span className="text-lg text-gray-500 font-normal">/ Ay</span></div>
-            <ul className="space-y-3 text-xs font-bold text-gray-700 flex-grow">
-              <li className="flex justify-between border-b pb-1"><span>Aylık Masal</span> <span>80 Adet</span></li>
-              <li className="flex justify-between border-b pb-1"><span>Sesli Masal</span> <span>40 Adet</span></li>
-              <li className="flex justify-between border-b pb-1"><span>Ses Klonlama</span> <span>Aktif</span></li>
-              <li className="flex justify-between border-b pb-1"><span>Bölüm Sayısı</span> <span>20 Bölüm</span></li>
-              <li className="flex justify-between border-b pb-1"><span>İstek Sınırı</span> <span>610 Karakter</span></li>
-              <li className="flex justify-between border-b pb-1"><span>Arşiv Kapasitesi</span> <span>80 Masal</span></li>
-              <li className="flex justify-between border-b pb-1 text-emerald-600"><span>Yayın Lisansı</span> <span>Dahil</span></li>
-            </ul>
-            <Link 
-              href={isPremium ? "/parent" : "/settings"} 
-              className={`w-full mt-6 py-3 rounded-xl font-bold text-center transition ${isPremium ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-gray-200 hover:bg-gray-300 text-[#052159]'}`}
-            >
-              {isPremium ? 'Panele Dön' : 'Yükselt'}
-            </Link>
           </div>
         </div>
       </section>
