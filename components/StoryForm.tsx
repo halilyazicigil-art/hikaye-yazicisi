@@ -243,31 +243,42 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
   const handleTabSelect = (selectedTab: 'normal' | 'egitici') => {
     if (selectedTab === 'egitici' && !isPro && !isPremium) {
-      alert('Eğitici mod için Tatlı Bal veya Altın Güneş paketine sahip olmalısınız.')
+      alert('Eğitici mod için Gümüş Gökyüzü veya Altın Güneş paketine sahip olmalısınız.')
       return
     }
     setTab(selectedTab)
   }
 
   const handleRandomize = () => {
-    // Random Voice
+    if (!isPro && !isPremium) {
+      // Freemium Caching Optimizations:
+      // Sabit ayarlar ile hazır senaryo eşleşme oranını %100'e çıkarıyoruz
+      setVoice('Aoede') // Bilge Anne
+      setVoiceName('Bilge Anne')
+      setGenre('Masal')
+      setImageStyle('Sulu Boya')
+      setAgeGroup('2-4')
+      
+      const randomScenario = STORY_SCENARIOS[Math.floor(Math.random() * STORY_SCENARIOS.length)]
+      setPrompt(randomScenario.prompt)
+      setCharacters(randomScenario.characters)
+      return
+    }
+
+    // Pro & Premium için Rastgele
     const randomVoice = AI_VOICES[Math.floor(Math.random() * AI_VOICES.length)]
     setVoice(randomVoice.id)
     setVoiceName(randomVoice.name)
 
-    // Random Genre
     const randomGenre = GENRES[Math.floor(Math.random() * GENRES.length)]
     setGenre(randomGenre)
 
-    // Random Style
     const randomStyle = IMAGE_STYLES[Math.floor(Math.random() * IMAGE_STYLES.length)]
     setImageStyle(randomStyle)
 
-    // Random Age Group
     const randomAge = AGE_GROUPS[Math.floor(Math.random() * AGE_GROUPS.length)]
     setAgeGroup(randomAge)
 
-    // Random Scenario (Contextual Prompt & Characters)
     const randomScenario = STORY_SCENARIOS[Math.floor(Math.random() * STORY_SCENARIOS.length)]
     setPrompt(randomScenario.prompt)
     setCharacters(randomScenario.characters)
@@ -355,8 +366,9 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value.slice(0, maxChars))}
-            placeholder={tab === 'normal' ? "Bana şu konu hakkında bir hikaye yaz..." : "Çocuğunuza ne öğretmek istersiniz? Örn: Ayşe'nin dişlerini fırçalamayı öğrenmesi..."}
-            className="w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800"
+            placeholder={!isPro && !isPremium ? "Kendi masalınızı yazmak için abone olun. Şimdilik zar simgesine basıp sürpriz hikaye üretebilirsiniz." : (tab === 'normal' ? "Bana şu konu hakkında bir hikaye yaz..." : "Çocuğunuza ne öğretmek istersiniz? Örn: Ayşe'nin dişlerini fırçalamayı öğrenmesi...")}
+            readOnly={!isPro && !isPremium}
+            className={`w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800 ${!isPro && !isPremium ? 'bg-gray-50 cursor-not-allowed opacity-80' : ''}`}
             required
           />
           <div className="absolute top-2 right-2 text-xs font-bold text-gray-400">

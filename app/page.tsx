@@ -9,8 +9,24 @@ export default async function LandingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
-  const isPro = user?.user_metadata?.subscription === 'pro'
-  const isPremium = user?.user_metadata?.subscription === 'premium'
+  let isPro = false;
+  let isPremium = false;
+
+  if (user) {
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('plan_id, current_period_end')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    const now = new Date()
+    const isExpired = sub?.current_period_end ? new Date(sub.current_period_end) < now : true
+
+    if (!isExpired) {
+      if (sub?.plan_id === 'pro') isPro = true;
+      if (sub?.plan_id === 'premium') isPremium = true;
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[#BDD9F2] text-[#052159] overflow-x-hidden font-nunito relative">
