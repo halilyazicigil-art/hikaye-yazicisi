@@ -279,17 +279,30 @@ CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, wat
         // 5. ADIM: SESLENDİRME (%90)
         await supabase.from('generation_jobs').update({ status: 'generating_audio', progress: 80 }).eq('id', jobId);
         const fullText = storyData.scenes.map((s: Scene) => s.text).join(" ");
-        const ttsUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
-        const ttsResp = await fetch(ttsUrl, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: fullText }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: payload.voiceOption } } } } })
-        });
-        const ttsData = await ttsResp.json() as { candidates: Candidate[] };
-        const audioMedia = extractMediaData(ttsData.candidates);
-        const audioFileName = `bg_audio_${jobId}.wav`;
-        await supabase.storage.from('story_assets').upload(`audio/${audioFileName}`, addWavHeader(Buffer.from(audioMedia!.data, 'base64')), { contentType: 'audio/wav' });
-        const { data: { publicUrl: audioUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
+        let audioUrl = null;
+
+        if (payload.voiceOption !== 'Sessiz') {
+            const voiceName = payload.elevenVoiceId || 'Aoede'; // AI_VOICES id'leri
+            const ttsUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
+            const ttsResp = await fetch(ttsUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: fullText }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } } } })
+            });
+            const ttsData = await ttsResp.json() as { candidates?: Candidate[], error?: any };
+            
+            if (!ttsData.candidates || ttsData.candidates.length === 0) {
+                throw new Error("TTS Hatası: " + JSON.stringify(ttsData.error || ttsData));
+            }
+            
+            const audioMedia = extractMediaData(ttsData.candidates);
+            if (!audioMedia) throw new Error("Ses üretilemedi, medya verisi eksik.");
+            
+            const audioFileName = `bg_audio_${jobId}.wav`;
+            await supabase.storage.from('story_assets').upload(`audio/${audioFileName}`, addWavHeader(Buffer.from(audioMedia.data, 'base64')), { contentType: 'audio/wav' });
+            const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
+            audioUrl = publicUrl;
+        }
 
         // Ses işlemi tamamlandı
         await supabase.from('generation_jobs').update({ status: 'audio_ready', progress: 90 }).eq('id', jobId);
