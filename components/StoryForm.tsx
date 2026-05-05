@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, Image as ImageIcon, Shuffle, X, Plus } from 'lucide-react'
 import { backgroundStoryAction } from '@/app/actions/backgroundStoryAction'
 import { saveStoryMetadata } from '@/app/actions/metadata'
+import { uploadReferenceImage } from '@/app/actions/uploadReferenceImage'
 import { createClient } from '@/utils/supabase/client'
 import { useEffect } from 'react'
 
@@ -44,6 +45,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   const [ageGroup, setAgeGroup] = useState<string>('2-4')
   const [characters, setCharacters] = useState<string[]>(['Sevimli Ayı'])
   const [educationalValue, setEducationalValue] = useState<string>('Dürüstlük')
+  const [uploadedRefFile, setUploadedRefFile] = useState<File | null>(null)
 
   const supabase = createClient()
   const [jobId, setJobId] = useState<string | null>(null)
@@ -170,6 +172,20 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       const egitici = tab === 'egitici' ? ` Eğitici Değer: ${educationalValue}.` : ''
       const fullTheme = `${genre} tarzında. Konu: ${prompt}. Çizim Stili: ${imageStyle}. Ses Seçimi: ${voice}. Karakterler: ${chars}.${egitici}`
       
+      let uploadedMasterRefUrl = undefined;
+      if (uploadedRefFile) {
+        const formData = new FormData();
+        formData.append('file', uploadedRefFile);
+        const uploadRes = await uploadReferenceImage(formData);
+        if (uploadRes.success) {
+          uploadedMasterRefUrl = uploadRes.url;
+        } else {
+          alert('Karakter referansı yüklenirken bir hata oluştu: ' + uploadRes.error);
+          setIsGenerating(false);
+          return;
+        }
+      }
+
       const response = await backgroundStoryAction({
         childName: 'Kullanıcı',
         hero: chars,
@@ -177,7 +193,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         age: ageGroup,
         voiceOption: voice === 'Sessiz' ? 'Sessiz' : 'AI',
         elevenVoiceId: voice !== 'Sessiz' ? voice : undefined,
-        style: imageStyle
+        style: imageStyle,
+        uploaded_master_ref: uploadedMasterRefUrl
       })
       
       if (response.success && response.jobId) {
@@ -231,9 +248,27 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
           <div className="absolute top-2 right-2 text-xs font-bold text-gray-400">
             {prompt.length} / {maxChars}
           </div>
-          <div className="absolute bottom-2 left-2 flex gap-4 text-amber-700/60">
-            <button type="button" className="p-2 hover:bg-amber-50 rounded-lg transition"><ImageIcon size={20} /></button>
-            <button type="button" className="p-2 hover:bg-amber-50 rounded-lg transition"><Shuffle size={20} /></button>
+          <div className="absolute bottom-2 left-2 flex items-center gap-4">
+            <label className={`p-2 rounded-lg transition cursor-pointer flex items-center gap-2 ${uploadedRefFile ? 'bg-indigo-100 text-indigo-700' : 'text-amber-700/60 hover:bg-amber-50'}`}>
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setUploadedRefFile(e.target.files[0])
+                  }
+                }}
+              />
+              <ImageIcon size={20} />
+              {uploadedRefFile && <span className="text-xs font-bold whitespace-nowrap overflow-hidden max-w-[120px] text-ellipsis">{uploadedRefFile.name}</span>}
+            </label>
+            <button type="button" className="p-2 text-amber-700/60 hover:bg-amber-50 rounded-lg transition"><Shuffle size={20} /></button>
+            {uploadedRefFile && (
+              <button type="button" onClick={() => setUploadedRefFile(null)} className="p-1 text-red-400 hover:text-red-600 transition">
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
 

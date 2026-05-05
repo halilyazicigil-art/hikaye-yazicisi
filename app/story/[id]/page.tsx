@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import StoryPlayer from '@/components/StoryPlayer'
 import Link from 'next/link'
-import { Download, Music } from 'lucide-react'
+import { Download, Music, ImageIcon } from 'lucide-react'
 
 export default async function StoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -11,6 +11,13 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
     .from('stories')
     .select('*')
     .eq('id', id)
+    .single()
+
+  // Karakter paftasını almak için generation_jobs tablosuna bakıyoruz
+  const { data: job } = await supabase
+    .from('generation_jobs')
+    .select('master_ref_data')
+    .eq('story_id', id)
     .single()
 
   if (!story) {
@@ -46,6 +53,20 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
               <Download size={16} />
               Kitabı İndir
             </a>
+
+            {/* Karakter Paftası İndir */}
+            {job?.master_ref_data && (
+              <a
+                href={job.master_ref_data}
+                download={`karakterler_${story.id}.png`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 px-5 py-3 rounded-2xl shadow-sm border border-indigo-200 font-bold text-indigo-700 transition-all text-sm"
+              >
+                <ImageIcon size={16} />
+                Karakterleri İndir
+              </a>
+            )}
 
             {/* Podcast İndir */}
             {story.audio_url && (

@@ -10,6 +10,7 @@ export async function backgroundStoryAction(formData: {
     age: string;
     style: string;
     elevenVoiceId?: string;
+    uploaded_master_ref?: string;
 }) {
     const supabase = await createClient();
 

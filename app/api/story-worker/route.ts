@@ -142,6 +142,7 @@ export async function POST(req: NextRequest) {
             style: string;
             voiceOption: string;
             profile_id?: string;
+            uploaded_master_ref?: string;
         };
 
         // 2. ADIM: METİN YAZIMI (%10)
@@ -191,19 +192,38 @@ export async function POST(req: NextRequest) {
         // Metin işlemi tamamlandı
         await supabase.from('generation_jobs').update({ status: 'text_ready', progress: 10 }).eq('id', jobId);
 
-        // 3. ADIM: MASTER KARAKTER PAFTASI (%20)
+        // 3. ADIM: MASTER KARAKTER PAFTASI (%20) VEYA BYPASS
         await supabase.from('generation_jobs').update({ status: 'generating_master' }).eq('id', jobId);
-        const charDescriptions = Object.values(storyData.characters).join(". ");
-        const masterPrompt = `A beautiful, high-fidelity illustration showing the following characters standing together in a magical forest: ${charDescriptions}. They should be visible clearly, with neutral expressions. Clean, safe for work illustration.`;
-        const masterMedia = await generateImagePro(masterPrompt, projectId, token);
-        if (!masterMedia) throw new Error("Master Pafta üretilemedi");
         
-        // Supabase Realtime 1MB Payload sınırına takılmamak için master görselini Storage'a yüklüyoruz
-        const masterFileName = `master_${jobId}.png`;
-        const { error: masterUploadErr } = await supabase.storage.from('story_assets').upload(`images/${masterFileName}`, Buffer.from(masterMedia.data, 'base64'), { contentType: 'image/png' });
-        if (masterUploadErr) throw new Error("Master görsel yüklenemedi: " + masterUploadErr.message);
-        
-        const { data: { publicUrl: masterUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${masterFileName}`);
+        let masterMedia: { data: string, mimeType: string };
+        let masterUrl: string;
+
+        if (payload.uploaded_master_ref) {
+            console.log(`[Bypass] Kullanıcı referans paftası yükledi. Çizim atlanıyor: ${payload.uploaded_master_ref}`);
+            const imgRes = await fetch(payload.uploaded_master_ref);
+            if (!imgRes.ok) throw new Error("Yüklenen referans görseli okunamadı.");
+            
+            const arrayBuffer = await imgRes.arrayBuffer();
+            const base64Data = Buffer.from(arrayBuffer).toString('base64');
+            
+            masterMedia = { data: base64Data, mimeType: 'image/png' };
+            masterUrl = payload.uploaded_master_ref;
+        } else {
+            const charDescriptions = Object.values(storyData.characters).join(". ");
+            const masterPrompt = `A beautiful, high-fidelity illustration showing the following characters standing together in a magical forest: ${charDescriptions}. They should be visible clearly, with neutral expressions. Clean, safe for work illustration.`;
+            
+            const generatedMedia = await generateImagePro(masterPrompt, projectId, token);
+            if (!generatedMedia) throw new Error("Master Pafta üretilemedi");
+            masterMedia = generatedMedia;
+            
+            // Supabase Realtime 1MB Payload sınırına takılmamak için master görselini Storage'a yüklüyoruz
+            const masterFileName = `master_${jobId}.png`;
+            const { error: masterUploadErr } = await supabase.storage.from('story_assets').upload(`images/${masterFileName}`, Buffer.from(masterMedia.data, 'base64'), { contentType: 'image/png' });
+            if (masterUploadErr) throw new Error("Master görsel yüklenemedi: " + masterUploadErr.message);
+            
+            const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${masterFileName}`);
+            masterUrl = publicUrl;
+        }
         
         // Master Karakter işlemi tamamlandı
         await supabase.from('generation_jobs').update({ status: 'master_ready', progress: 20, master_ref_data: masterUrl }).eq('id', jobId);
