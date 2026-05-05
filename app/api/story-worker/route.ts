@@ -151,6 +151,7 @@ export async function POST(req: NextRequest) {
         
         const storySystemPrompt = `GÖREV: Bir çocuk hikayesi yaz. 
         FORMAT: Sadece JSON döndür. 
+        CRITICAL: Return ONLY valid JSON. The JSON keys MUST be exactly: 'title', 'characters', 'scenes'. DO NOT translate the keys into Turkish.
         ZORUNLU ALANLAR: title (string), characters (obj: {name: description}), scenes (array: [{text, visualHook}]). 
         SAHNE SAYISI: 12.
         
@@ -209,8 +210,14 @@ export async function POST(req: NextRequest) {
             masterMedia = { data: base64Data, mimeType: 'image/png' };
             masterUrl = payload.uploaded_master_ref;
         } else {
-            const charDescriptions = Object.values(storyData.characters).join(". ");
-            const masterPrompt = `A beautiful, high-fidelity illustration showing the following characters standing together in a magical forest: ${charDescriptions}. They should be visible clearly, with neutral expressions. Clean, safe for work illustration.`;
+            const charsObj = storyData.characters || storyData.karakterler || storyData.Characters || {};
+            if (Object.keys(charsObj).length === 0) {
+                charsObj["Kahraman"] = "A young adventurer in standard clothing";
+            }
+            // LLM fazladan karakter üretirse master paftayı bozmaması için ilk 3 karakteri alıyoruz
+            const charDescriptions = Object.values(charsObj).slice(0, 3).join(". ");
+            
+            const masterPrompt = `A technical character lineup reference sheet on a plain, neutral light-grey background. Arrange the following characters side-by-side in a horizontal row, standing in a relaxed neutral pose. Full body visible. Characters: ${charDescriptions}. Professional concept art style, clean silhouette, no background scenery, no text.`;
             
             const generatedMedia = await generateImagePro(masterPrompt, projectId, token);
             if (!generatedMedia) throw new Error("Master Pafta üretilemedi");
