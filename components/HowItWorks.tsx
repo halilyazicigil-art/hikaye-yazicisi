@@ -29,7 +29,7 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-24 px-6 max-w-7xl mx-auto relative overflow-hidden">
+    <section id="how-it-works" className="py-24 px-6 max-w-7xl mx-auto relative overflow-hidden">
       {/* Decorative Stars */}
       <div className="absolute top-10 left-10 animate-pulse opacity-30">
         <Sparkles className="text-white" size={48} />
