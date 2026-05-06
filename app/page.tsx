@@ -31,52 +31,50 @@ export default async function LandingPage() {
   return (
     <main className="min-h-screen bg-[#BDD9F2] text-[#052159] overflow-x-hidden font-nunito relative">
       
-      {/* 1. KAHRAMAN BÖLÜMÜ (Hero) - Uyuyan Çocuk Görseli */}
-      <div className="relative w-full min-h-[85vh] flex flex-col overflow-hidden bg-[#BDD9F2]">
-        {/* Görsel Katmanı - Softened for legibility */}
-        <div className="absolute inset-0 bg-[url('/images/hero-sleeping.png')] bg-[length:100%_auto] bg-center bg-no-repeat z-0 opacity-50 filter blur-[1px] grayscale-[0.6]"></div>
-        {/* Yumuşak Geçiş ve Renk Dengeleyici Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#BDD9F2]/60 via-[#BDD9F2]/25 to-[#BDD9F2] z-10"></div>
-        
-        <div className="relative z-50">
-          <Navbar user={user} />
-        </div>
-        
-        <div className="flex-grow flex flex-col justify-center relative z-20">
-          <section className="max-w-5xl mx-auto px-6 py-20 text-center">
-            <h1 className="text-5xl md:text-7xl font-lora font-bold text-[#052159] leading-tight mb-6 drop-shadow-[0_2px_10px_rgba(255,255,255,0.7)]">
-              Hayallerini Süsleyen Masalları Beraber Yazın
-            </h1>
-            <p className="text-xl md:text-2xl text-[#052159] mb-10 max-w-3xl mx-auto font-medium drop-shadow-[0_1px_5px_rgba(255,255,255,0.4)]">
-              Çocuğunuzun ismini, en sevdiği karakteri ve temayı seçin. Geri kalan tüm sihri yapay zeka halletsin. Resimli, sesli ve sadece ona özel uyku öncesi serüvenleri yaratın.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-10">
-              <a href="#create" className="bg-[#84B1D9] hover:bg-[#8FBDD9] text-white px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl w-full sm:w-auto hover:scale-105">
-                Masal Üretmeye Başla
-              </a>
-              <Link href="/pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#052159] px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl w-full sm:w-auto border border-gray-200 hover:scale-105 text-center">
-                Abonelik Planları
-              </Link>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-6 text-sm font-bold text-emerald-700 drop-shadow-md">
-              <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Güvenli ve Reklamsız</span>
-              <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Pedagojik Filtreler</span>
-              <span className="flex items-center gap-1 text-sky-600 bg-white/50 px-3 py-1 rounded-full">⭐ Yüzlerce Mutlu Aile</span>
-            </div>
-          </section>
-        </div>
+      {/* 🌌 TÜM SAYFAYI KAPSAYAN SİHİRLİ ARKA PLAN */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {/* Ana Görsel Katmanı */}
+        <div className="sticky top-0 w-full h-screen bg-[url('/clouds_paper_boats_bg.png')] bg-cover bg-center bg-no-repeat opacity-60"></div>
+        {/* Yumuşak Renk Overlay'i - Sayfa boyunca devam eder */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#BDD9F2]/20 via-[#BDD9F2]/40 to-[#BDD9F2]/80"></div>
       </div>
 
-      {/* 2. SİHİRLİ ARKA PLANIN BAŞLADIĞI ALAN */}
-      <div className="relative overflow-hidden">
-        {/* Arka Plan Katmanı (Fixed div for maximum stability) */}
-        <div className="absolute inset-0 bg-[url('/clouds_paper_boats_bg.png')] bg-cover bg-center bg-no-repeat opacity-70 pointer-events-none z-0"></div>
-        {/* Mavi tonu korumak için overlay - Daha şeffaf hale getirildi */}
-        <div className="absolute inset-0 bg-[#BDD9F2]/40 pointer-events-none z-1"></div>
+      <div className="relative z-10">
+        {/* 1. KAHRAMAN BÖLÜMÜ (Hero) */}
+        <div className="relative w-full min-h-[85vh] flex flex-col overflow-hidden">
+          <div className="relative z-50">
+            <Navbar user={user} />
+          </div>
+          
+          <div className="flex-grow flex flex-col justify-center relative z-20">
+            <section className="max-w-5xl mx-auto px-6 py-20 text-center">
+              <h1 className="text-5xl md:text-7xl font-lora font-bold text-[#052159] leading-tight mb-6 drop-shadow-[0_2px_10px_rgba(255,255,255,0.7)]">
+                Hayallerini Süsleyen Masalları Beraber Yazın
+              </h1>
+              <p className="text-xl md:text-2xl text-[#052159] mb-10 max-w-3xl mx-auto font-medium drop-shadow-[0_1px_5px_rgba(255,255,255,0.4)]">
+                Çocuğunuzun ismini, en sevdiği karakteri ve temayı seçin. Geri kalan tüm sihri yapay zeka halletsin. Resimli, sesli ve sadece ona özel uyku öncesi serüvenleri yaratın.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-10">
+                <a href="#create" className="bg-[#84B1D9] hover:bg-[#8FBDD9] text-white px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl w-full sm:w-auto hover:scale-105">
+                  Masal Üretmeye Başla
+                </a>
+                <Link href="/pricing" className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#052159] px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl w-full sm:w-auto border border-gray-200 hover:scale-105 text-center">
+                  Abonelik Planları
+                </Link>
+              </div>
 
-        <div className="relative z-10">
+              <div className="flex flex-wrap justify-center gap-6 text-sm font-bold text-emerald-700 drop-shadow-md">
+                <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Güvenli ve Reklamsız</span>
+                <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Pedagojik Filtreler</span>
+                <span className="flex items-center gap-1 text-sky-600 bg-white/50 px-3 py-1 rounded-full">⭐ Yüzlerce Mutlu Aile</span>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {/* 2. FORM VE ÖZELLİKLER ALANI */}
+        <div className="relative">
           {/* Form Section */}
           <section id="create" className="pb-24 px-4 pt-16">
             <div className="text-center mb-12">
