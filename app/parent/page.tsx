@@ -89,8 +89,6 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   const isPro = !isExpired && sub?.plan_id === 'pro'
   const isPremium = !isExpired && sub?.plan_id === 'premium'
 
-  const { data: profiles } = await supabase.from('profiles').select('id, name').eq('user_id', user.id)
-  const profileIds = profiles?.map(p => p.id) || []
 
   // Toplam Arşiv Sayısı (Kısıtlamasız)
   const { count: totalStoriesCount } = await supabase
@@ -258,7 +256,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                             {story.title}
                           </h3>
                           <div className="flex items-center text-[11px] text-gray-400 mt-1 gap-2">
-                            <span>{story.profiles?.name || 'Kullanıcı'}</span>
+                            <span>Kullanıcı</span>
                             <span>•</span>
                             <span>{new Date(story.created_at).toLocaleDateString('tr-TR')}</span>
                           </div>

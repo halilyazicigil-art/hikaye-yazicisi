@@ -125,25 +125,17 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const [{ data: sub }, { data: profiles }] = await Promise.all([
-        supabase.from('subscriptions').select('plan_id, current_period_end').eq('user_id', user.id).maybeSingle(),
-        supabase.from('profiles').select('id').eq('user_id', user.id)
-      ])
+      const { data: sub } = await supabase.from('subscriptions').select('plan_id, current_period_end').eq('user_id', user.id).maybeSingle()
 
       let startDate = new Date()
       if (sub?.current_period_end) {
-        // Abone olanlar için fatura dönemi başlangıcı
         startDate = new Date(sub.current_period_end)
         startDate.setMonth(startDate.getMonth() - 1)
       } else {
-        // Ücretsiz kullanıcılar için ayın 1'i
         startDate.setDate(1)
         startDate.setHours(0, 0, 0, 0)
       }
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      
       const isPremiumUser = sub?.plan_id === 'premium'
       const isProUser = sub?.plan_id === 'pro'
       
