@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import Image from 'next/image'
 import { BookHeart, Volume2, Clock, Sparkles } from 'lucide-react'
+import AddToQueueButton from '@/components/AddToQueueButton'
 import Navbar from '@/components/Navbar'
 
 const GENRES = ['Tümü', 'Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl']
@@ -91,10 +92,22 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
                       </div>
                     )}
                     
-                    {/* Audio Badge */}
+                    {/* Audio & Queue Controls */}
                     {story.audio_url && (
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2.5 rounded-2xl shadow-lg text-sky-500 animate-in fade-in zoom-in duration-500">
-                        <Volume2 size={20} />
+                      <div className="absolute top-4 right-4 flex gap-2 animate-in fade-in zoom-in duration-500">
+                        <AddToQueueButton 
+                          story={{
+                            id: story.id,
+                            title: story.title,
+                            audio_url: story.audio_url || "",
+                            image_url: story.image_url || ""
+                          }} 
+                          iconOnly 
+                          className="bg-white/90 backdrop-blur-md shadow-lg"
+                        />
+                        <div className="bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-lg text-emerald-500">
+                          <Volume2 size={18} />
+                        </div>
                       </div>
                     )}
                   </div>

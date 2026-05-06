@@ -15,7 +15,11 @@ interface AudioPlayerContextType {
   progress: number
   duration: number
   isPlayerVisible: boolean
+  queue: Track[]
   playTrack: (track: Track) => void
+  addToQueue: (track: Track) => void
+  removeFromQueue: (id: string) => void
+  playNext: () => void
   togglePlay: () => void
   seekTo: (percentage: number) => void
   closePlayer: () => void
@@ -32,6 +36,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isPlayerVisible, setIsPlayerVisible] = useState(false)
+  const [queue, setQueue] = useState<Track[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -47,7 +52,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     }
 
     const handleEnded = () => {
-      setIsPlaying(false)
+      playNext()
     }
 
     audio.addEventListener('timeupdate', handleTimeUpdate)
@@ -59,7 +64,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
       audio.removeEventListener('ended', handleEnded)
     }
-  }, [currentTrack])
+  }, [currentTrack, queue])
 
   useEffect(() => {
     if (audioRef.current) {
@@ -84,6 +89,34 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     setIsPlayerVisible(true)
     setIsPlaying(true)
     setProgress(0)
+  }
+
+  const addToQueue = (track: Track) => {
+    if (!currentTrack) {
+      playTrack(track)
+    } else {
+      setQueue(prev => {
+        if (prev.find(i => i.id === track.id)) return prev
+        return [...prev, track]
+      })
+    }
+  }
+
+  const removeFromQueue = (id: string) => {
+    setQueue(prev => prev.filter(item => item.id !== id))
+  }
+
+  const playNext = () => {
+    if (queue.length > 0) {
+      const nextTrack = queue[0]
+      setQueue(prev => prev.slice(1))
+      setCurrentTrack(nextTrack)
+      setIsPlaying(true)
+      setProgress(0)
+    } else {
+      setIsPlaying(false)
+      setCurrentTrack(null)
+    }
   }
 
   const togglePlay = () => {
@@ -125,7 +158,11 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         progress,
         duration,
         isPlayerVisible,
+        queue,
         playTrack,
+        addToQueue,
+        removeFromQueue,
+        playNext,
         togglePlay,
         seekTo,
         closePlayer,

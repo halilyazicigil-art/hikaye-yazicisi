@@ -1,4 +1,5 @@
-import { BookHeart, Plus, Settings, Star, Clock, Shuffle, Sparkles } from 'lucide-react'
+import { Star, BookHeart, Plus, Crown, Sparkles, Wand2, Settings, Clock, Shuffle } from 'lucide-react'
+import AddToQueueButton from '@/components/AddToQueueButton'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
@@ -243,8 +244,19 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
 
                   return (
                     <Link href={`/story/${story.id}`} key={story.id} className="group relative p-6 bg-[#BDD9F2] hover:bg-[#BDD9F2] border border-sky-100 rounded-3xl transition-all cursor-pointer block overflow-hidden">
-                      <div className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-sm text-sky-500">
-                        <Star size={18} fill="currentColor" />
+                      <div className="absolute top-4 right-4 flex gap-2 z-10">
+                        <AddToQueueButton 
+                          story={{
+                            id: story.id,
+                            title: story.title,
+                            audio_url: story.audio_url || "",
+                            image_url: story.image_url || ""
+                          }} 
+                          iconOnly 
+                        />
+                        <div className="bg-white p-2 rounded-full shadow-sm text-sky-500 flex items-center justify-center">
+                          <Star size={18} fill="currentColor" />
+                        </div>
                       </div>
                       
                       <div className="flex items-start gap-4 mb-4">
