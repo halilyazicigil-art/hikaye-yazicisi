@@ -31,7 +31,7 @@ export default function GlobalAudioPlayer() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
         
         {/* Top Badges & Buttons */}
-        <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+        <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-20">
           <div className="bg-[#052159] text-white text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-lg border border-white/10">
             <Music size={12} className="text-sky-400" /> Hikaye Oyuncusu
           </div>
@@ -49,23 +49,23 @@ export default function GlobalAudioPlayer() {
         </div>
 
         {/* Center Controls */}
-        <div className="absolute inset-0 flex items-center justify-center gap-5 pt-4">
-          <button onClick={skipBackward} className="text-white/70 hover:text-white transition active:scale-95">
+        <div className="absolute inset-0 flex items-center justify-center gap-5 pt-4 pointer-events-none">
+          <button onClick={skipBackward} className="text-white/70 hover:text-white transition active:scale-95 pointer-events-auto">
             <Rewind size={22} fill="currentColor" />
           </button>
           <button 
             onClick={togglePlay}
-            className="w-12 h-12 bg-[#052159] hover:bg-[#182A46] text-white rounded-full flex items-center justify-center shadow-2xl transition transform hover:scale-105 active:scale-95 border border-white/20"
+            className="w-12 h-12 bg-[#052159] hover:bg-[#182A46] text-white rounded-full flex items-center justify-center shadow-2xl transition transform hover:scale-105 active:scale-95 border border-white/20 pointer-events-auto"
           >
             {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
           </button>
-          <button onClick={skipForward} className="text-white/70 hover:text-white transition active:scale-95">
+          <button onClick={skipForward} className="text-white/70 hover:text-white transition active:scale-95 pointer-events-auto">
             <FastForward size={22} fill="currentColor" />
           </button>
         </div>
 
         {/* Bottom Progress Bar */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3 text-white text-[10px] font-bold">
+        <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3 text-white text-[10px] font-bold z-20">
           <span className="w-8 text-right drop-shadow-md">{formatTime(progress)}</span>
           
           <div className="flex-1 relative h-5 group/slider cursor-pointer flex items-center">
