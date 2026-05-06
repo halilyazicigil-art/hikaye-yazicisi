@@ -39,7 +39,7 @@ export async function backgroundStoryAction(formData: {
         const shuffleLimit = isPremium ? 25 : (isPro ? 10 : 3);
         const manualLimit = isPremium ? 55 : (isPro ? 30 : 0);
         
-        const audioLimit = isPremium ? 40 : (isPro ? 20 : 0);
+        const audioLimit = isPremium ? 40 : (isPro ? 20 : 3);
         const wordLimit = isPremium ? 1000 : (isPro ? 500 : 300);
 
         // 2. Mevcut Fatura Dönemindeki Kullanımı Hesapla (Sert Sıfırlama Mantığı)

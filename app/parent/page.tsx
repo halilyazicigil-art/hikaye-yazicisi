@@ -1,4 +1,4 @@
-import { BookHeart, Plus, Settings, Star, Clock } from 'lucide-react'
+import { BookHeart, Plus, Settings, Star, Clock, Shuffle, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
@@ -7,36 +7,40 @@ import { redirect } from 'next/navigation'
 const GENRES = ['Tümü', 'Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl']
 
 async function getQuotaStats(supabase: any, profileIds: string[], sub: any, isPro: boolean, isPremium: boolean) {
-  let usedStories = 0
   if (profileIds.length > 0) {
-    // Bu ay üretilen masallar (Kota hesabı için - Faturalandırma döngüsüne uygun)
     let startDate = new Date()
-    startDate.setDate(1)
-    startDate.setHours(0, 0, 0, 0)
-
     if (sub?.current_period_end) {
       startDate = new Date(sub.current_period_end)
-      startDate.setDate(startDate.getDate() - 30)
+      startDate.setMonth(startDate.getMonth() - 1)
+    } else {
+      startDate.setDate(1)
+      startDate.setHours(0, 0, 0, 0)
     }
     
-    const { data: monthStories } = await supabase
-      .from('stories')
-      .select('id, audio_url')
-      .in('profile_id', profileIds)
-      .gte('created_at', startDate.toISOString())
-      
-    usedStories = monthStories?.length || 0
-    const usedVoiceStories = monthStories?.filter((s: any) => s.audio_url).length || 0
+    const [
+      { count: usedShuffle },
+      { count: usedManual },
+      { count: usedAudio }
+    ] = await Promise.all([
+      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
+      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).gte('created_at', startDate.toISOString()),
+      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
+    ])
 
-    const storyLimit = isPremium ? 80 : (isPro ? 40 : 3)
-    const voiceLimit = isPremium ? 40 : (isPro ? 20 : 1)
+    const shuffleLimit = isPremium ? 25 : (isPro ? 10 : 3)
+    const manualLimit = isPremium ? 55 : (isPro ? 30 : 0)
+    const audioLimit = isPremium ? 40 : (isPro ? 20 : 3)
 
-    const remainingText = `${Math.max(0, storyLimit - usedStories)} / ${storyLimit}`
-    const remainingVoiceText = `${Math.max(0, voiceLimit - usedVoiceStories)} / ${voiceLimit}`
-
-    return { usedStories, usedVoiceStories, storyLimit, voiceLimit, remainingText, remainingVoiceText }
+    return { 
+      shuffleUsed: usedShuffle || 0, 
+      shuffleLimit,
+      manualUsed: usedManual || 0,
+      manualLimit,
+      audioUsed: usedAudio || 0,
+      audioLimit
+    }
   }
-  return { usedStories: 0, usedVoiceStories: 0, storyLimit: 3, voiceLimit: 1, remainingText: '0 / 3', remainingVoiceText: '0 / 1' }
+  return { shuffleUsed: 0, shuffleLimit: 3, manualUsed: 0, manualLimit: 0, audioUsed: 0, audioLimit: 3 }
 }
 
 export default async function ParentDashboard({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -115,7 +119,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
     recentStories = stories || []
   }
 
-  const { remainingText, remainingVoiceText } = await getQuotaStats(supabase, profileIds, sub, isPro, isPremium)
+  const quota = await getQuotaStats(supabase, profileIds, sub, isPro, isPremium)
 
   return (
     <div className="min-h-screen bg-[#BDD9F2] font-nunito p-4 sm:p-8">
@@ -168,25 +172,42 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
               <h3 className="font-bold text-gray-900 text-lg border-b border-sky-100 pb-4">Aylık İstatistikler</h3>
               
               <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between p-4 bg-[#BDD9F2] border border-sky-100 rounded-2xl">
-                  <div className="flex items-center text-[#84B1D9] font-semibold">
-                    <BookHeart className="mr-3" size={24} /> Arşivlenen Masallar
+                {/* Arşiv */}
+                <div className="flex items-center justify-between p-4 bg-sky-50 border border-sky-100 rounded-2xl">
+                  <div className="flex items-center text-sky-700 font-bold">
+                    <BookHeart className="mr-3 text-sky-500" size={24} /> Arşivlenen Masallar
                   </div>
-                  <span className="text-2xl font-black text-[#84B1D9]">{totalStories}</span>
+                  <span className="text-2xl font-black text-sky-800">{totalStories}</span>
                 </div>
 
+                {/* Taslak */}
+                <div className="flex items-center justify-between p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                  <div className="flex items-center text-amber-700 font-bold text-sm">
+                    <Shuffle className="mr-3 text-amber-500" size={20} /> Sihirli Taslaklar
+                  </div>
+                  <span className="text-lg font-black text-amber-800">
+                    {Math.max(0, quota.shuffleLimit - quota.shuffleUsed)} / {quota.shuffleLimit}
+                  </span>
+                </div>
+
+                {/* Özgün */}
                 <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                  <div className="flex items-center text-emerald-800 font-semibold text-sm">
-                    <Clock className="mr-3" size={20} /> Kalan Masal Hakkı
+                  <div className="flex items-center text-emerald-800 font-bold text-sm">
+                    <Plus className="mr-3 text-emerald-500" size={20} /> Özgün Masallar
                   </div>
-                  <span className="text-lg font-bold text-emerald-700">{remainingText}</span>
+                  <span className="text-lg font-black text-emerald-800">
+                    {Math.max(0, quota.manualLimit - quota.manualUsed)} / {quota.manualLimit}
+                  </span>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-                  <div className="flex items-center text-blue-800 font-semibold text-sm">
-                    <Star className="mr-3" size={20} /> Kalan Sesli Masal Hakkı
+                {/* Sesli */}
+                <div className="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                  <div className="flex items-center text-indigo-800 font-bold text-sm">
+                    <Sparkles className="mr-3 text-indigo-500" size={20} /> Sesli Masallar
                   </div>
-                  <span className="text-lg font-bold text-blue-700">{remainingVoiceText}</span>
+                  <span className="text-lg font-black text-indigo-800">
+                    {Math.max(0, quota.audioLimit - quota.audioUsed)} / {quota.audioLimit}
+                  </span>
                 </div>
               </div>
             </div>
