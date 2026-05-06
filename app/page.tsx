@@ -31,11 +31,11 @@ export default async function LandingPage() {
   return (
     <main className="min-h-screen bg-[#BDD9F2] text-[#052159] overflow-x-hidden font-nunito relative">
       
-      {/* 🌌 TÜM SAYFAYI KAPSAYAN SİHİRLİ ARKA PLAN */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        {/* Ana Görsel Katmanı */}
-        <div className="sticky top-0 w-full h-screen bg-[url('/clouds_paper_boats_bg.png')] bg-cover bg-center bg-no-repeat opacity-60"></div>
-        {/* Yumuşak Renk Overlay'i - Sayfa boyunca devam eder */}
+      {/* 🌌 TÜM SAYFAYI KAPSAYAN SABİT SİHİRLİ ARKA PLAN */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        {/* Ana Görsel Katmanı - Fixed yaparak her yere yayıyoruz */}
+        <div className="absolute inset-0 bg-[url('/clouds_paper_boats_bg.png')] bg-cover bg-center bg-no-repeat opacity-60"></div>
+        {/* Yumuşak Renk Overlay'i - Sayfa boyunca sabit kalır */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#BDD9F2]/20 via-[#BDD9F2]/40 to-[#BDD9F2]/80"></div>
       </div>
 
