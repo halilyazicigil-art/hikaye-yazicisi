@@ -135,6 +135,15 @@ export async function POST(req: NextRequest) {
         await supabase.from('generation_jobs').update(updates).eq('id', id);
     }
 
+    interface Scene {
+        text: string;
+        visualHook: string;
+    }
+
+    interface Candidate {
+        content: { parts: { text?: string, inlineData?: { data: string, mimeType: string } }[] }
+    }
+
     try {
         const { data: job, error: jobErr } = await supabase.from('generation_jobs').select('*').eq('id', jobId).single();
         if (jobErr || !job) throw new Error("İş bulunamadı");
@@ -234,7 +243,7 @@ CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, wat
 
         // 5. ADIM: SESLENDİRME (%90)
         await supabase.from('generation_jobs').update({ status: 'generating_audio', progress: 80 }).eq('id', jobId);
-        const fullText = storyData.scenes.map((s: Scene) => s.text).join(" ");
+        const fullText = pages.map((s: Scene) => s.text).join(" ");
         let audioUrl = null;
 
         if (payload.voiceOption !== 'Sessiz') {
