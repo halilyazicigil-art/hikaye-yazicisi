@@ -29,56 +29,66 @@ const IMAGE_STYLES = ['Sulu Boya', '3D Pixar Stili', 'Pastel Düşler', 'Anime',
 const AGE_GROUPS = ['0-1', '1-2', '2-4', '4-6', '6-10', '10-13']
 
 const STORY_SCENARIOS = [
-  {
-    characters: ['Kaptan Bulut', 'Martı Gümüş'],
-    prompt: 'Kaptan Bulut ve yardımcısı Martı Gümüş, gökyüzündeki gökkuşağının renklerinin neden solduğunu bulmak için renkli bir yolculuğa çıkıyor.',
-    voice: 'Alnilam', voiceName: 'Yüce Kral', genre: 'Macera', style: 'Sulu Boya', age: '4-6'
-  },
-  {
-    characters: ['Robot Çark', 'Küçük Mühendis Melis'],
-    prompt: 'Robot Çark ve Melis, bozulan bir yıldız haritasını tamir etmek için uzay gemileriyle Samanyolu galaksisinde gizemli bir parçanın peşine düşerler.',
-    voice: 'Iapetus', voiceName: 'Orman Muhafızı', genre: 'Bilim Kurgu', style: '3D Pixar Stili', age: '6-10'
-  },
-  {
-    characters: ['Sevimli Ayı Pofuduk', 'Bilge Baykuş'],
-    prompt: 'Ayı Pofuduk, kış uykusuna yatmadan önce ormandaki en büyük bal kovanının haritasını bulmak için Bilge Baykuş ile bir maceraya atılır.',
-    voice: 'Aoede', voiceName: 'Bilge Anne', genre: 'Masal', style: 'Pastel Düşler', age: '2-4'
-  },
-  {
-    characters: ['Prenses Ada', 'Uçan At Kanat'],
-    prompt: 'Prenses Ada, krallığın üzerinden hiç eksilmeyen yağmur bulutlarını dağıtmak için Uçan Atı Kanat ile güneşin doğduğu diyara uçar.',
-    voice: 'Gacrux', voiceName: 'Gizemli Prenses', genre: 'Fantastik', style: 'Anime', age: '6-10'
-  },
-  {
-    characters: ['Minik Tavşan Pamuk', 'Hızlı Kaplumbağa'],
-    prompt: 'Pamuk ve Kaplumbağa, ormanda düzenlenen yıllık büyük piknik için en lezzetli havuçları toplamak üzere gizli bahçeye giderler.',
-    voice: 'Algenib', voiceName: 'Gezgin Tavşan', genre: 'Fabl', style: 'Sulu Boya', age: '1-2'
-  },
-  {
-    characters: ['Cesur İtfaiyeci Kerem', 'Yavru Kedi Duman'],
-    prompt: 'İtfaiyeci Kerem, bir ağacın en tepesinde mahsur kalan Duman\'ı kurtarmaya çalışırken, ikisi birden sihirli bir tünelden başka bir diyara geçerler.',
-    voice: 'Algieba', voiceName: 'Cesur Şövalye', genre: 'Macera', style: 'Çizgi Film', age: '4-6'
-  },
-  {
-    characters: ['Dedektif Can', 'Konuşan Köpek Tarçın'],
-    prompt: 'Dedektif Can ve Tarçın, müzedeki en değerli elmasın neden sadece geceleri parladığını çözmek için gizemli bir ipucunu takip ederler.',
-    voice: 'Callirrhoe', voiceName: 'Masalcı Kadın', genre: 'Macera', style: 'Pop Art', age: '10-13'
-  },
-  {
-    characters: ['Minik Peri Işıltı', 'Dev Arı Vızvız'],
-    prompt: 'Peri Işıltı, kanatlarındaki tozun azalması üzerine, dünyanın en nadir çiçeğinden polen toplamak için Dev Arı Vızvız\'ın sırtında bir yolculuğa çıkar.',
-    voice: 'Fenrir', voiceName: 'Sihirli Peri', genre: 'Masal', style: 'Yağlı Boya', age: '2-4'
-  },
-  {
-    characters: ['Süper Çocuk Mert', 'Gölge Adam'],
-    prompt: 'Mert, şehri ele geçirmeye çalışan Gölge Adam\'ı iyilik ve neşe ile durdurmak için mahalledeki tüm çocuklarla bir plan yapar.',
-    voice: 'Charon', voiceName: 'Heyecanlı Baba', genre: 'Fantastik', style: '3D Pixar Stili', age: '6-10'
-  },
-  {
-    characters: ['Mavi Ejderha Alev', 'Küçük Viking'],
-    prompt: 'Alev, ateş püskürtemediği için üzüldüğünde, Küçük Viking ona acı biberlerin ve dostluğun sırrını anlatarak yardım eder.',
-    voice: 'Achird', voiceName: 'Bilge Dede', genre: 'Masal', style: 'Vintage Retro', age: '4-6'
-  }
+  // --- MEVCUT 10 ---
+  { characters: ['Kaptan Bulut', 'Martı Gümüş'], prompt: 'Kaptan Bulut ve yardımcısı Martı Gümüş, gökyüzündeki gökkuşağının renklerinin neden solduğunu bulmak için renkli bir yolculuğa çıkıyor.', voice: 'Alnilam', voiceName: 'Yüce Kral', genre: 'Macera', style: 'Sulu Boya', age: '4-6' },
+  { characters: ['Robot Çark', 'Küçük Mühendis Melis'], prompt: 'Robot Çark ve Melis, bozulan bir yıldız haritasını tamir etmek için uzay gemileriyle Samanyolu galaksisinde gizemli bir parçanın peşine düşerler.', voice: 'Iapetus', voiceName: 'Orman Muhafızı', genre: 'Bilim Kurgu', style: '3D Pixar Stili', age: '6-10' },
+  { characters: ['Sevimli Ayı Pofuduk', 'Bilge Baykuş'], prompt: 'Ayı Pofuduk, kış uykusuna yatmadan önce ormandaki en büyük bal kovanının haritasını bulmak için Bilge Baykuş ile bir maceraya atılır.', voice: 'Aoede', voiceName: 'Bilge Anne', genre: 'Masal', style: 'Pastel Düşler', age: '2-4' },
+  { characters: ['Prenses Ada', 'Uçan At Kanat'], prompt: 'Prenses Ada, krallığın üzerinden hiç eksilmeyen yağmur bulutlarını dağıtmak için Uçan Atı Kanat ile güneşin doğduğu diyara uçar.', voice: 'Gacrux', voiceName: 'Gizemli Prenses', genre: 'Fantastik', style: 'Anime', age: '6-10' },
+  { characters: ['Minik Tavşan Pamuk', 'Hızlı Kaplumbağa'], prompt: 'Pamuk ve Kaplumbağa, ormanda düzenlenen yıllık büyük piknik için en lezzetli havuçları toplamak üzere gizli bahçeye giderler.', voice: 'Algenib', voiceName: 'Gezgin Tavşan', genre: 'Fabl', style: 'Sulu Boya', age: '1-2' },
+  { characters: ['Cesur İtfaiyeci Kerem', 'Yavru Kedi Duman'], prompt: 'İtfaiyeci Kerem, bir ağacın en tepesinde mahsur kalan Duman\'ı kurtarmaya çalışırken, ikisi birden sihirli bir tünelden başka bir diyara geçerler.', voice: 'Algieba', voiceName: 'Cesur Şövalye', genre: 'Macera', style: 'Çizgi Film', age: '4-6' },
+  { characters: ['Dedektif Can', 'Konuşan Köpek Tarçın'], prompt: 'Dedektif Can ve Tarçın, müzedeki en değerli elmasın neden sadece geceleri parladığını çözmek için gizemli bir ipucunu takip ederler.', voice: 'Callirrhoe', voiceName: 'Masalcı Kadın', genre: 'Macera', style: 'Pop Art', age: '10-13' },
+  { characters: ['Minik Peri Işıltı', 'Dev Arı Vızvız'], prompt: 'Peri Işıltı, kanatlarındaki tozun azalması üzerine, dünyanın en nadir çiçeğinden polen toplamak için Dev Arı Vızvız\'ın sırtında bir yolculuğa çıkar.', voice: 'Fenrir', voiceName: 'Sihirli Peri', genre: 'Masal', style: 'Yağlı Boya', age: '2-4' },
+  { characters: ['Süper Çocuk Mert', 'Gölge Adam'], prompt: 'Mert, şehri ele geçirmeye çalışan Gölge Adam\'ı iyilik ve neşe ile durdurmak için mahalledeki tüm çocuklarla bir plan yapar.', voice: 'Charon', voiceName: 'Heyecanlı Baba', genre: 'Fantastik', style: '3D Pixar Stili', age: '6-10' },
+  { characters: ['Mavi Ejderha Alev', 'Küçük Viking'], prompt: 'Alev, ateş püskürtemediği için üzüldüğünde, Küçük Viking ona acı biberlerin ve dostluğun sırrını anlatarak yardım eder.', voice: 'Achird', voiceName: 'Bilge Dede', genre: 'Masal', style: 'Vintage Retro', age: '4-6' },
+
+  // --- YENİ 40 SENARYO ---
+  // BİLİM KURGU (10 Yeni)
+  { characters: ['Uzaylı Zıpzıp', 'Astronot Kerem'], prompt: 'Zıpzıp, Ay üzerinde kaybolan sihirli antenini bulmak için Kerem ile kraterlerin arasında saklambaç oynar.', voice: 'Algenib', voiceName: 'Gezgin Tavşan', genre: 'Bilim Kurgu', style: '3D Pixar Stili', age: '4-6' },
+  { characters: ['Uçan Araba Vınvın', 'Tamirci Ece'], prompt: 'Vınvın\'ın motoru gökkuşağı yakıtı bittiği için durur, Ece ona en tatlı meyve sularından yeni bir yakıt icat eder.', voice: 'Fenrir', voiceName: 'Sihirli Peri', genre: 'Bilim Kurgu', style: 'Pop Art', age: '6-10' },
+  { characters: ['Zaman Yolcusu Arda', 'Dinozor Dino'], prompt: 'Arda, yanlışlıkla milyonlarca yıl geriye gidip Dino ile meyve toplama yarışı yapar.', voice: 'Charon', voiceName: 'Heyecanlı Baba', genre: 'Bilim Kurgu', style: 'Yağlı Boya', age: '6-10' },
+  { characters: ['Akıllı Ev Robi', 'Küçük Ali'], prompt: 'Robi, Ali\'nin ödevlerini yaparken bir hata yapar ve evin tüm eşyaları havada süzülmeye başlar.', voice: 'Achird', voiceName: 'Bilge Dede', genre: 'Bilim Kurgu', style: 'Çizgi Film', age: '4-6' },
+  { characters: ['Yıldız Gemisi Kaptanı', 'Işık Hızı'], prompt: 'Kaptan, Samanyolu\'nun en uzak köşesindeki dondurma gezegenini bulmak için rota çizer.', voice: 'Alnilam', voiceName: 'Yüce Kral', genre: 'Bilim Kurgu', style: 'Anime', age: '10-13' },
+  { characters: ['Siber Kedi Miya', 'Bilgisayar Faresi Tık'], prompt: 'Miya ve Tık, internet dünyasındaki kayıp bir klasörün içinde saklanan dijital balıkları kurtarırlar.', voice: 'Despina', voiceName: 'Huzur Perisi', genre: 'Bilim Kurgu', style: 'Pop Art', age: '6-10' },
+  { characters: ['Gezegen Muhafızı', 'Ay Tozu'], prompt: 'Muhafız, Satürn\'ün halkalarından birinin düştüğünü fark eder ve onu yerine takmak için dev bir vinç icat eder.', voice: 'Iapetus', voiceName: 'Orman Muhafızı', genre: 'Bilim Kurgu', style: '3D Pixar Stili', age: '10-13' },
+  { characters: ['Marslı Maviş', 'Dünyalı Doğa'], prompt: 'Maviş, Dünya\'daki çiçeklerin nasıl bu kadar güzel koktuğunu öğrenmek için gizlice bir bahçeye iner.', voice: 'Kore', voiceName: 'Gökkuşağı Kızı', genre: 'Bilim Kurgu', style: 'Pastel Düşler', age: '4-6' },
+  { characters: ['Geleceğin Çocuğu', 'Hologram Dostum'], prompt: 'Hologram dostum, sadece hayal gücüyle çalışan bir oyun odası tasarlar ve çocuklar orada sınırları zorlar.', voice: 'Algieba', voiceName: 'Cesur Şövalye', genre: 'Bilim Kurgu', style: 'Vintage Retro', age: '6-10' },
+  { characters: ['Güneş Paneli Panpa', 'Bulut Can'], prompt: 'Panpa, bulutlar güneşi kapattığında üzülür, Bulut Can ona komik şakalar yaparak dağılmasını sağlar.', voice: 'Algenib', voiceName: 'Gezgin Tavşan', genre: 'Bilim Kurgu', style: 'Sulu Boya', age: '2-4' },
+
+  // MASAL (10 Yeni)
+  { characters: ['Uykucu Bulut', 'Güneş Işığı'], prompt: 'Uykucu Bulut, sabah uyandığında her yerin neden parladığını merak eder ve Güneş Işığı ile tanışır.', voice: 'Aoede', voiceName: 'Bilge Anne', genre: 'Masal', style: 'Pastel Düşler', age: '0-1' },
+  { characters: ['Konuşan Ağaç Meşe', 'Küçük Sincap'], prompt: 'Meşe, ormanın en eski sırrını minik sincaba anlatırken rüzgarın şarkısını söyler.', voice: 'Achird', voiceName: 'Bilge Dede', genre: 'Masal', style: 'Yağlı Boya', age: '4-6' },
+  { characters: ['Kayıp Anahtar', 'Gizemli Sandık'], prompt: 'Sandık, içindeki mutluluk iksirini paylaşmak için doğru anahtarı beklemektedir.', voice: 'Despina', voiceName: 'Huzur Perisi', genre: 'Masal', style: 'Sulu Boya', age: '6-10' },
+  { characters: ['Gökkuşağı Perisi', 'Renkler'], prompt: 'Peri, yağmurdan sonra renklerin birbirine karıştığını görür ve onları sıraya dizmek için dans eder.', voice: 'Fenrir', voiceName: 'Sihirli Peri', genre: 'Masal', style: 'Pastel Düşler', age: '2-4' },
+  { characters: ['Pamuk Şeker Bulutu', 'Tatlı Yağmur'], prompt: 'Bulut, çocuklara şekerleme yağdırmak ister ama önce bulutlar okulundan izin alması gerekir.', voice: 'Kore', voiceName: 'Gökkuşağı Kızı', genre: 'Masal', style: 'Anime', age: '4-6' },
+  { characters: ['Ay Dede', 'Yıldız Çocuklar'], prompt: 'Ay Dede, her gece çocuklara masallar anlatırken yıldızlar da gökyüzünde ışık saçarak ona eşlik eder.', voice: 'Aoede', voiceName: 'Bilge Anne', genre: 'Masal', style: 'Vintage Retro', age: '1-2' },
+  { characters: ['Sihirli Pabuçlar', 'Koşucu Kaya'], prompt: 'Pabuçlar, Kaya\'nın çok yavaş olduğunu görünce ona hız kazandırmak için büyü yaparlar.', voice: 'Callirrhoe', voiceName: 'Masalcı Kadın', genre: 'Masal', style: 'Çizgi Film', age: '4-6' },
+  { characters: ['Kristal Saray Prensi', 'Buzdan At'], prompt: 'Prens, sarayının neden eridiğini bulmak için kuzey ışıklarının peşinden gider.', voice: 'Alnilam', voiceName: 'Yüce Kral', genre: 'Masal', style: 'Anime', age: '6-10' },
+  { characters: ['Minik Dev', 'Kocaman Cüce'], prompt: 'Dünyanın en tatlı devi ve en güçlü cücesi, arkadaşlığın boyla ilgili olmadığını kanıtlar.', voice: 'Charon', voiceName: 'Heyecanlı Baba', genre: 'Masal', style: '3D Pixar Stili', age: '4-6' },
+  { characters: ['Dilek Ağacı', 'Yaprak'], prompt: 'Ağaç, üzerinden düşen her yaprağın bir çocuğun dileğini gerçekleştirdiğini fark eder.', voice: 'Iapetus', voiceName: 'Orman Muhafızı', genre: 'Masal', style: 'Yağlı Boya', age: '6-10' },
+
+  // MACERA (10 Yeni)
+  { characters: ['Hazine Avcısı Efe', 'Harita'], prompt: 'Efe, odasında bulduğu eski haritanın aslında mutfağa giden yolu gösterdiğini keşfeder ama yolda engeller vardır.', voice: 'Algieba', voiceName: 'Cesur Şövalye', genre: 'Macera', style: 'Çizgi Film', age: '6-10' },
+  { characters: ['Denizaltı Kaptanı', 'Balık Memo'], prompt: 'Kaptan ve Memo, okyanusun en derinindeki kayıp şehri bulmak için ışıklı fenerlerini yakarlar.', voice: 'Iapetus', voiceName: 'Orman Muhafızı', genre: 'Macera', style: '3D Pixar Stili', age: '6-10' },
+  { characters: ['Dağcı Kerem', 'Zirve Kartalı'], prompt: 'Kerem, dünyanın en yüksek dağına tırmanırken kartalın ona verdiği tüylerle uçmayı öğrenir.', voice: 'Alnilam', voiceName: 'Yüce Kral', genre: 'Macera', style: 'Yağlı Boya', age: '10-13' },
+  { characters: ['Orman Kaşifi Aslı', 'Maymun Muzmuz'], prompt: 'Aslı ve Muzmuz, aslan kralın kayıp tacını bulmak için sarmaşıklardan atlarlar.', voice: 'Callirrhoe', voiceName: 'Masalcı Kadın', genre: 'Macera', style: 'Anime', age: '4-6' },
+  { characters: ['Bisikletli Postacı', 'Hızlı Rüzgar'], prompt: 'Postacı, tüm paketleri vaktinde yetiştirmek için rüzgarla yarışır ve her eve bir gülümseme götürür.', voice: 'Charon', voiceName: 'Heyecanlı Baba', genre: 'Macera', style: 'Pop Art', age: '6-10' },
+  { characters: ['Kampçı Tayfası', 'Ateş Böceği'], prompt: 'Çocuklar gece kamp yaparken ateş böceklerinin aslında ormanın fenerleri olduğunu öğrenirler.', voice: 'Despina', voiceName: 'Huzur Perisi', genre: 'Macera', style: 'Sulu Boya', age: '4-6' },
+  { characters: ['Uçurtma Avcısı', 'Kuyruklu Yıldız'], prompt: 'Uçurtma, rüzgara kapılıp gökyüzünün en tepesine çıkar ve bir kuyruklu yıldızla arkadaş olur.', voice: 'Kore', voiceName: 'Gökkuşağı Kızı', genre: 'Macera', style: 'Pastel Düşler', age: '6-10' },
+  { characters: ['Balonla Seyahat', 'Bulutlar'], prompt: 'Renkli dev balon, dünyanın etrafını bir günde gezmek için rüzgar akıntılarını takip eder.', voice: 'Algenib', voiceName: 'Gezgin Tavşan', genre: 'Macera', style: '3D Pixar Stili', age: '4-6' },
+  { characters: ['Safari Rehberi', 'Yavru Fil'], prompt: 'Rehber, sürüsünden ayrılan yavru fili annesine kavuşturmak için ormanın derinliklerine dalar.', voice: 'Achird', voiceName: 'Bilge Dede', genre: 'Macera', style: 'Vintage Retro', age: '6-10' },
+  { characters: ['Yelkenli Kaptanı', 'Yunus Dostu'], prompt: 'Kaptan, fırtınadan kaçarken yunusların ona yol gösterdiğini fark eder ve güvenli bir liman bulur.', voice: 'Algieba', voiceName: 'Cesur Şövalye', genre: 'Macera', style: 'Yağlı Boya', age: '10-13' },
+
+  // FABL & FANTASTİK (10 Yeni)
+  { characters: ['Bilge Kaplumbağa', 'Tavşan Hızlı'], prompt: 'Kaplumbağa, Tavşan\'a hızın değil sabrın kazandırdığını orman olimpiyatlarında bir kez daha gösterir.', voice: 'Achird', voiceName: 'Bilge Dede', genre: 'Fabl', style: 'Sulu Boya', age: '4-6' },
+  { characters: ['Kibirli Aslan', 'Minik Fare'], prompt: 'Aslan, ağa yakalandığında minik farenin onu kurtarabileceğine asla inanmazdı ama gerçek dostluk kazandı.', voice: 'Alnilam', voiceName: 'Yüce Kral', genre: 'Fabl', style: 'Vintage Retro', age: '2-4' },
+  { characters: ['Şarkıcı Ağustos Böceği', 'Çalışkan Karınca'], prompt: 'Böcek, kış geldiğinde karıncanın hazırlıklarının ne kadar değerli olduğunu bir şarkıyla anlatır.', voice: 'Kore', voiceName: 'Gökkuşağı Kızı', genre: 'Fabl', style: 'Çizgi Film', age: '4-6' },
+  { characters: ['Yalancı Çoban', 'Kuzu Dostum'], prompt: 'Çoban, dürüstlüğün ne kadar önemli olduğunu kuzu dostuyla yaşadığı küçük bir olayla anlar.', voice: 'Charon', voiceName: 'Heyecanlı Baba', genre: 'Fabl', style: 'Yağlı Boya', age: '6-10' },
+  { characters: ['Sihirli Kütüphaneci', 'Kitap Canavarı'], prompt: 'Kütüphaneci, kitapların içinden fırlayan hikayelerin odaya dağılmasını engellemek için sihirli bir şiir okur.', voice: 'Aoede', voiceName: 'Bilge Anne', genre: 'Fantastik', style: 'Anime', age: '10-13' },
+  { characters: ['Ejderha Yavrusu', 'Ateş Püskürtemeyen'], prompt: 'Yavru ejderha, ateş yerine gökkuşağı püskürttüğünü fark edince tüm köyün neşesi olur.', voice: 'Fenrir', voiceName: 'Sihirli Peri', genre: 'Fantastik', style: '3D Pixar Stili', age: '4-6' },
+  { characters: ['Görünmez Çocuk', 'Boya Kovası'], prompt: 'Çocuk, bir boya kovasına çarpınca herkes onu görmeye başlar ve en komik saklambaç oyunu yaşanır.', voice: 'Callirrhoe', voiceName: 'Masalcı Kadın', genre: 'Fantastik', style: 'Pop Art', age: '6-10' },
+  { characters: ['Konuşan Kediler Krallığı', 'Süt Gölü'], prompt: 'Kediler, krallıklarındaki süt gölünün neden kuruduğunu bulmak için süt yoluna çıkarlar.', voice: 'Despina', voiceName: 'Huzur Perisi', genre: 'Fantastik', style: 'Pastel Düşler', age: '4-6' },
+  { characters: ['Uçan Ada Sakinleri', 'Rüzgar Gülü'], prompt: 'Ada sakinleri, adalarının rüzgarda çok sallandığını görünce dev bir rüzgar gülü inşa ederler.', voice: 'Iapetus', voiceName: 'Orman Muhafızı', genre: 'Fantastik', style: '3D Pixar Stili', age: '10-13' },
+  { characters: ['Sihirli Değnek', 'Sakıncalı Büyücü'], prompt: 'Değnek, yanlışlıkla her dokunduğunu dondurmaya başlayınca büyücü onu ısıtmak için güneşle anlaşır.', voice: 'Algieba', voiceName: 'Cesur Şövalye', genre: 'Fantastik', style: 'Vintage Retro', age: '6-10' }
 ]
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
