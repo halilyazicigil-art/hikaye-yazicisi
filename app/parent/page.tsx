@@ -20,27 +20,30 @@ async function getQuotaStats(supabase: any, profileIds: string[], sub: any, isPr
     const [
       { count: usedShuffle },
       { count: usedManual },
-      { count: usedAudio }
+      { count: usedShuffleAudio },
+      { count: usedManualAudio }
     ] = await Promise.all([
       supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
       supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).gte('created_at', startDate.toISOString()),
-      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
+      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).not('audio_url', 'is', null).gte('created_at', startDate.toISOString()),
+      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
     ])
 
     const shuffleLimit = isPremium ? 25 : (isPro ? 10 : 3)
     const manualLimit = isPremium ? 55 : (isPro ? 30 : 0)
     const audioLimit = isPremium ? 40 : (isPro ? 20 : 3)
+    const manualAudioLimit = audioLimit - shuffleLimit
 
     return { 
       shuffleUsed: usedShuffle || 0, 
       shuffleLimit,
       manualUsed: usedManual || 0,
       manualLimit,
-      audioUsed: usedAudio || 0,
-      audioLimit
+      mAudioUsed: usedManualAudio || 0,
+      mAudioLimit: manualAudioLimit
     }
   }
-  return { shuffleUsed: 0, shuffleLimit: 3, manualUsed: 0, manualLimit: 0, audioUsed: 0, audioLimit: 3 }
+  return { shuffleUsed: 0, shuffleLimit: 3, manualUsed: 0, manualLimit: 0, mAudioUsed: 0, mAudioLimit: 0 }
 }
 
 export default async function ParentDashboard({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -203,10 +206,10 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                 {/* Sesli */}
                 <div className="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
                   <div className="flex items-center text-indigo-800 font-bold text-sm">
-                    <Sparkles className="mr-3 text-indigo-500" size={20} /> Sesli Masallar
+                    <Sparkles className="mr-3 text-indigo-500" size={20} /> Özgün Sesli Masallar
                   </div>
                   <span className="text-lg font-black text-indigo-800">
-                    {Math.max(0, quota.audioLimit - quota.audioUsed)} / {quota.audioLimit}
+                    {Math.max(0, quota.mAudioLimit - quota.mAudioUsed)} / {quota.mAudioLimit}
                   </span>
                 </div>
               </div>

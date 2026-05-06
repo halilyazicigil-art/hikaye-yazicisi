@@ -70,6 +70,22 @@ export async function backgroundStoryAction(formData: {
         const shuffleUsed = usedShuffle || 0;
         const manualUsed = usedManual || 0;
 
+        // 🚨 SESLİ HİKAYE REZERVASYON SİSTEMİ HESAPLAMASI
+        const shuffleAudioLimit = shuffleLimit; // Taslaklar her zaman sesli
+        const manualAudioLimit = audioLimit - shuffleLimit; // Geriye kalan ses hakları manuel üretim içindir
+
+        // Sesli üretim sayılarını ayrıştır
+        const [
+            { count: usedShuffleAudio },
+            { count: usedManualAudio }
+        ] = await Promise.all([
+            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).not('audio_url', 'is', null).gte('created_at', startDate.toISOString()),
+            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
+        ]);
+
+        const sAudioUsed = usedShuffleAudio || 0;
+        const mAudioUsed = usedManualAudio || 0;
+
         // 🚨 KOTA ENGELLEME (GÜVENLİK DUVARI)
         if (usedStories >= totalLimit) {
             throw new Error(`Aylık toplam hikaye limitinize ulaştınız (${totalLimit}/${totalLimit}).`);
@@ -79,8 +95,8 @@ export async function backgroundStoryAction(formData: {
             if (shuffleUsed >= shuffleLimit) {
                 throw new Error(`Aylık sihirli taslak (karıştır) limitinize ulaştınız (${shuffleLimit}/${shuffleLimit}).`);
             }
-            if ((usedAudioStories || 0) >= audioLimit) {
-                throw new Error(`Aylık sesli masal limitinize ulaştınız (${audioLimit}/${audioLimit}). Taslaklar sesli üretildiği için şu an yeni taslak oluşturamazsınız.`);
+            if (sAudioUsed >= shuffleAudioLimit) {
+                throw new Error(`Sihirli taslaklar için ayrılan sesli üretim limitiniz doldu (${shuffleAudioLimit}/${shuffleAudioLimit}).`);
             }
         } else {
             if (!isPro && !isPremium) {
@@ -91,9 +107,11 @@ export async function backgroundStoryAction(formData: {
             }
         }
 
-        // 🚨 SESLİ MASAL KOTASI KONTROLÜ (MANUEL ÜRETİM İÇİN)
-        if (!formData.isShuffle && formData.voiceOption !== 'Sessiz' && (usedAudioStories || 0) >= audioLimit) {
-            throw new Error(`Aylık sesli masal limitinize ulaştınız (${audioLimit}/${audioLimit}). Bu masalı 'Sessiz' modda üretebilir veya paketinizi yükseltebilirsiniz.`);
+        // 🚨 SESLİ MASAL KOTASI KONTROLÜ (MANUEL ÜRETİM İÇİN REZERVASYON KONTROLÜ)
+        if (!formData.isShuffle && formData.voiceOption !== 'Sessiz') {
+            if (mAudioUsed >= manualAudioLimit) {
+                throw new Error(`Kendi hikayeleriniz için sesli üretim limitiniz doldu (${mAudioUsed}/${manualAudioLimit}). Kalan ses haklarınız Sihirli Taslaklar için rezerve edilmiştir.`);
+            }
         }
 
         // 🧹 ARŞİV TEMİZLEME (YENİ KURAL)

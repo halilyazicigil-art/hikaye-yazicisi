@@ -149,27 +149,30 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       const shuffleLimit = isPremiumUser ? 25 : (isProUser ? 10 : 3)
       const manualLimit = isPremiumUser ? 55 : (isProUser ? 30 : 0)
       const totalLimit = isPremiumUser ? 80 : (isProUser ? 40 : 3)
-      const audioLimit = isPremiumUser ? 40 : (isProUser ? 20 : 0)
-
       const [
         { count: totalUsed },
         { count: usedShuffle },
         { count: usedManual },
-        { count: usedAudio }
+        { count: usedShuffleAudio },
+        { count: usedManualAudio }
       ] = await Promise.all([
         supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).gte('created_at', startDate.toISOString()),
         supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
         supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).gte('created_at', startDate.toISOString()),
-        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
+        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).not('audio_url', 'is', null).gte('created_at', startDate.toISOString()),
+        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
       ])
+
+      const mAudioLimit = audioLimit - shuffleLimit
 
       setQuotaStats({
         shuffleUsed: usedShuffle || 0,
         shuffleLimit,
         manualUsed: usedManual || 0,
         manualLimit,
-        audioUsed: usedAudio || 0,
-        audioLimit,
+        audioUsed: usedManualAudio || 0, // Manuel sesli üretim sayısı
+        audioLimit: mAudioLimit, // Kendi hikayesi için ayırılan limit
+        shuffleAudioUsed: usedShuffleAudio || 0,
         totalUsed: totalUsed || 0,
         totalLimit
       })
@@ -457,9 +460,9 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               <button 
                 type="button" 
                 onClick={handleRandomize}
-                disabled={quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit || quotaStats?.audioUsed >= quotaStats?.audioLimit}
+                disabled={quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit || quotaStats?.shuffleAudioUsed >= quotaStats?.shuffleLimit}
                 className={`p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 group relative ${
-                  (quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit || quotaStats?.audioUsed >= quotaStats?.audioLimit)
+                  (quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit || quotaStats?.shuffleAudioUsed >= quotaStats?.shuffleLimit)
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none pulse-none'
                     : (isShuffle 
                         ? 'bg-sky-100 text-sky-700 shadow-sm' 
@@ -468,7 +471,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                 title={
                   quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit 
                     ? "Taslak limitiniz doldu" 
-                    : (quotaStats?.audioUsed >= quotaStats?.audioLimit ? "Sesli hikaye limitiniz doldu" : "Sürpriz Seçim Yap")
+                    : (quotaStats?.shuffleAudioUsed >= quotaStats?.shuffleLimit ? "Taslaklar için ses limitiniz doldu" : "Sürpriz Seçim Yap")
                 }
               >
                 <Shuffle size={22} className={`${isShuffle ? '' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
@@ -483,7 +486,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                 </span>
               )}
 
-              {!isShuffle && (quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit || quotaStats?.audioUsed >= quotaStats?.audioLimit) && (
+              {!isShuffle && (quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit || quotaStats?.shuffleAudioUsed >= quotaStats?.shuffleLimit) && (
                 <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 shadow-sm">
                   {quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit ? "Taslak Limitiniz Doldu" : "Ses Limitiniz Doldu"}
                 </span>
@@ -798,7 +801,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
             <div className="flex items-center gap-2 bg-purple-50 px-3 py-1.5 rounded-full border border-purple-100 shadow-sm">
               <Sparkles size={14} className="text-purple-600" />
-              <span className="text-purple-700 font-bold">Sesli:</span>
+              <span className="text-purple-700 font-bold">Özgün Ses:</span>
               <span className="text-purple-900 font-black">{quotaStats ? Math.max(0, quotaStats.audioLimit - quotaStats.audioUsed) : 0} / {quotaStats?.audioLimit}</span>
             </div>
             {remainingStories !== null && (
