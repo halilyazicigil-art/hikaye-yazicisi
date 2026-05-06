@@ -37,6 +37,7 @@ CREATE TABLE public.stories (
   content_json jsonb NOT NULL, -- Masal metin sayfaları
   image_url text, -- Kapak veya ana görsel URL'i
   audio_url text, -- Seslendirme dosyası URL'i
+  is_shuffle boolean DEFAULT false, -- 'Karıştır' butonu ile mi üretildi?
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

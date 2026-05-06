@@ -102,6 +102,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   const [characters, setCharacters] = useState<string[]>(['Sevimli Ayı'])
   const [educationalValue, setEducationalValue] = useState<string>('Dürüstlük')
   const [uploadedRefFile, setUploadedRefFile] = useState<File | null>(null)
+  const [isShuffle, setIsShuffle] = useState(false)
 
   const supabase = createClient()
   const [jobId, setJobId] = useState<string | null>(null)
@@ -326,6 +327,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     
     setPrompt(randomScenario.prompt)
     setCharacters(randomScenario.characters)
+    setIsShuffle(true)
   }
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -363,7 +365,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         voiceOption: voice === 'Sessiz' ? 'Sessiz' : 'AI',
         elevenVoiceId: voice !== 'Sessiz' ? voice : undefined,
         style: imageStyle,
-        uploaded_master_ref: uploadedMasterRefUrl
+        uploaded_master_ref: uploadedMasterRefUrl,
+        isShuffle: isShuffle
       })
       
       if (response.success && response.jobId) {
@@ -409,7 +412,10 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         <div className="relative mb-6">
           <textarea
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value.slice(0, maxChars))}
+            onChange={(e) => {
+              setPrompt(e.target.value.slice(0, maxChars));
+              setIsShuffle(false);
+            }}
             placeholder={!isPro && !isPremium ? "Kendi masalınızı yazmak için abone olun. Şimdilik zar simgesine basıp sürpriz hikaye üretebilirsiniz." : (tab === 'normal' ? "Bana şu konu hakkında bir hikaye yaz..." : "Çocuğunuza ne öğretmek istersiniz? Örn: Ayşe'nin dişlerini fırçalamayı öğrenmesi...")}
             readOnly={!isPro && !isPremium}
             className={`w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800 ${!isPro && !isPremium ? 'bg-gray-50 cursor-not-allowed opacity-80' : ''}`}

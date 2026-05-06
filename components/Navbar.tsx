@@ -11,7 +11,7 @@ const Navbar = ({ user }: { user?: any }) => {
   const navLinks = [
     { name: 'Fiyatlandırma', href: '/pricing' },
     { name: 'Nasıl Çalışır', href: '/how-it-works' },
-    { name: 'Masallar', href: '#' },
+    { name: 'Sihirli Kitaplık', href: '/library' },
   ]
 
   return (

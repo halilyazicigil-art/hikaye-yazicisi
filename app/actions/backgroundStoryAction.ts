@@ -11,6 +11,7 @@ export async function backgroundStoryAction(formData: {
     style: string;
     elevenVoiceId?: string;
     uploaded_master_ref?: string;
+    isShuffle?: boolean;
 }) {
     const supabase = await createClient();
 

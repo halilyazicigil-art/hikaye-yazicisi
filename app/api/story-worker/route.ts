@@ -315,7 +315,8 @@ CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, wat
             title: storyData.title,
             content_json: pagesWithImages,
             image_url: pagesWithImages[0].image_url,
-            audio_url: audioUrl
+            audio_url: audioUrl,
+            is_shuffle: payload.isShuffle || false
         }).select().single();
 
         if (storyErr) throw storyErr;
