@@ -56,8 +56,8 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
               href={`/library${genre === 'Tümü' ? '' : `?genre=${encodeURIComponent(genre)}`}`}
               className={`px-8 py-3 rounded-full font-black transition-all border duration-300 shadow-xl ${
                 activeGenre === genre
-                  ? 'bg-white text-[#052159] border-white scale-110 shadow-white/20'
-                  : 'bg-[#052159]/20 backdrop-blur-md text-white border-white/30 hover:bg-white/20 hover:border-white/50'
+                  ? 'bg-white text-[#84B1D9] border-white scale-110 shadow-white/20'
+                  : 'bg-[#84B1D9]/80 backdrop-blur-md text-white border-white/30 hover:bg-[#84B1D9] hover:border-white/50'
               }`}
             >
               {genre}
