@@ -237,8 +237,6 @@ CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, wat
             const progress = 30 + Math.floor(((i + 1) / (pages.length || 1)) * 60);
             await updateJob(jobId, { progress });
             pagesWithImages.push({ text: scene.text, image_url: publicUrl });
-            
-            }
         }
 
         // 5. ADIM: SESLENDİRME (%90)
