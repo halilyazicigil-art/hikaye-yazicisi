@@ -187,11 +187,14 @@ export async function backgroundStoryAction(formData: {
         }
 
         // 3. İş Kuyruğuna Ekle (Sadece Kota Varsa ve Cache'de Yoksa)
+        const targetProfileId = profileIds.length > 0 ? profileIds[0] : null;
+        if (!targetProfileId) throw new Error("Hikaye oluşturmak için en az bir çocuk profiliniz olmalı.");
+
         const { data: job, error: jobErr } = await supabase.from('generation_jobs').insert({
             user_id: user.id,
             status: 'pending',
             progress: 0,
-            payload: { ...formData, wordLimit }
+            payload: { ...formData, wordLimit, profile_id: targetProfileId }
         }).select().single();
 
         if (jobErr) throw jobErr;

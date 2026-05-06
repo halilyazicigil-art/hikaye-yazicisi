@@ -311,7 +311,7 @@ CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, wat
 
         // 6. ADIM: MÜHÜR VE BİTİŞ (%100)
         const { data: story, error: storyErr } = await supabase.from('stories').insert({
-            profile_id: payload.profile_id || (await supabase.from('profiles').select('id').eq('user_id', job.user_id).single()).data?.id,
+            profile_id: payload.profile_id || (await supabase.from('profiles').select('id').eq('user_id', job.user_id).limit(1).maybeSingle()).data?.id,
             title: storyData.title,
             content_json: pagesWithImages,
             image_url: pagesWithImages[0].image_url,
