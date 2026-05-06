@@ -28,8 +28,8 @@ async function getQuotaStats(supabase: any, profileIds: string[], sub: any, isPr
     usedStories = monthStories?.length || 0
     const usedVoiceStories = monthStories?.filter((s: any) => s.audio_url).length || 0
 
-    const storyLimit = isPremium ? 90 : (isPro ? 40 : 3)
-    const voiceLimit = isPremium ? 50 : (isPro ? 20 : 1)
+    const storyLimit = isPremium ? 80 : (isPro ? 40 : 3)
+    const voiceLimit = isPremium ? 40 : (isPro ? 20 : 1)
 
     const remainingText = `${Math.max(0, storyLimit - usedStories)} / ${storyLimit}`
     const remainingVoiceText = `${Math.max(0, voiceLimit - usedVoiceStories)} / ${voiceLimit}`

@@ -138,7 +138,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
       const isPremiumUser = !isExpired && sub?.plan_id === 'premium'
       const isProUser = !isExpired && sub?.plan_id === 'pro'
-      const storyLimit = isPremiumUser ? 90 : (isProUser ? 40 : 3)
+      const storyLimit = isPremiumUser ? 80 : (isProUser ? 40 : 3)
 
       // 2. Mevcut Dönem Başlangıcını Bul (Sert Sıfırlama)
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
