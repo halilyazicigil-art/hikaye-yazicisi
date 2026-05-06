@@ -26,7 +26,10 @@ function armoredParser(text: string) {
     try {
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) throw new Error("JSON bloğu bulunamadı.");
-        return JSON.parse(jsonMatch[0].trim());
+        const parsed = JSON.parse(jsonMatch[0].trim());
+        const pages = parsed?.scenes || parsed?.pages || [];
+        if (pages.length === 0) throw new Error("Yapay zeka hikaye sayfalarını oluşturamadı.");
+        return parsed;
     } catch (err) {
         throw new Error("JSON Ayrıştırma Hatası");
     }
@@ -112,9 +115,7 @@ async function generateImagePro(prompt: string, projectId: string, token: string
             console.warn(`[Görsel Üretimi] Deneme ${attempt + 1}/${retries + 1} başarısız:`, error.message);
             
             if (attempt < retries) {
-                // Kota aşımları için (429) çok daha agresif bir bekleme (5 sn baz) + Jitter
                 const baseDelay = isRateLimit ? 6000 : 2000;
-                // Exponential Backoff: 6s, 9s, 13s, 20s, 30s...
                 const backoff = (baseDelay * Math.pow(1.5, attempt)) + (Math.random() * 2000); 
                 console.log(`[Görsel Üretimi] Kota doldu, sistem ${Math.round(backoff)}ms uyutuluyor... (Deneme: ${attempt + 1})`);
                 await delay(backoff);
@@ -130,25 +131,18 @@ export async function POST(req: NextRequest) {
     const supabase = await createAdminClient();
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
     
+    async function updateJob(id: string, updates: any) {
+        await supabase.from('generation_jobs').update(updates).eq('id', id);
+    }
+
     try {
-        // 1. İşi Al
         const { data: job, error: jobErr } = await supabase.from('generation_jobs').select('*').eq('id', jobId).single();
         if (jobErr || !job) throw new Error("İş bulunamadı");
 
         const token = await getVertexAccessToken();
-        const payload = job.payload as {
-            theme: string;
-            hero: string;
-            style: string;
-            voiceOption: string;
-            profile_id?: string;
-            uploaded_master_ref?: string;
-            wordLimit?: number;
-        };
+        const payload = job.payload as any;
 
-        // 2. ADIM: METİN YAZIMI (%10)
-        // İstek öncesi veritabanı durumunu processing_text olarak güncelleyebiliriz (opsiyonel)
-        await supabase.from('generation_jobs').update({ status: 'processing_text' }).eq('id', jobId);
+        await updateJob(jobId, { status: 'processing_text' });
         
         const storySystemPrompt = `GÖREV: Bir çocuk hikayesi yaz. 
         FORMAT: Sadece JSON döndür. 
@@ -181,77 +175,45 @@ export async function POST(req: NextRequest) {
             throw new Error(`LLM Metin Hatası: ${errData.error?.message || textResp.statusText}`);
         }
 
-        const textData = await textResp.json() as { candidates: { content: { parts: { text: string }[] } }[] };
+        const textData = await textResp.json() as any;
         const rawText = textData.candidates[0].content.parts[0].text;
-        
-        let storyData;
-        try {
-            storyData = JSON.parse(rawText);
-        } catch (e) {
-            console.log(">>> JSON Parse failed, trying armoredParser:", e);
-            storyData = armoredParser(rawText);
-        }
+        const storyData = armoredParser(rawText);
 
-        // Metin işlemi tamamlandı
-        await supabase.from('generation_jobs').update({ status: 'text_ready', progress: 10 }).eq('id', jobId);
+        await updateJob(jobId, { status: 'text_ready', progress: 10 });
 
-        // 3. ADIM: MASTER KARAKTER PAFTASI (%20) VEYA BYPASS
-        await supabase.from('generation_jobs').update({ status: 'generating_master' }).eq('id', jobId);
+        // 3. ADIM: MASTER KARAKTER PAFTASI (%20)
+        await updateJob(jobId, { status: 'generating_master' });
         
         let masterMedia: { data: string, mimeType: string };
         let masterUrl: string;
 
         if (payload.uploaded_master_ref) {
-            console.log(`[Bypass] Kullanıcı referans paftası yükledi. Çizim atlanıyor: ${payload.uploaded_master_ref}`);
             const imgRes = await fetch(payload.uploaded_master_ref);
             if (!imgRes.ok) throw new Error("Yüklenen referans görseli okunamadı.");
-            
             const arrayBuffer = await imgRes.arrayBuffer();
-            const base64Data = Buffer.from(arrayBuffer).toString('base64');
-            
-            masterMedia = { data: base64Data, mimeType: 'image/png' };
+            masterMedia = { data: Buffer.from(arrayBuffer).toString('base64'), mimeType: 'image/png' };
             masterUrl = payload.uploaded_master_ref;
         } else {
             const charsObj = storyData.characters || storyData.karakterler || storyData.Characters || {};
-            if (Object.keys(charsObj).length === 0) {
-                charsObj["Kahraman"] = "A young adventurer in standard clothing";
-            }
-            // LLM fazladan karakter üretirse master paftayı bozmaması için ilk 3 karakteri alıyoruz
-            const charDescriptions = Object.values(charsObj).slice(0, 3).join(". ");
+            const charDescriptions = Object.values(charsObj).slice(0, 3).join(". ") || "A young adventurer in standard clothing";
             
             const masterPrompt = `A technical character lineup reference sheet on a plain, neutral light-grey background. Arrange the following characters side-by-side in a horizontal row, standing in a relaxed neutral pose. Full body visible. Characters: ${charDescriptions}. Professional concept art style, clean silhouette, no background scenery, no text.`;
             
-            const generatedMedia = await generateImagePro(masterPrompt, projectId, token);
-            if (!generatedMedia) throw new Error("Master Pafta üretilemedi");
-            masterMedia = generatedMedia;
-            
-            // Supabase Realtime 1MB Payload sınırına takılmamak için master görselini Storage'a yüklüyoruz
+            masterMedia = await generateImagePro(masterPrompt, projectId, token);
             const masterFileName = `master_${jobId}.png`;
-            const { error: masterUploadErr } = await supabase.storage.from('story_assets').upload(`images/${masterFileName}`, Buffer.from(masterMedia.data, 'base64'), { contentType: 'image/png' });
-            if (masterUploadErr) throw new Error("Master görsel yüklenemedi: " + masterUploadErr.message);
-            
-            const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${masterFileName}`);
-            masterUrl = publicUrl;
+            await supabase.storage.from('story_assets').upload(`images/${masterFileName}`, Buffer.from(masterMedia.data, 'base64'), { contentType: 'image/png' });
+            masterUrl = supabase.storage.from('story_assets').getPublicUrl(`images/${masterFileName}`).data.publicUrl;
         }
         
-        // Master Karakter işlemi tamamlandı
-        await supabase.from('generation_jobs').update({ status: 'master_ready', progress: 20, master_ref_data: masterUrl }).eq('id', jobId);
+        await updateJob(jobId, { status: 'master_ready', progress: 20, master_ref_data: masterUrl });
 
-        // 4. ADIM: 12 SAHNE ÇİZİMİ (%30-80) (Eski Sıralı Sistem)
-        await supabase.from('generation_jobs').update({ status: 'processing', progress: 30 }).eq('id', jobId);
-        
-        interface Scene {
-            text: string;
-            visualHook: string;
-        }
-
+        // 4. ADIM: SAHNE ÇİZİMİ
+        await updateJob(jobId, { status: 'processing', progress: 30 });
+        const pages = storyData.scenes || [];
         const pagesWithImages = [];
         
-        // Gelen talep üzerine eski sırayla işleme (bir görsel bitmeden diğerine geçmeme) sistemine dönüldü
-        for (let i = 0; i < storyData.scenes.length; i++) {
-            const scene = storyData.scenes[i];
-            
-            // PROMPT ENGINEERING: Referansın aynısını çizmesini engellemek ve yazıları yasaklamak için güçlü yönlendirme
+        for (let i = 0; i < pages.length; i++) {
+            const scene = pages[i];
             const scenePrompt = `[SCENE ${i+1}] Style: ${payload.style}. 
 NEW ACTION/SCENE TO DRAW: ${scene.visualHook}. 
 CHARACTER REFERENCE: Use the provided reference image ONLY for character design and face consistency. 
@@ -259,22 +221,14 @@ CRITICAL INSTRUCTION 1: Do NOT reproduce the reference image exactly. You MUST d
 CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, watermarks, signatures, or typography. Clean visual art only.`;
 
             const media = await generateImagePro(scenePrompt, projectId, token, [{ name: 'master', data: masterMedia.data }]);
-            
             const fileName = `bg_img_${jobId}_${i}.png`;
-            const { error: uploadErr } = await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(media!.data, 'base64'), { contentType: 'image/png' });
-            if (uploadErr) throw new Error(`Sayfa ${i+1} görseli yüklenemedi: ${uploadErr.message}`);
+            await supabase.storage.from('story_assets').upload(`images/${fileName}`, Buffer.from(media!.data, 'base64'), { contentType: 'image/png' });
+            const publicUrl = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`).data.publicUrl;
             
-            const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`images/${fileName}`);
-            
-            // İlerlemeyi güncelle
-            const currentProgress = 30 + Math.floor(((i + 1) / storyData.scenes.length) * 50);
-            await supabase.from('generation_jobs').update({ progress: currentProgress }).eq('id', jobId);
-            
+            const progress = 30 + Math.floor(((i + 1) / (pages.length || 1)) * 60);
+            await updateJob(jobId, { progress });
             pagesWithImages.push({ text: scene.text, image_url: publicUrl });
             
-            // Kota aşımını önlemek için her sahne arasında bekleme
-            if (i < storyData.scenes.length - 1) {
-                await delay(2000);
             }
         }
 
