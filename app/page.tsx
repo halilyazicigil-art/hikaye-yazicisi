@@ -72,9 +72,9 @@ export default async function LandingPage() {
       {/* 2. SİHİRLİ ARKA PLANIN BAŞLADIĞI ALAN */}
       <div className="relative overflow-hidden">
         {/* Arka Plan Katmanı (Fixed div for maximum stability) */}
-        <div className="absolute inset-0 bg-[url('/clouds_paper_boats_bg.png')] bg-cover bg-center bg-no-repeat opacity-50 pointer-events-none z-0"></div>
-        {/* Mavi tonu korumak için overlay */}
-        <div className="absolute inset-0 bg-[#BDD9F2]/70 pointer-events-none z-1"></div>
+        <div className="absolute inset-0 bg-[url('/clouds_paper_boats_bg.png')] bg-cover bg-center bg-no-repeat opacity-70 pointer-events-none z-0"></div>
+        {/* Mavi tonu korumak için overlay - Daha şeffaf hale getirildi */}
+        <div className="absolute inset-0 bg-[#BDD9F2]/40 pointer-events-none z-1"></div>
 
         <div className="relative z-10">
           {/* Form Section */}
