@@ -28,15 +28,15 @@ const Navbar = ({ user }: { user?: any }) => {
         </span>
       </Link>
       
-      <div className="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-full border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+      <div className="hidden md:flex items-center gap-2 bg-white/20 backdrop-blur-2xl px-4 py-2 rounded-full border border-white/40 shadow-[0_10px_40px_rgba(0,0,0,0.15)]">
         {navLinks.map((link) => (
           <Link 
             key={link.name}
             href={link.href} 
-            className={`px-5 py-2 rounded-full transition-all text-sm font-black tracking-wide border transition-all duration-300 ${
+            className={`px-5 py-2 rounded-full transition-all text-sm font-black tracking-wide border duration-300 ${
               pathname === link.href 
-                ? 'bg-white text-[#84B1D9] border-white shadow-md scale-105' 
-                : 'text-white border-white/20 hover:bg-white/20 hover:border-white/40'
+                ? 'bg-white text-[#84B1D9] border-white shadow-[0_4px_12px_rgba(255,255,255,0.3)] scale-105' 
+                : 'text-white border-white/30 hover:bg-white/30 hover:border-white/60 hover:scale-105'
             }`}
           >
             {link.name}
