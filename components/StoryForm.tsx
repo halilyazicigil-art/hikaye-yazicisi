@@ -149,6 +149,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       const shuffleLimit = isPremiumUser ? 25 : (isProUser ? 10 : 3)
       const manualLimit = isPremiumUser ? 55 : (isProUser ? 30 : 0)
       const totalLimit = isPremiumUser ? 80 : (isProUser ? 40 : 3)
+      const audioLimit = isPremiumUser ? 40 : (isProUser ? 20 : 3)
+
       const [
         { count: totalUsed },
         { count: usedShuffle },
