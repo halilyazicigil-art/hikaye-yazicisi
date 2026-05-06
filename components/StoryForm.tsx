@@ -449,14 +449,30 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               <ImageIcon size={20} />
               {uploadedRefFile && <span className="text-xs font-bold whitespace-nowrap overflow-hidden max-w-[120px] text-ellipsis">{uploadedRefFile.name}</span>}
             </label>
-            <button 
-              type="button" 
-              onClick={handleRandomize}
-              className={`p-2 rounded-lg transition-all hover:scale-110 active:scale-95 group ${isShuffle ? 'bg-sky-100 text-sky-700 shadow-sm' : 'text-sky-700/60 hover:bg-sky-50'}`}
-              title="Sürpriz Seçim Yap"
-            >
-              <Shuffle size={20} className={`${isShuffle ? 'animate-pulse' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                type="button" 
+                onClick={handleRandomize}
+                className={`p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 group relative ${
+                  isShuffle 
+                    ? 'bg-sky-100 text-sky-700 shadow-sm' 
+                    : 'bg-[#BDD9F2] text-sky-700 hover:bg-[#84B1D9] hover:text-white shadow-lg shadow-sky-200/50 animate-pulse'
+                }`}
+                title="Sürpriz Seçim Yap"
+              >
+                <Shuffle size={22} className={`${isShuffle ? '' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+                {!isShuffle && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full border-2 border-white animate-ping"></span>
+                )}
+              </button>
+              
+              {!isShuffle && (
+                <span className="text-[11px] font-black text-sky-600 bg-sky-50 px-3 py-1.5 rounded-full border border-sky-100 shadow-sm animate-bounce">
+                  Hadi taslakları dene! ✨
+                </span>
+              )}
+            </div>
+
             {isShuffle && (
               <button 
                 type="button" 
