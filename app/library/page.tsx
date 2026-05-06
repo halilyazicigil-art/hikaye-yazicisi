@@ -27,8 +27,15 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
   const { data: stories } = await query
 
   return (
-    <div className="min-h-screen bg-[#BDD9F2]">
-      <Navbar user={user} />
+    <div className="min-h-screen bg-[#BDD9F2] relative overflow-x-hidden">
+      {/* 🌌 TÜM SAYFAYI KAPSAYAN SABİT SİHİRLİ ARKA PLAN */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[url('/clouds_paper_boats_bg.png')] bg-cover bg-center bg-no-repeat opacity-60"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#BDD9F2]/20 via-[#BDD9F2]/40 to-[#BDD9F2]/80"></div>
+      </div>
+
+      <div className="relative z-10">
+        <Navbar user={user} />
       
       <main className="max-w-7xl mx-auto px-6 py-12">
         {/* Header Section */}
@@ -174,5 +181,6 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
         </div>
       </footer>
     </div>
+  </div>
   )
 }
