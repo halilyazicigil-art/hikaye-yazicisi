@@ -130,8 +130,17 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         supabase.from('profiles').select('id').eq('user_id', user.id)
       ])
 
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - 30)
+      let startDate = new Date()
+      if (sub?.current_period_end) {
+        // Abone olanlar için fatura dönemi başlangıcı
+        startDate = new Date(sub.current_period_end)
+        startDate.setMonth(startDate.getMonth() - 1)
+      } else {
+        // Ücretsiz kullanıcılar için ayın 1'i
+        startDate.setDate(1)
+        startDate.setHours(0, 0, 0, 0)
+      }
+
       const profileIds = profiles?.map(p => p.id) || []
       
       const [

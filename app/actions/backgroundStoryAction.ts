@@ -44,12 +44,14 @@ export async function backgroundStoryAction(formData: {
 
         // 2. Mevcut Fatura Dönemindeki Kullanımı Hesapla (Sert Sıfırlama Mantığı)
         let startDate = new Date();
-        startDate.setDate(1);
-        startDate.setHours(0, 0, 0, 0);
-
         if (sub?.current_period_end) {
+            // Abone olanlar için: Fatura dönemi başlangıcı = bitişten 1 ay öncesi
             startDate = new Date(sub.current_period_end);
-            startDate.setDate(startDate.getDate() - 30);
+            startDate.setMonth(startDate.getMonth() - 1);
+        } else {
+            // Ücretsiz (Pamuk Bulut) için: Her ayın 1'inde sıfırlanır
+            startDate.setDate(1);
+            startDate.setHours(0, 0, 0, 0);
         }
 
         const [
