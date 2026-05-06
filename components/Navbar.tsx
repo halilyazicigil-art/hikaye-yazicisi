@@ -24,13 +24,13 @@ const Navbar = ({ user }: { user?: any }) => {
         <span className="text-3xl font-lora font-bold tracking-tight text-white ml-3 drop-shadow-md">MyStory</span>
       </Link>
       
-      <div className="hidden md:flex items-center gap-8 text-white font-bold">
+      <div className="hidden md:flex items-center gap-2 bg-[#84B1D9]/90 backdrop-blur-md px-6 py-2.5 rounded-full shadow-lg border border-white/20">
         {navLinks.map((link) => (
           <Link 
             key={link.name}
             href={link.href} 
-            className={`transition-all hover:text-sky-100 drop-shadow-sm ${
-              pathname === link.href ? 'text-white border-b-2 border-white' : 'text-white/80'
+            className={`px-4 py-1.5 rounded-full transition-all hover:bg-white/20 text-white font-bold drop-shadow-sm ${
+              pathname === link.href ? 'bg-white/30 shadow-inner' : ''
             }`}
           >
             {link.name}
@@ -41,9 +41,11 @@ const Navbar = ({ user }: { user?: any }) => {
       <div className="flex items-center gap-4">
         {user ? (
           <>
-            <Link href="/parent" className="text-white font-bold hover:text-sky-100 transition drop-shadow-sm">Panele Dön</Link>
+            <Link href="/parent" className="bg-[#84B1D9] hover:bg-[#8FBDD9] text-white px-6 py-2.5 rounded-2xl font-bold transition-all shadow-lg drop-shadow-sm">
+              Panele Dön
+            </Link>
             <form action="/auth/sign-out" method="post">
-              <button className="bg-white/30 backdrop-blur-md hover:bg-white/40 text-white px-6 py-2.5 rounded-xl font-bold transition-all border border-white/30 shadow-lg">
+              <button className="bg-white/90 backdrop-blur-sm hover:bg-white text-[#052159] px-6 py-2.5 rounded-2xl font-bold transition-all border border-gray-200 shadow-lg">
                 Çıkış Yap
               </button>
             </form>
