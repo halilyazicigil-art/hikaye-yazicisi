@@ -28,7 +28,7 @@ const Navbar = ({ user }: { user?: any }) => {
         </span>
       </Link>
       
-      <div className="hidden md:flex items-center gap-2 bg-[#84B1D9]/30 backdrop-blur-2xl px-4 py-2 rounded-full border border-white/30 shadow-lg">
+      <div className="hidden md:flex items-center gap-2 bg-[#D9E8F5] backdrop-blur-md px-4 py-2 rounded-full border border-white/40 shadow-lg">
         {navLinks.map((link) => {
           const isActive = pathname === link.href
 
@@ -36,8 +36,8 @@ const Navbar = ({ user }: { user?: any }) => {
             <Link 
               key={link.name}
               href={link.href} 
-              className={`px-5 py-2 rounded-full transition-all text-sm font-black tracking-wide border duration-300 bg-white text-[#052159] border-white shadow-md hover:scale-105 hover:bg-sky-50 ${
-                isActive ? 'shadow-lg scale-105 ring-2 ring-white/50' : ''
+              className={`px-5 py-2 rounded-full transition-all text-sm font-black tracking-wide border duration-300 bg-white text-[#052159] border-white shadow-sm hover:scale-105 hover:bg-sky-50 ${
+                isActive ? 'shadow-md scale-105 ring-2 ring-[#84B1D9]/20' : ''
               }`}
             >
               {link.name}
