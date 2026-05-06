@@ -34,8 +34,11 @@ export async function backgroundStoryAction(formData: {
         const isPremium = !isExpired && sub?.plan_id === 'premium';
         const isPro = !isExpired && sub?.plan_id === 'pro';
         
-        // 🚨 YENİ PAKET KURALLARI
-        const storyLimit = isPremium ? 80 : (isPro ? 40 : 3);
+        // 🚨 YENİ PAKET KURALLARI (TASLAK VS ÖZGÜN)
+        const totalLimit = isPremium ? 80 : (isPro ? 40 : 3);
+        const shuffleLimit = isPremium ? 70 : (isPro ? 30 : 3);
+        const manualLimit = isPremium ? 10 : (isPro ? 10 : 0);
+        
         const audioLimit = isPremium ? 40 : (isPro ? 20 : 0);
         const wordLimit = isPremium ? 1000 : (isPro ? 500 : 300);
 
@@ -49,26 +52,38 @@ export async function backgroundStoryAction(formData: {
             startDate.setDate(startDate.getDate() - 30);
         }
 
-        const [{ count: usedStories }, { count: usedAudioStories }] = await Promise.all([
-            supabase
-                .from('stories')
-                .select('*', { count: 'exact', head: true })
-                .in('profile_id', profileIds)
-                .gte('created_at', startDate.toISOString()),
-            supabase
-                .from('stories')
-                .select('*', { count: 'exact', head: true })
-                .in('profile_id', profileIds)
-                .not('audio_url', 'is', null)
-                .gte('created_at', startDate.toISOString())
+        const [
+            { count: totalUsed },
+            { count: usedShuffle },
+            { count: usedManual },
+            { count: usedAudioStories }
+        ] = await Promise.all([
+            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).gte('created_at', startDate.toISOString()),
+            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
+            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).gte('created_at', startDate.toISOString()),
+            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
         ]);
 
-        // 🚨 KOTA ENGELLEME (GÜVENLİK DUVARI) - AYLIK ÜRETİM LİMİTİ
-        if ((usedStories || 0) >= storyLimit) {
-            const message = isExpired 
-                ? "Abonelik süreniz dolmuştur. Masal üretimine devam etmek için lütfen üyeliğinizi yenileyin."
-                : `Aylık hikaye limitinize ulaştınız (${storyLimit}/${storyLimit}). Yeni haklarınız dönem sonunda yenilenecektir.`;
-            throw new Error(message);
+        const usedStories = totalUsed || 0;
+        const shuffleUsed = usedShuffle || 0;
+        const manualUsed = usedManual || 0;
+
+        // 🚨 KOTA ENGELLEME (GÜVENLİK DUVARI)
+        if (usedStories >= totalLimit) {
+            throw new Error(`Aylık toplam hikaye limitinize ulaştınız (${totalLimit}/${totalLimit}).`);
+        }
+
+        if (formData.isShuffle) {
+            if (shuffleUsed >= shuffleLimit) {
+                throw new Error(`Aylık sihirli taslak (karıştır) limitinize ulaştınız (${shuffleLimit}/${shuffleLimit}).`);
+            }
+        } else {
+            if (!isPro && !isPremium) {
+                throw new Error("Pamuk Bulut paketi ile sadece sihirli taslakları (karıştır) kullanabilirsiniz. Kendi hikayenizi yazmak için lütfen abone olun.");
+            }
+            if (manualUsed >= manualLimit) {
+                throw new Error(`Aylık özgün hikaye (kendi yazdığınız) limitinize ulaştınız (${manualLimit}/${manualLimit}).`);
+            }
         }
 
         // 🚨 SESLİ MASAL KOTASI KONTROLÜ
