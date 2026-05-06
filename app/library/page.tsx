@@ -97,13 +97,6 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
                         <Volume2 size={20} />
                       </div>
                     )}
-
-                    {/* Genre Badge */}
-                    {meta.genre && (
-                      <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md text-white text-xs font-black px-3 py-1.5 rounded-xl border border-white/20">
-                        {meta.genre.toUpperCase()}
-                      </div>
-                    )}
                   </div>
 
                   {/* Content Area */}
@@ -113,6 +106,30 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
                         {story.title}
                       </h3>
                       <Sparkles className="text-amber-400 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" size={20} />
+                    </div>
+
+                    {/* 🏷️ Metadata Etiketleri (Premium Görünüm) */}
+                    <div className="flex flex-wrap gap-2">
+                      {meta.genre && (
+                        <span className="bg-sky-100/50 text-sky-800 text-[10px] px-2.5 py-1.5 rounded-xl font-bold border border-sky-200/50 flex items-center gap-1">
+                          📖 {meta.genre}
+                        </span>
+                      )}
+                      {meta.style && (
+                        <span className="bg-amber-50 text-amber-700 text-[10px] px-2.5 py-1.5 rounded-xl font-bold border border-amber-100 flex items-center gap-1">
+                          🎨 {meta.style}
+                        </span>
+                      )}
+                      {meta.voice_name && (
+                        <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2.5 py-1.5 rounded-xl font-bold border border-emerald-100 flex items-center gap-1">
+                          🎙️ {meta.voice_name}
+                        </span>
+                      )}
+                      {meta.age_group && (
+                        <span className="bg-purple-50 text-purple-700 text-[10px] px-2.5 py-1.5 rounded-xl font-bold border border-purple-100 flex items-center gap-1">
+                          👶 {meta.age_group} Yaş
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-gray-500 text-sm line-clamp-2 leading-relaxed">
