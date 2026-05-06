@@ -244,7 +244,6 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                                    (Array.isArray(story.content_json) ? [] : []) // Basit bir fallback
 
                   return (
-                  return (
                     <Link 
                       href={`/story/${story.id}`} 
                       key={story.id}
