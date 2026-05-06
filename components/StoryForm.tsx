@@ -427,8 +427,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               setIsShuffle(false);
             }}
             placeholder={!isPro && !isPremium ? "Kendi masalınızı yazmak için abone olun. Şimdilik zar simgesine basıp sürpriz hikaye üretebilirsiniz." : (tab === 'normal' ? "Bana şu konu hakkında bir hikaye yaz..." : "Çocuğunuza ne öğretmek istersiniz? Örn: Ayşe'nin dişlerini fırçalamayı öğrenmesi...")}
-            readOnly={!isPro && !isPremium}
-            className={`w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800 ${!isPro && !isPremium ? 'bg-gray-50 cursor-not-allowed opacity-80' : ''}`}
+            readOnly={(!isPro && !isPremium) || isShuffle}
+            className={`w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800 ${((!isPro && !isPremium) || isShuffle) ? 'bg-gray-50 cursor-not-allowed opacity-80' : ''}`}
             required
           />
           <div className="absolute top-2 right-2 text-xs font-bold text-gray-400">
@@ -452,11 +452,24 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             <button 
               type="button" 
               onClick={handleRandomize}
-              className="p-2 text-sky-700/60 hover:bg-sky-50 rounded-lg transition-all hover:scale-110 active:scale-95 group"
+              className={`p-2 rounded-lg transition-all hover:scale-110 active:scale-95 group ${isShuffle ? 'bg-sky-100 text-sky-700 shadow-sm' : 'text-sky-700/60 hover:bg-sky-50'}`}
               title="Sürpriz Seçim Yap"
             >
-              <Shuffle size={20} className="group-hover:rotate-180 transition-transform duration-500" />
+              <Shuffle size={20} className={`${isShuffle ? 'animate-pulse' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
             </button>
+            {isShuffle && (
+              <button 
+                type="button" 
+                onClick={() => {
+                  setIsShuffle(false)
+                  setPrompt('')
+                  setCharacters(['Sevimli Ayı'])
+                }} 
+                className="text-xs font-bold text-sky-500 hover:text-sky-700 bg-sky-50 px-3 py-1.5 rounded-full border border-sky-100 shadow-sm flex items-center gap-1 transition-all"
+              >
+                <X size={14} /> Düzenle
+              </button>
+            )}
             {uploadedRefFile && (
               <button type="button" onClick={() => setUploadedRefFile(null)} className="p-1 text-red-400 hover:text-red-600 transition">
                 <X size={16} />
@@ -470,10 +483,10 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
           
           {/* SES (AUDIO) */}
           <div className="py-2">
-            <div onClick={() => toggleSection('voice')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+            <div onClick={() => !isShuffle && toggleSection('voice')} className={`flex items-center justify-between py-3 transition px-2 rounded-lg ${isShuffle ? 'cursor-not-allowed opacity-75' : 'hover:bg-gray-50/50 cursor-pointer'}`}>
               <span className="font-bold text-gray-800 text-lg">Ses</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#84B1D9] text-white px-3 py-1 rounded-full text-sm font-bold">{voiceName}</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-bold ${isShuffle ? 'bg-gray-200 text-gray-500' : 'bg-[#84B1D9] text-white'}`}>{voiceName}</span>
                 {openSection === 'voice' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
@@ -612,10 +625,10 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
           {/* TÜR (GENRE) */}
           <div className="py-2">
-            <div onClick={() => toggleSection('genre')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+            <div onClick={() => !isShuffle && toggleSection('genre')} className={`flex items-center justify-between py-3 transition px-2 rounded-lg ${isShuffle ? 'cursor-not-allowed opacity-75' : 'hover:bg-gray-50/50 cursor-pointer'}`}>
               <span className="font-bold text-gray-800 text-lg">Tür</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#84B1D9] text-white px-3 py-1 rounded-full text-sm font-bold">{genre}</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-bold ${isShuffle ? 'bg-gray-200 text-gray-500' : 'bg-[#84B1D9] text-white'}`}>{genre}</span>
                 {openSection === 'genre' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
@@ -632,10 +645,10 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
           {/* GÖRÜNTÜ STİLİ */}
           <div className="py-2">
-            <div onClick={() => toggleSection('style')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+            <div onClick={() => !isShuffle && toggleSection('style')} className={`flex items-center justify-between py-3 transition px-2 rounded-lg ${isShuffle ? 'cursor-not-allowed opacity-75' : 'hover:bg-gray-50/50 cursor-pointer'}`}>
               <span className="font-bold text-gray-800 text-lg">Görüntü Stili</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#84B1D9] text-white px-3 py-1 rounded-full text-sm font-bold">{imageStyle}</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-bold ${isShuffle ? 'bg-gray-200 text-gray-500' : 'bg-[#84B1D9] text-white'}`}>{imageStyle}</span>
                 {openSection === 'style' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
@@ -652,10 +665,10 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
           {/* YAŞ GRUBU */}
           <div className="py-2">
-            <div onClick={() => toggleSection('age')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+            <div onClick={() => !isShuffle && toggleSection('age')} className={`flex items-center justify-between py-3 transition px-2 rounded-lg ${isShuffle ? 'cursor-not-allowed opacity-75' : 'hover:bg-gray-50/50 cursor-pointer'}`}>
               <span className="font-bold text-gray-800 text-lg">Yaş Grubu</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#84B1D9] text-white px-3 py-1 rounded-full text-sm font-bold">{ageGroup} Yaş</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-bold ${isShuffle ? 'bg-gray-200 text-gray-500' : 'bg-[#84B1D9] text-white'}`}>{ageGroup} Yaş</span>
                 {openSection === 'age' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
@@ -686,10 +699,10 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
           {/* KARAKTERLER */}
           <div className="py-2">
-            <div onClick={() => toggleSection('characters')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
+            <div onClick={() => !isShuffle && toggleSection('characters')} className={`flex items-center justify-between py-3 transition px-2 rounded-lg ${isShuffle ? 'cursor-not-allowed opacity-75' : 'hover:bg-gray-50/50 cursor-pointer'}`}>
               <span className="font-bold text-gray-800 text-lg">Karakterler</span>
               <div className="flex items-center gap-2">
-                <span className="bg-[#84B1D9] text-white px-3 py-1 rounded-full text-sm font-bold">{characters.length} Karakter</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-bold ${isShuffle ? 'bg-gray-200 text-gray-500' : 'bg-[#84B1D9] text-white'}`}>{characters.length} Karakter</span>
                 {openSection === 'characters' ? <ChevronUp className="text-[#8FBDD9]" /> : <ChevronDown className="text-gray-400" />}
               </div>
             </div>
