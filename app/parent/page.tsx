@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
+ 
+const GENRES = ['Tümü', 'Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl']
 
 async function getQuotaStats(supabase: any, profileIds: string[], sub: any, isPro: boolean, isPremium: boolean) {
   let usedStories = 0
@@ -49,6 +51,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   const params = await searchParams
   const success = params?.success
   const plan = params?.plan as string
+  const activeGenre = (params?.genre as string) || 'Tümü'
 
   // WEBHOOK BYPASS: If returning from Stripe Checkout successfully
   if (success === 'true' && typeof plan === 'string') {
@@ -98,13 +101,17 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
     totalStories = count || 0
 
     // Son Masallar (Görsel Liste için)
-    const { data: stories } = await supabase
+    let query = supabase
       .from('stories')
       .select('id, title, created_at, content_json, metadata, profiles(name)')
       .in('profile_id', profileIds)
       .order('created_at', { ascending: false })
-      .limit(10)
-    
+
+    if (activeGenre !== 'Tümü') {
+      query = query.filter('metadata->>genre', 'eq', activeGenre)
+    }
+
+    const { data: stories } = await query.limit(20)
     recentStories = stories || []
   }
 
@@ -187,8 +194,25 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
 
           {/* Right Column - Library */}
           <div className="lg:col-span-2 bg-white rounded-[2rem] shadow-sm border border-sky-900/10 p-8">
-            <div className="flex justify-between items-center mb-6">
+            <div className="mb-6 space-y-6">
               <h2 className="text-2xl font-lora font-bold text-[#2d2d2d]">Eski Masallar Kütüphanesi</h2>
+              
+              {/* Filter Bar */}
+              <div className="flex flex-wrap gap-2 pb-2">
+                {GENRES.map((genre) => (
+                  <Link
+                    key={genre}
+                    href={`/parent${genre === 'Tümü' ? '' : `?genre=${encodeURIComponent(genre)}`}`}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                      activeGenre === genre
+                        ? 'bg-[#84B1D9] text-white border-[#84B1D9] shadow-md'
+                        : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
+                    }`}
+                  >
+                    {genre}
+                  </Link>
+                ))}
+              </div>
             </div>
 
             {recentStories.length === 0 ? (
@@ -228,22 +252,22 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                       {/* 🏷️ Metadata Etiketleri */}
                       <div className="flex flex-wrap gap-2 mb-4">
                         {meta.genre && (
-                          <span className="bg-sky-100/50 text-sky-800 text-[10px] px-2 py-1 rounded-lg font-bold border border-sky-200/50">
+                          <span className="bg-sky-100/50 text-sky-800 text-[10px] px-2.5 py-1.5 rounded-xl font-bold border border-sky-200/50 flex items-center gap-1">
                             📖 {meta.genre}
                           </span>
                         )}
                         {meta.style && (
-                          <span className="bg-blue-50 text-blue-700 text-[10px] px-2 py-1 rounded-lg font-bold border border-blue-100">
+                          <span className="bg-amber-50 text-amber-700 text-[10px] px-2.5 py-1.5 rounded-xl font-bold border border-amber-100 flex items-center gap-1">
                             🎨 {meta.style}
                           </span>
                         )}
                         {meta.voice_name && (
-                          <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-1 rounded-lg font-bold border border-emerald-100">
+                          <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2.5 py-1.5 rounded-xl font-bold border border-emerald-100 flex items-center gap-1">
                             🎙️ {meta.voice_name}
                           </span>
                         )}
                         {meta.age_group && (
-                          <span className="bg-purple-50 text-purple-700 text-[10px] px-2 py-1 rounded-lg font-bold border border-purple-100">
+                          <span className="bg-purple-50 text-purple-700 text-[10px] px-2.5 py-1.5 rounded-xl font-bold border border-purple-100 flex items-center gap-1">
                             👶 {meta.age_group} Yaş
                           </span>
                         )}
