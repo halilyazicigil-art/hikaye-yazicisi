@@ -40,24 +40,24 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
       <main className="max-w-7xl mx-auto px-6 py-12">
         {/* Header Section */}
         <div className="text-center mb-16 space-y-4">
-          <h1 className="text-5xl font-lora font-bold text-white drop-shadow-md">
+          <h1 className="text-6xl font-lora font-black text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.2)]">
             Sihirli Kitaplık
           </h1>
-          <p className="text-sky-100 text-xl max-w-2xl mx-auto">
+          <p className="text-white text-xl max-w-2xl mx-auto font-bold drop-shadow-md opacity-90">
             Hayal gücünüzle yarattığınız benzersiz maceraların toplandığı özel koleksiyonunuz.
           </p>
         </div>
 
         {/* Filter Bar */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
+        <div className="flex flex-wrap justify-center gap-3 mb-16">
           {GENRES.map((genre) => (
             <Link
               key={genre}
               href={`/library${genre === 'Tümü' ? '' : `?genre=${encodeURIComponent(genre)}`}`}
-              className={`px-6 py-2.5 rounded-full font-bold transition-all shadow-sm ${
+              className={`px-8 py-3 rounded-full font-black transition-all border duration-300 shadow-xl ${
                 activeGenre === genre
-                  ? 'bg-white text-[#84B1D9] scale-105 shadow-md'
-                  : 'bg-[#84B1D9]/40 text-white hover:bg-white/20 backdrop-blur-sm'
+                  ? 'bg-white text-[#84B1D9] border-white scale-110 shadow-white/20'
+                  : 'bg-white/20 backdrop-blur-md text-white border-white/40 hover:bg-white/30 hover:border-white/60'
               }`}
             >
               {genre}
