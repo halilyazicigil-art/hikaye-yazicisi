@@ -32,7 +32,11 @@ export async function backgroundStoryAction(formData: {
         
         const isPremium = !isExpired && sub?.plan_id === 'premium';
         const isPro = !isExpired && sub?.plan_id === 'pro';
-        const storyLimit = isPremium ? 90 : (isPro ? 40 : 3);
+        
+        // 🚨 YENİ PAKET KURALLARI
+        const storyLimit = isPremium ? 80 : (isPro ? 40 : 3);
+        const audioLimit = isPremium ? 40 : (isPro ? 20 : 0);
+        const wordLimit = isPremium ? 1000 : (isPro ? 500 : 300);
 
         // 2. Mevcut Fatura Dönemindeki Kullanımı Hesapla (Sert Sıfırlama Mantığı)
         let startDate = new Date();
@@ -44,11 +48,19 @@ export async function backgroundStoryAction(formData: {
             startDate.setDate(startDate.getDate() - 30);
         }
 
-        const { count: usedStories } = await supabase
-            .from('stories')
-            .select('*', { count: 'exact', head: true })
-            .in('profile_id', profileIds)
-            .gte('created_at', startDate.toISOString());
+        const [{ count: usedStories }, { count: usedAudioStories }] = await Promise.all([
+            supabase
+                .from('stories')
+                .select('*', { count: 'exact', head: true })
+                .in('profile_id', profileIds)
+                .gte('created_at', startDate.toISOString()),
+            supabase
+                .from('stories')
+                .select('*', { count: 'exact', head: true })
+                .in('profile_id', profileIds)
+                .not('audio_url', 'is', null)
+                .gte('created_at', startDate.toISOString())
+        ]);
 
         // 🚨 KOTA ENGELLEME (GÜVENLİK DUVARI) - AYLIK ÜRETİM LİMİTİ
         if ((usedStories || 0) >= storyLimit) {
@@ -56,6 +68,11 @@ export async function backgroundStoryAction(formData: {
                 ? "Abonelik süreniz dolmuştur. Masal üretimine devam etmek için lütfen üyeliğinizi yenileyin."
                 : `Aylık hikaye limitinize ulaştınız (${storyLimit}/${storyLimit}). Yeni haklarınız dönem sonunda yenilenecektir.`;
             throw new Error(message);
+        }
+
+        // 🚨 SESLİ MASAL KOTASI KONTROLÜ
+        if (formData.voiceOption !== 'Sessiz' && (usedAudioStories || 0) >= audioLimit) {
+            throw new Error(`Aylık sesli masal limitinize ulaştınız (${audioLimit}/${audioLimit}). Bu masalı 'Sessiz' modda üretebilir veya paketinizi yükseltebilirsiniz.`);
         }
 
         // 🧹 ARŞİV TEMİZLEME (YENİ KURAL)
@@ -135,7 +152,7 @@ export async function backgroundStoryAction(formData: {
             user_id: user.id,
             status: 'pending',
             progress: 0,
-            payload: formData
+            payload: { ...formData, wordLimit }
         }).select().single();
 
         if (jobErr) throw jobErr;

@@ -143,6 +143,7 @@ export async function POST(req: NextRequest) {
             voiceOption: string;
             profile_id?: string;
             uploaded_master_ref?: string;
+            wordLimit?: number;
         };
 
         // 2. ADIM: METİN YAZIMI (%10)
@@ -154,6 +155,7 @@ export async function POST(req: NextRequest) {
         CRITICAL: Return ONLY valid JSON. The JSON keys MUST be exactly: 'title', 'characters', 'scenes'. DO NOT translate the keys into Turkish.
         ZORUNLU ALANLAR: title (string), characters (obj: {name: description}), scenes (array: [{text, visualHook}]). 
         SAHNE SAYISI: 12.
+        HİKAYE UZUNLUĞU: Hikaye toplamda yaklaşık ${payload.wordLimit || 500} kelime olmalıdır. Her sahne (scene) metni bu uzunluğu dengeleyecek şekilde detaylı yazılmalıdır.
         
         CRITICAL RULE FOR VISUAL ENGINE (IP & SAFETY):
         Eğer kullanıcı Disney, Marvel, Pixar vb. bilinen telifli karakterler (Örn: Alaaddin, Elsa, Örümcek Adam) veya ünlü kişiler talep ederse, hikaye metninde (text) bu isimleri kullanabilirsin. 
