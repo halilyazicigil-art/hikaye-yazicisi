@@ -30,19 +30,14 @@ const Navbar = ({ user }: { user?: any }) => {
       
       <div className="hidden md:flex items-center gap-2 bg-[#84B1D9]/90 backdrop-blur-2xl px-4 py-2 rounded-full border border-white/30 shadow-xl">
         {navLinks.map((link) => {
-          const isHowItWorks = link.name === 'Nasıl Çalışır'
           const isActive = pathname === link.href
 
           return (
             <Link 
               key={link.name}
               href={link.href} 
-              className={`px-5 py-2 rounded-full transition-all text-sm font-black tracking-wide border duration-300 ${
-                isHowItWorks
-                  ? 'bg-white text-[#84B1D9] border-white shadow-md hover:scale-105 hover:bg-sky-50'
-                  : isActive
-                    ? 'bg-white text-[#84B1D9] border-white shadow-lg scale-105' 
-                    : 'text-white border-white/20 hover:bg-white/20 hover:border-white/40 hover:scale-105'
+              className={`px-5 py-2 rounded-full transition-all text-sm font-black tracking-wide border duration-300 bg-white text-[#84B1D9] border-white shadow-md hover:scale-105 hover:bg-sky-50 ${
+                isActive ? 'shadow-lg scale-105 ring-2 ring-white/50' : ''
               }`}
             >
               {link.name}
