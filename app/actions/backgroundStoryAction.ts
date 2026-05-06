@@ -34,10 +34,10 @@ export async function backgroundStoryAction(formData: {
         const isPremium = !isExpired && sub?.plan_id === 'premium';
         const isPro = !isExpired && sub?.plan_id === 'pro';
         
-        // 🚨 YENİ PAKET KURALLARI (TASLAK VS ÖZGÜN)
+        // 🚨 KESİN PAKET KURALLARI (TASLAK VS ÖZGÜN)
         const totalLimit = isPremium ? 80 : (isPro ? 40 : 3);
-        const shuffleLimit = isPremium ? 70 : (isPro ? 30 : 3);
-        const manualLimit = isPremium ? 10 : (isPro ? 10 : 0);
+        const shuffleLimit = isPremium ? 25 : (isPro ? 10 : 3);
+        const manualLimit = isPremium ? 55 : (isPro ? 30 : 0);
         
         const audioLimit = isPremium ? 40 : (isPro ? 20 : 0);
         const wordLimit = isPremium ? 1000 : (isPro ? 500 : 300);

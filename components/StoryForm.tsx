@@ -42,7 +42,6 @@ const STORY_SCENARIOS = [
   { characters: ['Mavi Ejderha Alev', 'Küçük Viking'], prompt: 'Alev, ateş püskürtemediği için üzüldüğünde, Küçük Viking ona acı biberlerin ve dostluğun sırrını anlatarak yardım eder.', voice: 'Achird', voiceName: 'Bilge Dede', genre: 'Masal', style: 'Vintage Retro', age: '4-6' },
 
   // --- YENİ 40 SENARYO ---
-  // BİLİM KURGU (10 Yeni)
   { characters: ['Uzaylı Zıpzıp', 'Astronot Kerem'], prompt: 'Zıpzıp, Ay üzerinde kaybolan sihirli antenini bulmak için Kerem ile kraterlerin arasında saklambaç oynar.', voice: 'Algenib', voiceName: 'Gezgin Tavşan', genre: 'Bilim Kurgu', style: '3D Pixar Stili', age: '4-6' },
   { characters: ['Uçan Araba Vınvın', 'Tamirci Ece'], prompt: 'Vınvın\'ın motoru gökkuşağı yakıtı bittiği için durur, Ece ona en tatlı meyve sularından yeni bir yakıt icat eder.', voice: 'Fenrir', voiceName: 'Sihirli Peri', genre: 'Bilim Kurgu', style: 'Pop Art', age: '6-10' },
   { characters: ['Zaman Yolcusu Arda', 'Dinozor Dino'], prompt: 'Arda, yanlışlıkla milyonlarca yıl geriye gidip Dino ile meyve toplama yarışı yapar.', voice: 'Charon', voiceName: 'Heyecanlı Baba', genre: 'Bilim Kurgu', style: 'Yağlı Boya', age: '6-10' },
@@ -116,53 +115,51 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
 
   const supabase = createClient()
   const [jobId, setJobId] = useState<string | null>(null)
-  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
+  const [jobStatus, setJobStatus] = useState<any>(null)
   const [remainingStories, setRemainingStories] = useState<number | null>(null)
   const [quotaStats, setQuotaStats] = useState<any>(null)
   const fakeProgressIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  
-  interface JobStatus {
-    status: string;
-    progress: number;
-    master_ref_data?: string;
-    story_id?: string;
-    error_message?: string;
-    id: string;
-    _isFaking?: boolean;
-  }
 
   useEffect(() => {
     const fetchQuota = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // 1. Abonelik ve Profil Bilgilerini Çek
       const [{ data: sub }, { data: profiles }] = await Promise.all([
         supabase.from('subscriptions').select('plan_id, current_period_end').eq('user_id', user.id).maybeSingle(),
         supabase.from('profiles').select('id').eq('user_id', user.id)
       ])
 
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() - 30)
       const profileIds = profiles?.map(p => p.id) || []
-      const now = new Date()
-      const isExpired = sub?.current_period_end ? new Date(sub.current_period_end) < now : true
+      
+      const [
+        { count: totalUsed },
+        { count: usedShuffle },
+        { count: usedManual }
+      ] = await Promise.all([
+        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).gte('created_at', startDate.toISOString()),
+        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
+        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).gte('created_at', startDate.toISOString())
+      ])
 
-      const isPremiumUser = !isExpired && sub?.plan_id === 'premium'
-      const isProUser = !isExpired && sub?.plan_id === 'pro'
-      const storyLimit = isPremiumUser ? 80 : (isProUser ? 40 : 3)
+      const isPremiumUser = sub?.plan_id === 'premium'
+      const isProUser = sub?.plan_id === 'pro'
+      
+      const shuffleLimit = isPremiumUser ? 25 : (isProUser ? 10 : 3)
+      const manualLimit = isPremiumUser ? 55 : (isProUser ? 30 : 0)
+      const totalLimit = isPremiumUser ? 80 : (isProUser ? 40 : 3)
 
-      // 2. Mevcut Dönem Başlangıcını Bul (Sert Sıfırlama)
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-
-      // 3. Kullanılan Kotayı Say
-      const { count } = await supabase
-        .from('stories')
-        .select('*', { count: 'exact', head: true })
-        .in('profile_id', profileIds)
-        .gte('created_at', startOfMonth)
-
-      const usedCount = count || 0
-      setRemainingStories(Math.max(0, storyLimit - usedCount))
-      setQuotaStats({ usedCount, storyLimit, isExpired })
+      setQuotaStats({
+        shuffleUsed: usedShuffle || 0,
+        shuffleLimit,
+        manualUsed: usedManual || 0,
+        manualLimit,
+        totalUsed: totalUsed || 0,
+        totalLimit
+      })
+      setRemainingStories(totalLimit - (totalUsed || 0))
     }
 
     fetchQuota()
@@ -185,9 +182,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         table: 'generation_jobs',
         filter: `id=eq.${jobId}` 
       }, async (payload) => {
-        const newStatus = payload.new as JobStatus;
+        const newStatus = payload.new as any;
         
-        // Eğer faking (sahte ilerleme) modundaysak, veritabanından gelen 0% bilgisinin yerel ilerlemeyi ezmesine izin verme
         setJobStatus(prev => {
           if (prev?._isFaking && newStatus.status === 'cached_processing') {
             return { ...newStatus, progress: prev.progress, _isFaking: true };
@@ -196,10 +192,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         });
 
         if (newStatus.status === 'completed' && newStatus.story_id) {
-          // Başarılı üretim sonrası sayacı düşür (iyimser güncelleme)
           setRemainingStories(prev => (prev !== null ? prev - 1 : 0))
           
-          // 🛡️ METADATA KAYDI (BORU HATTI DIŞI)
           await saveStoryMetadata(newStatus.story_id, {
             voice_name: voiceName,
             genre: genre,
@@ -216,13 +210,9 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
     return () => { supabase.removeChannel(channel) }
   }, [jobId, voiceName, genre, imageStyle, ageGroup, tab, educationalValue, characters])
 
-  // Freemium Caching (Fake Progress Delay) - useRef tabanlı stabil versiyon
   useEffect(() => {
     if (jobStatus?.status === 'cached_processing' && jobStatus.story_id && !jobStatus._isFaking) {
-      // 1. Sahte süreci başlat
       setJobStatus(prev => prev ? { ...prev, _isFaking: true, progress: 1 } : null);
-      
-      // 2. Mevcut bir interval varsa temizle (garantiye al)
       if (fakeProgressIntervalRef.current) clearInterval(fakeProgressIntervalRef.current);
       
       let currentProgress = 1;
@@ -230,7 +220,6 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         currentProgress += 1;
         
         if (currentProgress >= 100) {
-          // Sayaç bitti!
           if (fakeProgressIntervalRef.current) clearInterval(fakeProgressIntervalRef.current);
           fakeProgressIntervalRef.current = null;
           
@@ -250,13 +239,10 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             });
           }
         } else {
-          // İlerlemeyi güncelle
           setJobStatus(prev => prev ? { ...prev, progress: currentProgress, _isFaking: true } : null);
         }
-      }, 1800); // 3 dakika = 180 saniye -> 180/100 = 1.8 saniye
+      }, 1800);
     }
-    
-    // Cleanup: Bileşen unmount olduğunda veya jobId sıfırlandığında temizle
     return () => {
       if (!jobId && fakeProgressIntervalRef.current) {
         clearInterval(fakeProgressIntervalRef.current);
@@ -291,7 +277,6 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Giriş yapmalısınız")
 
-      // API Action çağrısı (ileride oluşturulacak)
       const res = await fetch('/api/voices/clone', {
         method: 'POST',
         body: formData
@@ -325,10 +310,9 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   }
 
   const handleRandomize = () => {
+    if (quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit) return;
     const randomScenario = STORY_SCENARIOS[Math.floor(Math.random() * STORY_SCENARIOS.length)]
 
-    // Tüm paketler (Pamuk, Gümüş, Altın) için hazır senaryolar özel sabit ayarlarla gelir
-    // Bu sayede Caching mantığı herkes için çalışır ve hazır taslaklar kullanılabilir
     setVoice(randomScenario.voice || 'Aoede')
     setVoiceName(randomScenario.voiceName || 'Bilge Anne')
     setGenre(randomScenario.genre || 'Masal')
@@ -381,7 +365,6 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       
       if (response.success && response.jobId) {
         setJobId(response.jobId)
-        // İlk durumu al
         const { data } = await supabase.from('generation_jobs').select('*').eq('id', response.jobId).single()
         setJobStatus(data)
       } else {
@@ -393,7 +376,6 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       alert(errorMessage)
       setIsGenerating(false)
     }
-    // NOT: setIsGenerating(false) işlemini başarılı durumda yapmıyoruz çünkü modalın görünmesini ve sürecin devam etmesini istiyoruz.
   }
 
   return (
@@ -426,9 +408,15 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               setPrompt(e.target.value.slice(0, maxChars));
               setIsShuffle(false);
             }}
-            placeholder={!isPro && !isPremium ? "Kendi masalınızı yazmak için abone olun. Şimdilik zar simgesine basıp sürpriz hikaye üretebilirsiniz." : (tab === 'normal' ? "Bana şu konu hakkında bir hikaye yaz..." : "Çocuğunuza ne öğretmek istersiniz? Örn: Ayşe'nin dişlerini fırçalamayı öğrenmesi...")}
-            readOnly={(!isPro && !isPremium) || isShuffle}
-            className={`w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800 ${((!isPro && !isPremium) || isShuffle) ? 'bg-gray-50 cursor-not-allowed opacity-80' : ''}`}
+            placeholder={
+              !isPro && !isPremium 
+                ? "Kendi masalınızı yazmak için abone olun. Şimdilik zar simgesine basıp sürpriz hikaye üretebilirsiniz." 
+                : (quotaStats?.manualUsed >= quotaStats?.manualLimit 
+                    ? "Özgün masal (kendi yazma) limitiniz doldu! Lütfen taslakları deneyin." 
+                    : (tab === 'normal' ? "Bana şu konu hakkında bir hikaye yaz..." : "Çocuğunuza ne öğretmek istersiniz? Örn: Ayşe'nin dişlerini fırçalamayı öğrenmesi..."))
+            }
+            readOnly={(!isPro && !isPremium) || isShuffle || (quotaStats?.manualUsed >= quotaStats?.manualLimit)}
+            className={`w-full h-32 resize-none text-xl p-4 focus:outline-none placeholder-gray-400 text-gray-800 ${((!isPro && !isPremium) || isShuffle || (quotaStats?.manualUsed >= quotaStats?.manualLimit)) ? 'bg-gray-50 cursor-not-allowed opacity-80' : ''}`}
             required
           />
           <div className="absolute top-2 right-2 text-xs font-bold text-gray-400">
@@ -453,22 +441,31 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
               <button 
                 type="button" 
                 onClick={handleRandomize}
+                disabled={quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit}
                 className={`p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 group relative ${
-                  isShuffle 
-                    ? 'bg-sky-100 text-sky-700 shadow-sm' 
-                    : 'bg-[#BDD9F2] text-sky-700 hover:bg-[#84B1D9] hover:text-white shadow-lg shadow-sky-200/50 animate-pulse'
+                  quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none pulse-none'
+                    : (isShuffle 
+                        ? 'bg-sky-100 text-sky-700 shadow-sm' 
+                        : 'bg-[#BDD9F2] text-sky-700 hover:bg-[#84B1D9] hover:text-white shadow-lg shadow-sky-200/50 animate-pulse')
                 }`}
-                title="Sürpriz Seçim Yap"
+                title={quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit ? "Taslak limitiniz doldu" : "Sürpriz Seçim Yap"}
               >
                 <Shuffle size={22} className={`${isShuffle ? '' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-                {!isShuffle && (
+                {!isShuffle && quotaStats?.shuffleUsed < quotaStats?.shuffleLimit && (
                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full border-2 border-white animate-ping"></span>
                 )}
               </button>
               
-              {!isShuffle && (
+              {!isShuffle && quotaStats?.shuffleUsed < quotaStats?.shuffleLimit && (
                 <span className="text-[11px] font-black text-sky-600 bg-sky-50 px-3 py-1.5 rounded-full border border-sky-100 shadow-sm animate-bounce">
                   Hadi taslakları dene! ✨
+                </span>
+              )}
+
+              {!isShuffle && quotaStats?.shuffleUsed >= quotaStats?.shuffleLimit && (
+                <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 shadow-sm">
+                  Taslak Limitiniz Doldu
                 </span>
               )}
             </div>
@@ -508,15 +505,12 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
             {openSection === 'voice' && (
               <div className="p-4 space-y-6 bg-gray-50/50 rounded-xl mt-2">
-                {/* Sessiz Seçeneği */}
                 <div 
                   onClick={() => handleVoiceSelect('Sessiz', 'Sessiz')}
                   className={`p-4 rounded-xl cursor-pointer border-2 transition text-center ${voice === 'Sessiz' ? 'border-[#84B1D9] bg-[#BDD9F2]' : 'border-transparent bg-white shadow-sm'}`}
                 >
                   <span className="font-bold">Sessiz (Sadece Metin)</span>
                 </div>
-
-                {/* AI Sesleri */}
                 <div>
                   <h4 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Sihirli Masalcılar (AI)</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -532,8 +526,6 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                     ))}
                   </div>
                 </div>
-
-                {/* Kendi Sesim */}
                 <div>
                   <h4 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Kendi Sesim</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -574,7 +566,6 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                 <button onClick={() => setShowVoiceModal(false)} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition">
                   <X size={24} className="text-gray-400" />
                 </button>
-
                 <div className="text-center mb-8">
                   <div className="w-20 h-20 bg-purple-100 text-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-4">
                     <Plus size={40} />
@@ -582,21 +573,12 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                   <h3 className="text-2xl font-bold text-gray-900">Kendi Sesini Ekle</h3>
                   <p className="text-gray-500 mt-2">Masalları senin sesinle okuyalım!</p>
                 </div>
-
-                <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-bold shadow-sm animate-pulse">
-              <span className="text-lg">⚠️</span>
-              {quotaStats?.isExpired 
-                ? "Abonelik süreniz dolmuştur. Devam etmek için lütfen üyeliğinizi yenileyin."
-                : `Aylık hikaye limitinize ulaştınız.`
-              }
-            </div>
                 <div className="bg-sky-50 border border-sky-200 rounded-2xl p-4 mb-6">
                   <p className="text-sm text-sky-800 font-bold flex items-start gap-2">
                     <span className="text-lg">⚠️</span>
                     Kural: En gerçekçi sonuç için en az 5 dakikalık, arkada gürültü olmayan net bir ses kaydı yüklemelisiniz.
                   </p>
                 </div>
-
                 <form onSubmit={handleVoiceUpload} className="space-y-6">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Sese Bir İsim Ver</label>
@@ -617,7 +599,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
           )}
 
-          {/* EĞİTİCİ (Sadece Eğitici tabındaysa) */}
+          {/* EĞİTİCİ */}
           {tab === 'egitici' && (
             <div className="py-2">
               <div onClick={() => toggleSection('educational')} className="flex items-center justify-between py-3 hover:bg-gray-50/50 cursor-pointer transition px-2 rounded-lg">
@@ -706,9 +688,6 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                     </button>
                   ))}
                 </div>
-                <p className="text-center text-[11px] text-gray-400 mt-4 font-medium uppercase tracking-widest">
-                  Masal içeriği seçilen yaşa göre özel olarak hazırlanacaktır
-                </p>
               </div>
             )}
           </div>
@@ -786,20 +765,21 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             )}
           </button>
           
-          {(remainingStories !== null && remainingStories <= 0) && (
-            <p className="mt-4 text-red-500 font-bold text-sm bg-red-50 px-4 py-2 rounded-full border border-red-100 animate-pulse">
-              ⚠️ {quotaStats?.isExpired 
-                ? "Abonelik süreniz dolmuştur. Devam etmek için lütfen üyeliğinizi yenileyin." 
-                : "Aylık hikaye limitinize ulaştınız."
-              }
-            </p>
-          )}
-          
-          {remainingStories !== null && remainingStories > 0 && remainingStories <= 5 && (
-            <p className="mt-4 text-orange-600 font-bold text-sm bg-orange-50 px-4 py-2 rounded-full border border-orange-100">
-              Dikkat! Sadece {remainingStories} masal hakkınız kaldı.
-            </p>
-          )}
+          <div className="mt-6 flex flex-col sm:flex-row items-center gap-4 text-sm w-full justify-center">
+            <div className="flex items-center gap-2 bg-sky-50 px-3 py-1.5 rounded-full border border-sky-100 shadow-sm">
+              <Shuffle size={14} className="text-sky-600" />
+              <span className="text-sky-700 font-bold">Taslak:</span>
+              <span className="text-sky-900 font-black">{quotaStats ? Math.max(0, quotaStats.shuffleLimit - quotaStats.shuffleUsed) : 0} / {quotaStats?.shuffleLimit}</span>
+            </div>
+            <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100 shadow-sm">
+              <Plus size={14} className="text-indigo-600" />
+              <span className="text-indigo-700 font-bold">Özgün:</span>
+              <span className="text-indigo-900 font-black">{quotaStats ? Math.max(0, quotaStats.manualLimit - quotaStats.manualUsed) : 0} / {quotaStats?.manualLimit}</span>
+            </div>
+            {remainingStories !== null && (
+              <span className="text-gray-400 font-medium">Toplam Kalan: <strong className="text-gray-600 font-black">{remainingStories}</strong></span>
+            )}
+          </div>
         </div>
       </form>
 
@@ -828,7 +808,6 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {/* Progress Panel */}
               <div className="flex flex-col justify-center space-y-6">
                 <div>
                   <div className="flex justify-between mb-3">
@@ -848,43 +827,29 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
                     <span className="text-xl">{jobStatus.progress >= 10 ? '✅' : '⏳'}</span> Senaryo ve Metin Yazımı
                   </li>
                   <li className={`flex items-center gap-3 font-bold ${jobStatus.progress >= 20 ? 'text-emerald-600' : 'text-gray-400'}`}>
-                    <span className="text-xl">{jobStatus.progress >= 20 ? '✅' : '⏳'}</span> Karakterler Çiziliyor (Master Pafta)
+                    <span className="text-xl">{jobStatus.progress >= 20 ? '✅' : '⏳'}</span> Karakterler Çiziliyor
                   </li>
                   <li className={`flex items-center gap-3 font-bold ${jobStatus.progress >= 80 ? 'text-emerald-600' : 'text-gray-400'}`}>
-                    <span className="text-xl">{jobStatus.progress >= 80 ? '✅' : '⏳'}</span> 12 Sahne Resimleniyor
+                    <span className="text-xl">{jobStatus.progress >= 80 ? '✅' : '⏳'}</span> Sahne Resimleniyor
                   </li>
                   <li className={`flex items-center gap-3 font-bold ${jobStatus.progress >= 100 ? 'text-emerald-600' : 'text-gray-400'}`}>
-                    <span className="text-xl">{jobStatus.progress >= 100 ? '✅' : '⏳'}</span> Seslendirme ve Son Rötuşlar
+                    <span className="text-xl">{jobStatus.progress >= 100 ? '✅' : '⏳'}</span> Tamamlanıyor
                   </li>
                 </ul>
-
-                {jobStatus.status === 'completed' && (
-                  <div className="p-4 bg-emerald-50 text-emerald-700 rounded-2xl text-center font-bold text-lg border border-emerald-200">
-                    🎉 Masalınız Tamamlandı! Yönlendiriliyorsunuz...
-                  </div>
-                )}
-
-                {jobStatus.status === 'failed' && (
-                  <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm border border-red-200 font-bold">
-                    ❌ Eyvah, bir hata oluştu: {jobStatus.error_message}
-                  </div>
-                )}
               </div>
 
-              {/* Visual Reference Panel */}
               <div className="bg-[#BDD9F2] rounded-3xl p-6 border-2 border-dashed border-[#BDD9F2] flex flex-col items-center justify-center min-h-[300px]">
                 <h4 className="text-sm font-bold text-sky-700 uppercase tracking-widest mb-4">Karakter Referansınız</h4>
                 {jobStatus.master_ref_data ? (
                   <img 
                     src={jobStatus.master_ref_data.startsWith('http') ? jobStatus.master_ref_data : `data:image/png;base64,${jobStatus.master_ref_data}`} 
-                    className="w-full rounded-2xl shadow-xl border-4 border-white transform rotate-2 hover:rotate-0 transition-transform"
+                    className="w-full rounded-2xl shadow-xl border-4 border-white"
                     alt="Master Reference"
                   />
                 ) : (
                   <div className="flex flex-col items-center text-center text-sky-900/40">
                     <ImageIcon size={48} className="mb-4 opacity-50" />
-                    <p className="font-bold">Ana karakterler henüz oluşturulmadı...</p>
-                    <p className="text-sm mt-2">Yapay zeka şu an senaryoyu kurguluyor.</p>
+                    <p className="font-bold">Karakterler oluşturuluyor...</p>
                   </div>
                 )}
               </div>
