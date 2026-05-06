@@ -79,6 +79,9 @@ export async function backgroundStoryAction(formData: {
             if (shuffleUsed >= shuffleLimit) {
                 throw new Error(`Aylık sihirli taslak (karıştır) limitinize ulaştınız (${shuffleLimit}/${shuffleLimit}).`);
             }
+            if ((usedAudioStories || 0) >= audioLimit) {
+                throw new Error(`Aylık sesli masal limitinize ulaştınız (${audioLimit}/${audioLimit}). Taslaklar sesli üretildiği için şu an yeni taslak oluşturamazsınız.`);
+            }
         } else {
             if (!isPro && !isPremium) {
                 throw new Error("Pamuk Bulut paketi ile sadece sihirli taslakları (karıştır) kullanabilirsiniz. Kendi hikayenizi yazmak için lütfen abone olun.");
@@ -88,8 +91,8 @@ export async function backgroundStoryAction(formData: {
             }
         }
 
-        // 🚨 SESLİ MASAL KOTASI KONTROLÜ
-        if (formData.voiceOption !== 'Sessiz' && (usedAudioStories || 0) >= audioLimit) {
+        // 🚨 SESLİ MASAL KOTASI KONTROLÜ (MANUEL ÜRETİM İÇİN)
+        if (!formData.isShuffle && formData.voiceOption !== 'Sessiz' && (usedAudioStories || 0) >= audioLimit) {
             throw new Error(`Aylık sesli masal limitinize ulaştınız (${audioLimit}/${audioLimit}). Bu masalı 'Sessiz' modda üretebilir veya paketinizi yükseltebilirsiniz.`);
         }
 
