@@ -103,7 +103,7 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   // Son Masallar (Görsel Liste için)
   let storiesQuery = supabase
     .from('stories')
-    .select('id, title, created_at, content_json, metadata')
+    .select('id, title, created_at, content_json, metadata, image_url, audio_url')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
