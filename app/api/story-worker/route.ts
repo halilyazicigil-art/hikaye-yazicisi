@@ -239,30 +239,64 @@ CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, wat
             pagesWithImages.push({ text: scene.text, image_url: publicUrl });
         }
 
-        // 5. ADIM: SESLENDİRME (%90)
+        // 5. ADIM: SESLENDİRME (%90) - AKILLI PARÇALAMA (CHUNKING)
         await supabase.from('generation_jobs').update({ status: 'generating_audio', progress: 80 }).eq('id', jobId);
-        const fullText = pages.map((s: Scene) => s.text).join(" ");
         let audioUrl = null;
 
         if (payload.voiceOption !== 'Sessiz') {
             const voiceName = payload.elevenVoiceId || 'Aoede'; // AI_VOICES id'leri
             const ttsUrl = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-tts-preview:generateContent`;
-            const ttsResp = await fetch(ttsUrl, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: fullText }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } } } })
-            });
-            const ttsData = await ttsResp.json() as { candidates?: Candidate[], error?: any };
             
-            if (!ttsData.candidates || ttsData.candidates.length === 0) {
-                throw new Error("TTS Hatası: " + JSON.stringify(ttsData.error || ttsData));
+            const allAudioChunks: Buffer[] = [];
+            
+            // Her sahneyi ayrı ayrı seslendiriyoruz (Model yorulmasını ve ses kısılmasını önlemek için)
+            for (let i = 0; i < pages.length; i++) {
+                const sceneText = pages[i].text;
+                if (!sceneText) continue;
+
+                const ttsResp = await fetch(ttsUrl, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        contents: [{ role: 'user', parts: [{ text: sceneText }] }], 
+                        generationConfig: { 
+                            responseModalities: ["AUDIO"], 
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } } 
+                        } 
+                    })
+                });
+
+                const ttsData = await ttsResp.json() as { candidates?: Candidate[], error?: any };
+                
+                if (!ttsData.candidates || ttsData.candidates.length === 0) {
+                    console.error(`>>> [TTS UYARI] Sahne ${i+1} seslendirilemedi:`, ttsData.error);
+                    continue;
+                }
+                
+                const audioMedia = extractMediaData(ttsData.candidates);
+                if (audioMedia) {
+                    allAudioChunks.push(Buffer.from(audioMedia.data, 'base64'));
+                }
+                
+                // İlerleme güncellemesi (%80 - %90 arası)
+                const audioProgress = 80 + Math.floor(((i + 1) / (pages.length || 1)) * 10);
+                await updateJob(jobId, { progress: audioProgress });
             }
-            
-            const audioMedia = extractMediaData(ttsData.candidates);
-            if (!audioMedia) throw new Error("Ses üretilemedi, medya verisi eksik.");
-            
+
+            if (allAudioChunks.length === 0) {
+                throw new Error("Ses üretilemedi, tüm parçalar boş döndü.");
+            }
+
+            // Tüm parçaları uç uca, pürüzsüzce birleştiriyoruz
+            const combinedPcm = Buffer.concat(allAudioChunks);
             const audioFileName = `bg_audio_${jobId}.wav`;
-            await supabase.storage.from('story_assets').upload(`audio/${audioFileName}`, addWavHeader(Buffer.from(audioMedia.data, 'base64')), { contentType: 'audio/wav' });
+            
+            await supabase.storage.from('story_assets').upload(
+                `audio/${audioFileName}`, 
+                addWavHeader(combinedPcm), 
+                { contentType: 'audio/wav' }
+            );
+            
             const { data: { publicUrl } } = supabase.storage.from('story_assets').getPublicUrl(`audio/${audioFileName}`);
             audioUrl = publicUrl;
         }
