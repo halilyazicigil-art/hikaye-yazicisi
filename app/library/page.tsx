@@ -14,7 +14,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
 
   let query = supabase
     .from('stories')
-    .select('*, profiles(name)')
+    .select('*')
     .eq('is_shuffle', false)
     .order('created_at', { ascending: false })
 

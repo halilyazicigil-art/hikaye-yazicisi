@@ -19,13 +19,8 @@ export async function backgroundStoryAction(formData: {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Oturum açılmadı.");
 
-        // 1. Abonelik ve Profil Bilgilerini Çek (KOTA KONTROLÜ İÇİN)
-        const [{ data: sub }, { data: profiles }] = await Promise.all([
-            supabase.from('subscriptions').select('plan_id, current_period_end').eq('user_id', user.id).maybeSingle(),
-            supabase.from('profiles').select('id').eq('user_id', user.id)
-        ]);
-
-        const profileIds = profiles?.map(p => p.id) || [];
+        // 1. Abonelik Bilgilerini Çek (KOTA KONTROLÜ İÇİN)
+        const { data: sub } = await supabase.from('subscriptions').select('plan_id, current_period_end').eq('user_id', user.id).maybeSingle();
         
         // 🚨 ABONELİK SÜRE KONTROLÜ
         const now = new Date();
@@ -57,13 +52,11 @@ export async function backgroundStoryAction(formData: {
         const [
             { count: totalUsed },
             { count: usedShuffle },
-            { count: usedManual },
-            { count: usedAudioStories }
+            { count: usedManual }
         ] = await Promise.all([
-            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).gte('created_at', startDate.toISOString()),
-            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
-            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).gte('created_at', startDate.toISOString()),
-            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
+            supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', startDate.toISOString()),
+            supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
+            supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_shuffle', false).gte('created_at', startDate.toISOString())
         ]);
 
         const usedStories = totalUsed || 0;
@@ -79,8 +72,8 @@ export async function backgroundStoryAction(formData: {
             { count: usedShuffleAudio },
             { count: usedManualAudio }
         ] = await Promise.all([
-            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).not('audio_url', 'is', null).gte('created_at', startDate.toISOString()),
-            supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
+            supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_shuffle', true).not('audio_url', 'is', null).gte('created_at', startDate.toISOString()),
+            supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_shuffle', false).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
         ]);
 
         const sAudioUsed = usedShuffleAudio || 0;
@@ -114,30 +107,7 @@ export async function backgroundStoryAction(formData: {
             }
         }
 
-        // 🧹 ARŞİV TEMİZLEME (YENİ KURAL)
-        const archiveLimit = isPremium ? 100 : (isPro ? 50 : 3);
-        const { count: totalArchiveCount } = await supabase
-            .from('stories')
-            .select('*', { count: 'exact', head: true })
-            .in('profile_id', profileIds);
-
-        if ((totalArchiveCount || 0) >= archiveLimit) {
-            // En eski hikayeyi bul ve sil
-            const { data: oldestStory } = await supabase
-                .from('stories')
-                .select('id')
-                .in('profile_id', profileIds)
-                .order('created_at', { ascending: true })
-                .limit(1)
-                .single();
-
-            if (oldestStory) {
-                await supabase.from('stories').delete().eq('id', oldestStory.id);
-                console.log(`>>> [ARŞİV TEMİZLİĞİ]: Limit dolduğu için en eski hikaye (${oldestStory.id}) silindi.`);
-            }
-        }
-
-        // 🏆 CACHING MİMARİSİ (TÜM PAKETLER İÇİN MALİYET SIFIRLAMA)
+        // 🏆 CACHING MİMARİSİ
         const { data: existingJob } = await supabase
             .from('generation_jobs')
             .select('story_id')
@@ -155,17 +125,15 @@ export async function backgroundStoryAction(formData: {
                 .single();
 
             if (masterStory) {
-                const targetProfileId = profileIds.length > 0 ? profileIds[0] : null;
-                if (!targetProfileId) throw new Error("Hikaye oluşturmak için en az bir çocuk profiliniz olmalı.");
-
                 const { data: copiedStory, error: copyErr } = await supabase
                     .from('stories')
                     .insert({
-                        profile_id: targetProfileId,
+                        user_id: user.id,
                         title: masterStory.title,
                         content_json: masterStory.content_json,
                         image_url: masterStory.image_url,
-                        audio_url: masterStory.audio_url
+                        audio_url: masterStory.audio_url,
+                        is_shuffle: masterStory.is_shuffle
                     })
                     .select()
                     .single();
@@ -187,14 +155,11 @@ export async function backgroundStoryAction(formData: {
         }
 
         // 3. İş Kuyruğuna Ekle (Sadece Kota Varsa ve Cache'de Yoksa)
-        const targetProfileId = profileIds.length > 0 ? profileIds[0] : null;
-        if (!targetProfileId) throw new Error("Hikaye oluşturmak için en az bir çocuk profiliniz olmalı.");
-
         const { data: job, error: jobErr } = await supabase.from('generation_jobs').insert({
             user_id: user.id,
             status: 'pending',
             progress: 0,
-            payload: { ...formData, wordLimit, profile_id: targetProfileId }
+            payload: { ...formData, wordLimit, user_id: user.id }
         }).select().single();
 
         if (jobErr) throw jobErr;

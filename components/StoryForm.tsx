@@ -141,7 +141,8 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         startDate.setHours(0, 0, 0, 0)
       }
 
-      const profileIds = profiles?.map(p => p.id) || []
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
       
       const isPremiumUser = sub?.plan_id === 'premium'
       const isProUser = sub?.plan_id === 'pro'
@@ -158,11 +159,11 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         { count: usedShuffleAudio },
         { count: usedManualAudio }
       ] = await Promise.all([
-        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).gte('created_at', startDate.toISOString()),
-        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
-        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).gte('created_at', startDate.toISOString()),
-        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).not('audio_url', 'is', null).gte('created_at', startDate.toISOString()),
-        supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
+        supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', startDate.toISOString()),
+        supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
+        supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_shuffle', false).gte('created_at', startDate.toISOString()),
+        supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_shuffle', true).not('audio_url', 'is', null).gte('created_at', startDate.toISOString()),
+        supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_shuffle', false).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
       ])
 
       const mAudioLimit = audioLimit - shuffleLimit

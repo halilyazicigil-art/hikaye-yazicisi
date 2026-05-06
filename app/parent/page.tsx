@@ -6,8 +6,7 @@ import { redirect } from 'next/navigation'
  
 const GENRES = ['Tümü', 'Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl']
 
-async function getQuotaStats(supabase: any, profileIds: string[], sub: any, isPro: boolean, isPremium: boolean) {
-  if (profileIds.length > 0) {
+async function getQuotaStats(supabase: any, userId: string, sub: any, isPro: boolean, isPremium: boolean) {
     let startDate = new Date()
     if (sub?.current_period_end) {
       startDate = new Date(sub.current_period_end)
@@ -23,10 +22,10 @@ async function getQuotaStats(supabase: any, profileIds: string[], sub: any, isPr
       { count: usedShuffleAudio },
       { count: usedManualAudio }
     ] = await Promise.all([
-      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
-      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).gte('created_at', startDate.toISOString()),
-      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', true).not('audio_url', 'is', null).gte('created_at', startDate.toISOString()),
-      supabase.from('stories').select('*', { count: 'exact', head: true }).in('profile_id', profileIds).eq('is_shuffle', false).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
+      supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('is_shuffle', true).gte('created_at', startDate.toISOString()),
+      supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('is_shuffle', false).gte('created_at', startDate.toISOString()),
+      supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('is_shuffle', true).not('audio_url', 'is', null).gte('created_at', startDate.toISOString()),
+      supabase.from('stories').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('is_shuffle', false).not('audio_url', 'is', null).gte('created_at', startDate.toISOString())
     ])
 
     const shuffleLimit = isPremium ? 25 : (isPro ? 10 : 3)
@@ -42,8 +41,6 @@ async function getQuotaStats(supabase: any, profileIds: string[], sub: any, isPr
       mAudioUsed: usedManualAudio || 0,
       mAudioLimit: manualAudioLimit
     }
-  }
-  return { shuffleUsed: 0, shuffleLimit: 3, manualUsed: 0, manualLimit: 0, mAudioUsed: 0, mAudioLimit: 0 }
 }
 
 export default async function ParentDashboard({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -95,34 +92,29 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
   const { data: profiles } = await supabase.from('profiles').select('id, name').eq('user_id', user.id)
   const profileIds = profiles?.map(p => p.id) || []
 
-  let totalStories = 0
-  let recentStories: any[] = []
+  // Toplam Arşiv Sayısı (Kısıtlamasız)
+  const { count: totalStoriesCount } = await supabase
+    .from('stories')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+  
+  const totalStories = totalStoriesCount || 0
 
-  if (profileIds.length > 0) {
-    // Toplam Arşiv Sayısı (Kısıtlamasız)
-    const { count } = await supabase
-      .from('stories')
-      .select('*', { count: 'exact', head: true })
-      .in('profile_id', profileIds)
-    
-    totalStories = count || 0
+  // Son Masallar (Görsel Liste için)
+  let storiesQuery = supabase
+    .from('stories')
+    .select('id, title, created_at, content_json, metadata')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
 
-    // Son Masallar (Görsel Liste için)
-    let query = supabase
-      .from('stories')
-      .select('id, title, created_at, content_json, metadata, profiles(name)')
-      .in('profile_id', profileIds)
-      .order('created_at', { ascending: false })
-
-    if (activeGenre !== 'Tümü') {
-      query = query.filter('metadata->>genre', 'eq', activeGenre)
-    }
-
-    const { data: stories } = await query.limit(20)
-    recentStories = stories || []
+  if (activeGenre !== 'Tümü') {
+    storiesQuery = storiesQuery.filter('metadata->>genre', 'eq', activeGenre)
   }
 
-  const quota = await getQuotaStats(supabase, profileIds, sub, isPro, isPremium)
+  const { data: stories } = await storiesQuery.limit(20)
+  const recentStories = stories || []
+
+  const quota = await getQuotaStats(supabase, user.id, sub, isPro, isPremium)
 
   return (
     <div className="min-h-screen bg-[#BDD9F2] font-nunito p-4 sm:p-8">
