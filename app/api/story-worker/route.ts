@@ -275,7 +275,17 @@ CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, wat
                 
                 const audioMedia = extractMediaData(ttsData.candidates);
                 if (audioMedia) {
-                    allAudioChunks.push(Buffer.from(audioMedia.data, 'base64'));
+                    const pcmBuffer = Buffer.from(audioMedia.data, 'base64');
+                    allAudioChunks.push(pcmBuffer);
+                    
+                    // ⏱️ KESİN SÜRE HESABI (24kHz, 16-bit Mono için)
+                    // Formül: byte_length / (sampleRate * channels * (bitsPerSample/8))
+                    // 24000 * 1 * 2 = 48000 bytes per second
+                    const duration = pcmBuffer.length / 48000;
+                    
+                    if (pagesWithImages[i]) {
+                        pagesWithImages[i].duration = duration;
+                    }
                 }
                 
                 // İlerleme güncellemesi (%80 - %90 arası)

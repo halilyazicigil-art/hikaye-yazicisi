@@ -7,6 +7,7 @@ import { useAudioPlayer } from '@/context/AudioPlayerContext'
 interface StoryPageData {
   text: string
   image_url: string
+  duration?: number
 }
 
 interface StoryPlayerProps {
@@ -29,12 +30,25 @@ export default function StoryPlayer({ id, title, content, imageUrl, audioUrl, pa
 
   const isThisPlaying = currentTrack?.id === id && isPlaying
 
-  // Sayfa başlangıç zamanlarını metin uzunluğu oranına göre hesapla
-  const getPageTimestamps = useCallback((duration: number) => {
+  // Sayfa başlangıç zamanlarını hesapla (Varsa kesin süreleri, yoksa tahmini oranlamayı kullan)
+  const getPageTimestamps = useCallback((audioDuration: number) => {
+    // Eğer tüm sayfaların kesin süresi varsa (Yeni Sistem), bunları toplayarak ilerle
+    const hasPreciseDurations = bookPages.every(p => p.duration !== undefined);
+
+    if (hasPreciseDurations) {
+      let accumulated = 0;
+      return bookPages.map((p) => {
+        const start = accumulated;
+        accumulated += p.duration || 0;
+        return start;
+      });
+    }
+
+    // Fallback: Eski tahmini yöntem (Metin uzunluğu oranına göre)
     const totalChars = bookPages.reduce((sum, p) => sum + p.text.length, 0)
     let accumulated = 0
     return bookPages.map((p) => {
-      const start = (accumulated / totalChars) * duration
+      const start = (accumulated / totalChars) * audioDuration
       accumulated += p.text.length
       return start
     })
@@ -150,9 +164,13 @@ export default function StoryPlayer({ id, title, content, imageUrl, audioUrl, pa
             <div className="flex justify-between items-center gap-4 mb-6">
               <button
                 onClick={() => {
-                  setCurrentPage(Math.max(0, currentPage - 1))
+                  const newPage = Math.max(0, currentPage - 1);
+                  setCurrentPage(newPage);
+                  
+                  // Eğer ses çalıyorsa, sesin zamanını da o sayfanın başına çek
                   if (currentTrack?.id === id && audioRef.current) {
-                    audioRef.current.pause()
+                    const timestamps = getPageTimestamps(audioRef.current.duration);
+                    audioRef.current.currentTime = timestamps[newPage];
                   }
                 }}
                 disabled={currentPage === 0}
@@ -169,9 +187,13 @@ export default function StoryPlayer({ id, title, content, imageUrl, audioUrl, pa
 
               <button
                 onClick={() => {
-                  setCurrentPage(Math.min(bookPages.length - 1, currentPage + 1))
+                  const newPage = Math.min(bookPages.length - 1, currentPage + 1);
+                  setCurrentPage(newPage);
+                  
+                  // Eğer ses çalıyorsa, sesin zamanını da o sayfanın başına çek
                   if (currentTrack?.id === id && audioRef.current) {
-                    audioRef.current.pause()
+                    const timestamps = getPageTimestamps(audioRef.current.duration);
+                    audioRef.current.currentTime = timestamps[newPage];
                   }
                 }}
                 disabled={currentPage === bookPages.length - 1}
