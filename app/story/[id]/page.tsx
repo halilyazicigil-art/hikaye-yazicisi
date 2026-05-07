@@ -57,18 +57,15 @@ export default async function StoryPage({ params, searchParams }: {
               {/* Kitap İndir (PDF) */}
               <DownloadBookButton story={story} />
 
-              {/* Karakter Paftası İndir */}
-              {job?.master_ref_data && (
-                <a
-                  href={job.master_ref_data}
-                  download={`karakterler_${story.id}.png`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 px-5 py-3 rounded-2xl shadow-sm border border-indigo-200 font-bold text-indigo-700 transition-all text-sm"
+              {/* Bu Kahramanlarla Yeni Serüven Başlat */}
+              {story.id && (
+                <Link
+                  href={`/?continue_from=${story.id}`}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-5 py-3 rounded-2xl shadow-lg border-b-4 border-orange-700 font-bold transition-all text-sm animate-pulse hover:animate-none"
                 >
-                  <ImageIcon size={16} />
-                  Karakterleri İndir
-                </a>
+                  <Sparkles size={16} />
+                  Bu Kahramanlarla Yeni Serüven Başlat
+                </Link>
               )}
 
               {/* Podcast İndir */}

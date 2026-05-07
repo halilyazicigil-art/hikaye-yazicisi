@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, Image as ImageIcon, Shuffle, X, Plus } from 'lucide-react'
 import { backgroundStoryAction } from '@/app/actions/backgroundStoryAction'
 import { saveStoryMetadata } from '@/app/actions/metadata'
-import { uploadReferenceImage } from '@/app/actions/uploadReferenceImage'
+import { togglePinAction } from '@/app/actions/pinAction'
 import { createClient } from '@/utils/supabase/client'
 
 const AI_VOICES = [
@@ -92,7 +92,7 @@ const STORY_SCENARIOS = [
 
 export default function StoryForm({ isPro = false, isPremium = false }: { isPro?: boolean, isPremium?: boolean }) {
   const [prompt, setPrompt] = useState('')
-  const [tab, setTab] = useState<'normal' | 'egitici'>('normal')
+  const [tab, setTab] = useState<'normal' | 'egitici' | 'devam'>('normal')
   const [isGenerating, setIsGenerating] = useState(false)
 
   // Accordion states
@@ -110,8 +110,11 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
   const [ageGroup, setAgeGroup] = useState<string>('2-4')
   const [characters, setCharacters] = useState<string[]>(['Sevimli Ayı'])
   const [educationalValue, setEducationalValue] = useState<string>('Dürüstlük')
-  const [uploadedRefFile, setUploadedRefFile] = useState<File | null>(null)
   const [isShuffle, setIsShuffle] = useState(false)
+  const [continueFromId, setContinueFromId] = useState<string | null>(null)
+  const [continueStory, setContinueStory] = useState<any | null>(null)
+  const [pinnedStories, setPinnedStories] = useState<any[]>([])
+  const [recentStories, setRecentStories] = useState<any[]>([])
 
   const supabase = createClient()
   const [jobId, setJobId] = useState<string | null>(null)
@@ -174,13 +177,35 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       setRemainingStories(totalLimit - (totalUsed || 0))
     }
 
-    fetchQuota()
-    
-    const fetchClonedVoices = async () => {
-      const { data } = await supabase.from('cloned_voices').select('*')
-      if (data) setClonedVoices(data)
+    const fetchPinnedAndRecent = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: pinned } = await supabase.from('stories').select('*').eq('user_id', user.id).eq('is_pinned', true).limit(5).order('created_at', { ascending: false })
+      const { data: recent } = await supabase.from('stories').select('*').eq('user_id', user.id).neq('is_pinned', true).limit(5).order('created_at', { ascending: false })
+      
+      if (pinned) setPinnedStories(pinned)
+      if (recent) setRecentStories(recent)
     }
+
+    fetchQuota()
     fetchClonedVoices()
+    fetchPinnedAndRecent()
+
+    // Check for continuation parameter in URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const contId = urlParams.get('continue_from')
+    if (contId) {
+      setTab('devam')
+      setContinueFromId(contId)
+      supabase.from('stories').select('*').eq('id', contId).single().then(({ data }) => {
+        if (data) {
+          setContinueStory(data)
+          setPrompt(`...serüven devam ediyor: `)
+          if (data.metadata?.characters) setCharacters(data.metadata.characters)
+        }
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -349,19 +374,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       const egitici = tab === 'egitici' ? ` Eğitici Değer: ${educationalValue}.` : ''
       const fullTheme = `${genre} tarzında. Konu: ${prompt}. Çizim Stili: ${imageStyle}. Ses Seçimi: ${voice}. Karakterler: ${chars}.${egitici}`
       
-      let uploadedMasterRefUrl = undefined;
-      if (uploadedRefFile) {
-        const formData = new FormData();
-        formData.append('file', uploadedRefFile);
-        const uploadRes = await uploadReferenceImage(formData);
-        if (uploadRes.success) {
-          uploadedMasterRefUrl = uploadRes.url;
-        } else {
-          alert('Karakter referansı yüklenirken bir hata oluştu: ' + uploadRes.error);
-          setIsGenerating(false);
-          return;
-        }
-      }
+      // Karakter Referans Mantığı (Artık sadece sistem içi referans kullanılıyor)
 
       const response = await backgroundStoryAction({
         childName: 'Kullanıcı',
@@ -371,7 +384,7 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
         voiceOption: voice === 'Sessiz' ? 'Sessiz' : 'AI',
         elevenVoiceId: voice !== 'Sessiz' ? voice : undefined,
         style: imageStyle,
-        uploaded_master_ref: uploadedMasterRefUrl,
+        master_ref_story_id: tab === 'devam' ? continueFromId || undefined : undefined,
         isShuffle: isShuffle
       })
       
@@ -396,22 +409,99 @@ export default function StoryForm({ isPro = false, isPremium = false }: { isPro?
       <div className="flex border-b border-gray-100">
         <button
           type="button"
-          onClick={() => handleTabSelect('normal')}
-          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors ${tab === 'normal' ? 'text-sky-700 border-b-4 border-sky-600 bg-sky-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+          onClick={() => setTab('normal')}
+          className={`w-1/3 px-2 py-4 font-bold text-xs sm:text-lg transition-colors border-r border-gray-100 ${tab === 'normal' ? 'text-sky-700 border-b-4 border-sky-600 bg-sky-50/30' : 'text-gray-400 hover:text-gray-600'}`}
         >
-          Normal Hikayeler
+          Normal Masallar
         </button>
         <button
           type="button"
           onClick={() => handleTabSelect('egitici')}
-          className={`w-1/2 px-4 py-4 font-bold text-lg transition-colors flex items-center justify-center gap-2 ${tab === 'egitici' ? 'text-sky-700 border-b-4 border-sky-600 bg-sky-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+          className={`w-1/3 px-2 py-4 font-bold text-xs sm:text-lg transition-colors border-r border-gray-100 ${tab === 'egitici' ? 'text-sky-700 border-b-4 border-sky-600 bg-sky-50/30' : 'text-gray-400 hover:text-gray-600'}`}
         >
-          Eğitici Hikayeler
-          {!isPro && !isPremium && <span className="text-xs bg-gray-200 text-gray-500 px-2 py-1 rounded-full">Pro</span>}
+          Eğitici Masallar
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('devam')}
+          className={`w-1/3 px-2 py-4 font-bold text-xs sm:text-lg transition-colors ${tab === 'devam' ? 'text-sky-700 border-b-4 border-sky-600 bg-sky-50/30' : 'text-gray-400 hover:text-gray-600'}`}
+        >
+          Serüvene Devam
         </button>
       </div>
 
       <form onSubmit={handleGenerate} className="p-6">
+        {/* --- CONTINUATION MODE --- */}
+        {tab === 'devam' && (
+          <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
+            {!continueStory ? (
+              <div className="bg-sky-50/50 rounded-2xl p-6 border-2 border-dashed border-sky-200">
+                <h3 className="text-[#052159] font-black mb-4 flex items-center gap-2 text-sm sm:text-base">
+                  <Sparkles size={20} className="text-orange-400" />
+                  Hangi Kahramanlarla Devam Etmek İstersin?
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  {[...pinnedStories, ...recentStories].length === 0 ? (
+                    <p className="text-gray-400 text-sm italic col-span-2 py-4 text-center">Henüz hikayen bulunmuyor. Önce bir hikaye oluşturmalısın.</p>
+                  ) : (
+                    [...pinnedStories, ...recentStories].slice(0, 5).map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => {
+                          setContinueFromId(s.id);
+                          setContinueStory(s);
+                          if (s.metadata?.characters) setCharacters(s.metadata.characters);
+                        }}
+                        className="flex items-center gap-3 p-3 bg-white rounded-xl border border-sky-100 hover:border-sky-400 hover:shadow-md transition-all text-left"
+                      >
+                        <img src={s.image_url} className="w-12 h-12 rounded-lg object-cover shadow-sm" alt="" />
+                        <div className="flex-1 overflow-hidden">
+                          <p className="text-sm font-bold text-sky-900 truncate">{s.title}</p>
+                          <p className="text-[10px] text-gray-400">{new Date(s.created_at).toLocaleDateString('tr-TR')}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+
+                <div className="text-center pt-2 border-t border-sky-100">
+                  <a href="/parent" className="text-sky-600 text-[10px] sm:text-xs font-bold hover:underline">
+                    Daha eski hikayelerini kütüphaneden seçebilirsin →
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-orange-50 to-sky-50 rounded-2xl p-4 border border-orange-200 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img src={continueStory.image_url} className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-md" alt="" />
+                    <div className="absolute -top-2 -right-2 bg-orange-500 text-white p-1 rounded-full shadow-lg">
+                      <Sparkles size={12} />
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] sm:text-sm font-black text-[#052159] uppercase tracking-tight">Kahramanlar Bağlandı</h4>
+                    <p className="text-xs text-orange-700 font-bold truncate max-w-[150px] sm:max-w-none">{continueStory.title}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContinueFromId(null);
+                    setContinueStory(null);
+                    setTab('normal');
+                  }}
+                  className="bg-white/50 hover:bg-white p-2 rounded-full text-gray-400 hover:text-red-500 transition-all"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Main Textarea */}
         <div className="relative mb-6">
           <textarea

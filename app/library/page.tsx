@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { BookHeart, Volume2, Clock, Sparkles } from 'lucide-react'
 import AddToQueueButton from '@/components/AddToQueueButton'
 import Navbar from '@/components/Navbar'
+import PinButton from '@/components/PinButton'
 
 const GENRES = ['Tümü', 'Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl']
 
@@ -98,6 +99,11 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
                         <BookHeart size={64} />
                       </div>
                     )}
+
+                    {/* Pin Button */}
+                    <div className="absolute top-4 right-4 z-20">
+                      <PinButton storyId={story.id} initialPinned={!!story.is_pinned} />
+                    </div>
                     
                     {/* Audio & Queue Controls */}
                     {story.audio_url && (

@@ -39,7 +39,10 @@ function extractMediaData(candidates: Candidate[]) {
     if (!candidates?.[0]?.content?.parts) return null;
     const mediaPart = candidates[0].content.parts.find((p: MediaPart) => p.inlineData?.data);
     if (!mediaPart || !mediaPart.inlineData) return null;
-    return { data: mediaPart.inlineData.data, mimeType: mediaPart.inlineData.mimeType };
+    return { 
+        data: mediaPart.inlineData.data, 
+        mimeType: mediaPart.inlineData.mimeType || 'image/png' 
+    };
 }
 
 function delay(ms: number) {
@@ -190,19 +193,37 @@ export async function POST(req: NextRequest) {
 
         await updateJob(jobId, { status: 'text_ready', progress: 10 });
 
-        // 3. ADIM: MASTER KARAKTER PAFTASI (%20)
+        // 3. MASTER KARAKTER PAFTASI (%20)
         await updateJob(jobId, { status: 'generating_master' });
         
         let masterMedia: { data: string, mimeType: string };
         let masterUrl: string;
 
-        if (payload.uploaded_master_ref) {
-            const imgRes = await fetch(payload.uploaded_master_ref);
-            if (!imgRes.ok) throw new Error("Yüklenen referans görseli okunamadı.");
+        // EĞER BİR REFERANS VARSA (YENİ SİSTEM)
+        const refStoryId = payload.master_ref_story_id;
+        
+        if (refStoryId) {
+            const { data: refStory } = await supabase.from('stories').select('image_url, metadata').eq('id', refStoryId).single();
+            if (!refStory || !refStory.image_url) throw new Error("Referans hikaye veya görseli bulunamadı.");
+            
+            const imgRes = await fetch(refStory.image_url);
+            if (!imgRes.ok) throw new Error("Referans görseli indirilemedi.");
             const arrayBuffer = await imgRes.arrayBuffer();
-            masterMedia = { data: Buffer.from(arrayBuffer).toString('base64'), mimeType: 'image/png' };
-            masterUrl = payload.uploaded_master_ref;
+            
+            // Dinamik MimeType Tespiti
+            const contentType = imgRes.headers.get('content-type') || 'image/png';
+            
+            masterMedia = { data: Buffer.from(arrayBuffer).toString('base64'), mimeType: contentType };
+            masterUrl = refStory.image_url;
+
+            // 🧠 Karakter Tanımları (Gemini'ye kimin kim olduğunu öğretmek için)
+            const refMetadata = (refStory as any).metadata || {};
+            const refChars = refMetadata.characters || [];
+            if (refChars.length > 0) {
+                (job.payload as any).ref_character_mapping = refChars.join(", ");
+            }
         } else {
+            // SIFIRDAN ÜRETİM
             const charsObj = storyData.characters || storyData.karakterler || storyData.Characters || {};
             const charDescriptions = Object.values(charsObj).slice(0, 3).join(". ") || "A young adventurer in standard clothing";
             
@@ -223,9 +244,10 @@ export async function POST(req: NextRequest) {
         
         for (let i = 0; i < pages.length; i++) {
             const scene = pages[i];
+            const refMapping = (job.payload as any).ref_character_mapping ? `KNOWN CHARACTERS FROM REF: ${(job.payload as any).ref_character_mapping}. ` : "";
             const scenePrompt = `[SCENE ${i+1}] Style: ${payload.style}. 
 NEW ACTION/SCENE TO DRAW: ${scene.visualHook}. 
-CHARACTER REFERENCE: Use the provided reference image ONLY for character design and face consistency. 
+${refMapping}CHARACTER REFERENCE: Use the provided reference image ONLY for character design and face consistency. 
 CRITICAL INSTRUCTION 1: Do NOT reproduce the reference image exactly. You MUST draw the characters performing the NEW ACTION/SCENE described above. Change their poses and environment to match the new scene.
 CRITICAL INSTRUCTION 2: The image MUST NOT contain any text, letters, words, watermarks, signatures, or typography. Clean visual art only.`;
 

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { createClient } from '@/utils/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
+import PinButton from '@/components/PinButton'
  
 const GENRES = ['Tümü', 'Masal', 'Bilim Kurgu', 'Macera', 'Fantastik', 'Fabl']
 
@@ -251,6 +252,11 @@ export default async function ParentDashboard({ searchParams }: { searchParams: 
                     >
                       {/* Cover Image */}
                       <div className="relative aspect-[4/3] overflow-hidden">
+                        {story.image_url && (
+                          <div className="absolute top-4 right-4 z-20">
+                            <PinButton storyId={story.id} initialPinned={!!story.is_pinned} />
+                          </div>
+                        )}
                         {story.image_url ? (
                           <Image 
                             src={story.image_url} 
