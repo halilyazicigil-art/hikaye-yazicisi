@@ -80,7 +80,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
               const meta = story.metadata || {}
               return (
                 <Link 
-                  href={`/story/${story.id}`} 
+                  href={`/story/${story.id}?source=library`} 
                   key={story.id}
                   className="group bg-white rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col"
                 >

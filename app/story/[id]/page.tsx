@@ -5,8 +5,14 @@ import { Download, Music, ImageIcon } from 'lucide-react'
 import DownloadBookButton from '@/components/DownloadBookButton'
 import AudioBanner from '@/components/AudioBanner'
 
-export default async function StoryPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function StoryPage({ params, searchParams }: { 
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ source?: string }>
+}) {
   const { id } = await params
+  const { source } = await searchParams
+  const hideDownloads = source === 'library'
+
   const supabase = await createClient()
 
   const { data: story } = await supabase
@@ -39,45 +45,47 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
         <div className="mb-6 flex flex-wrap justify-between items-center gap-3">
           {/* Geri butonu */}
           <Link
-            href="/parent"
+            href={source === 'library' ? '/library' : '/parent'}
             className="inline-flex items-center gap-2 bg-white px-5 py-3 rounded-2xl shadow-sm border border-sky-100 font-bold text-sky-800 hover:bg-sky-50 hover:border-sky-200 transition-all text-sm"
           >
-            ← Kütüphaneye Dön
+            ← {source === 'library' ? 'Kitaplığa Dön' : 'Kütüphaneye Dön'}
           </Link>
 
           {/* İndirme butonları */}
-          <div className="flex items-center gap-3">
-            {/* Kitap İndir (PDF) */}
-            <DownloadBookButton story={story} />
+          {!hideDownloads && (
+            <div className="flex items-center gap-3">
+              {/* Kitap İndir (PDF) */}
+              <DownloadBookButton story={story} />
 
-            {/* Karakter Paftası İndir */}
-            {job?.master_ref_data && (
-              <a
-                href={job.master_ref_data}
-                download={`karakterler_${story.id}.png`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 px-5 py-3 rounded-2xl shadow-sm border border-indigo-200 font-bold text-indigo-700 transition-all text-sm"
-              >
-                <ImageIcon size={16} />
-                Karakterleri İndir
-              </a>
-            )}
+              {/* Karakter Paftası İndir */}
+              {job?.master_ref_data && (
+                <a
+                  href={job.master_ref_data}
+                  download={`karakterler_${story.id}.png`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 px-5 py-3 rounded-2xl shadow-sm border border-indigo-200 font-bold text-indigo-700 transition-all text-sm"
+                >
+                  <ImageIcon size={16} />
+                  Karakterleri İndir
+                </a>
+              )}
 
-            {/* Podcast İndir */}
-            {story.audio_url && (
-              <a
-                href={story.audio_url}
-                download={`${story.title}.mp3`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-2xl font-bold shadow-md transition-all text-sm"
-              >
-                <Music size={16} />
-                Podcast İndir
-              </a>
-            )}
-          </div>
+              {/* Podcast İndir */}
+              {story.audio_url && (
+                <a
+                  href={story.audio_url}
+                  download={`${story.title}.mp3`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-2xl font-bold shadow-md transition-all text-sm"
+                >
+                  <Music size={16} />
+                  Podcast İndir
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Seslendirme Bannerı */}
