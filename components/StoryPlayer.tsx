@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Play, Pause, Download, BookOpen, Music } from 'lucide-react'
+import { Play, Pause, Download, BookOpen, Music, Maximize, Minimize, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useAudioPlayer } from '@/context/AudioPlayerContext'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface StoryPageData {
   text: string
@@ -20,9 +21,31 @@ interface StoryPlayerProps {
 }
 
 export default function StoryPlayer({ id, title, content, imageUrl, audioUrl, pages }: StoryPlayerProps) {
-  const { currentTrack, isPlaying, playTrack, togglePlay, audioRef, progress: globalProgress } = useAudioPlayer()
+  const { 
+    currentTrack, isPlaying, playTrack, togglePlay, audioRef, 
+    progress: globalProgress, viewMode, setViewMode 
+  } = useAudioPlayer()
   const [currentPage, setCurrentPage] = useState(0)
   const [localProgress, setLocalProgress] = useState(0)
+
+  // 📖 Okuyucu açıldığında modu güncelle (Eğer arka plandaysak)
+  useEffect(() => {
+    if (viewMode === 'background') {
+      setViewMode('reader')
+    }
+  }, [viewMode, setViewMode])
+
+  const toggleFullscreen = () => {
+    if (viewMode === 'fullscreen') {
+      setViewMode('reader')
+      if (document.fullscreenElement) {
+        document.exitFullscreen()
+      }
+    } else {
+      setViewMode('fullscreen')
+      document.documentElement.requestFullscreen()
+    }
+  }
 
   const bookPages = pages && pages.length > 0
     ? pages
@@ -109,11 +132,19 @@ export default function StoryPlayer({ id, title, content, imageUrl, audioUrl, pa
             )}
           </div>
 
-          {/* Sayfa numarası rozeti */}
-          <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md border border-sky-100">
-            <span className="text-sky-800 font-black text-sm tracking-wider">
-              {currentPage + 1} / {bookPages.length}
-            </span>
+          <div className="absolute top-6 left-6 flex gap-2 z-20">
+            <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md border border-sky-100">
+              <span className="text-sky-800 font-black text-sm tracking-wider">
+                {currentPage + 1} / {bookPages.length}
+              </span>
+            </div>
+            <button 
+              onClick={toggleFullscreen}
+              className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md border border-sky-100 hover:bg-sky-50 text-sky-800 transition-all"
+              title="Tam Ekran"
+            >
+              <Maximize size={18} />
+            </button>
           </div>
 
           {/* Ses çubuğu — sadece play butonu */}
@@ -220,6 +251,100 @@ export default function StoryPlayer({ id, title, content, imageUrl, audioUrl, pa
           </div>
         </div>
       </div>
+
+      {/* 🎭 PREMİUM TAM EKRAN (CINEMATIC MODE) */}
+      <AnimatePresence>
+        {viewMode === 'fullscreen' && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-[#052159] flex flex-col items-center justify-center overflow-hidden"
+          >
+            {/* Arka Plan Görseli (Blurlu) */}
+            <div className="absolute inset-0 opacity-20 blur-3xl scale-110">
+               <img src={currentDisplayImage} className="w-full h-full object-cover" />
+            </div>
+
+            <div className="relative z-10 w-full h-full flex flex-col md:flex-row items-center px-10 md:px-20 gap-12">
+              {/* Sol: Dev Görsel */}
+              <motion.div 
+                key={`img-${currentPage}`}
+                initial={{ x: -100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                className="w-full md:w-1/2 aspect-square max-h-[70vh] relative shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden border-8 border-white/10"
+              >
+                <img src={currentDisplayImage} className="w-full h-full object-cover" />
+              </motion.div>
+
+              {/* Sağ: Metin ve Başlık */}
+              <div className="w-full md:w-1/2 text-white space-y-8">
+                <motion.h1 
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="text-4xl md:text-6xl font-black leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-sky-200 to-white/70"
+                >
+                  {title}
+                </motion.h1>
+                
+                <motion.p 
+                  key={`text-${currentPage}`}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-2xl md:text-4xl leading-relaxed font-medium text-sky-50/90"
+                >
+                  {bookPages[currentPage]?.text}
+                </motion.p>
+
+                {/* Alt Kontroller */}
+                <div className="flex items-center gap-6 pt-10">
+                   <button 
+                     onClick={handleTogglePlay}
+                     className="w-20 h-20 bg-sky-500 hover:bg-sky-400 text-white rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 active:scale-95"
+                   >
+                     {isThisPlaying ? <Pause size={40} /> : <Play size={40} className="ml-1" />}
+                   </button>
+
+                   <div className="flex gap-3">
+                      <button 
+                        onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                        disabled={currentPage === 0}
+                        className="p-4 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all disabled:opacity-20"
+                      >
+                        <ChevronLeft size={32} />
+                      </button>
+                      <button 
+                        onClick={() => setCurrentPage(Math.min(bookPages.length - 1, currentPage + 1))}
+                        disabled={currentPage === bookPages.length - 1}
+                        className="p-4 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all disabled:opacity-20"
+                      >
+                        <ChevronRight size={32} />
+                      </button>
+                   </div>
+
+                   <button 
+                    onClick={toggleFullscreen}
+                    className="ml-auto p-4 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all"
+                    title="Tam Ekrandan Çık"
+                   >
+                     <Minimize size={32} />
+                   </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Alt Progress Bar */}
+            <div className="absolute bottom-0 left-0 right-0 h-2 bg-white/5">
+               <motion.div 
+                 className="h-full bg-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.8)]"
+                 initial={{ width: 0 }}
+                 animate={{ width: `${localProgress}%` }}
+               />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

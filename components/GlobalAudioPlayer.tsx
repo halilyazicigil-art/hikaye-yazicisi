@@ -6,7 +6,11 @@ import { X, Play, Pause, Rewind, FastForward, Maximize2, Music, ListMusic, Trash
 import Link from 'next/link'
 
 export default function GlobalAudioPlayer() {
-  const { currentTrack, isPlaying, progress, duration, isPlayerVisible, queue, togglePlay, closePlayer, skipForward, skipBackward, seekTo, playNext, removeFromQueue } = useAudioPlayer()
+  const { 
+    currentTrack, isPlaying, progress, duration, isPlayerVisible, queue, 
+    togglePlay, closePlayer, skipForward, skipBackward, seekTo, playNext, 
+    removeFromQueue, setViewMode 
+  } = useAudioPlayer()
   const [showQueue, setShowQueue] = useState(false)
 
   if (!isPlayerVisible || !currentTrack) return null
@@ -168,7 +172,11 @@ export default function GlobalAudioPlayer() {
               <span className="w-1.5 h-1.5 bg-sky-400 rounded-full" /> ŞU AN ÇALIYOR
             </p>
           </div>
-          <Link href={`/story/${currentTrack.id}`} className="text-white/40 hover:text-sky-400 transition-colors p-1">
+          <Link 
+            href={`/story/${currentTrack.id}`} 
+            onClick={() => setViewMode('reader')}
+            className="text-white/40 hover:text-sky-400 transition-colors p-1"
+          >
             <Maximize2 size={16} />
           </Link>
         </div>

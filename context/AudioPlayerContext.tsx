@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 
 export interface Track {
   id: string
@@ -8,6 +9,8 @@ export interface Track {
   audioUrl: string
   imageUrl: string
 }
+
+export type ViewMode = 'background' | 'reader' | 'fullscreen'
 
 interface AudioPlayerContextType {
   currentTrack: Track | null
@@ -26,6 +29,8 @@ interface AudioPlayerContextType {
   skipForward: () => void
   skipBackward: () => void
   audioRef: React.RefObject<HTMLAudioElement | null>
+  viewMode: ViewMode
+  setViewMode: (mode: ViewMode) => void
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined)
@@ -37,7 +42,9 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const [duration, setDuration] = useState(0)
   const [isPlayerVisible, setIsPlayerVisible] = useState(false)
   const [queue, setQueue] = useState<Track[]>([])
+  const [viewMode, setViewMode] = useState<ViewMode>('background')
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const audio = audioRef.current
@@ -113,9 +120,17 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       setCurrentTrack(nextTrack)
       setIsPlaying(true)
       setProgress(0)
+
+      // 🚀 OTOMATİK NAVİGASYON (Premium Akış)
+      // Eğer kullanıcı kitap okuyucusu veya tam ekrandaysa, yeni kitaba otomatik git
+      if (viewMode === 'reader' || viewMode === 'fullscreen') {
+        router.push(`/story/${nextTrack.id}`)
+      }
     } else {
       setIsPlaying(false)
       setCurrentTrack(null)
+      // Kuyruk bittiyse ve okuyucudaysak arka plana dön
+      if (viewMode !== 'background') setViewMode('background')
     }
   }
 
@@ -168,7 +183,9 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         closePlayer,
         skipForward,
         skipBackward,
-        audioRef
+        audioRef,
+        viewMode,
+        setViewMode
       }}
     >
       {children}

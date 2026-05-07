@@ -4,9 +4,13 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Cloud } from 'lucide-react'
+import { useAudioPlayer } from '@/context/AudioPlayerContext'
 
 const Navbar = ({ user }: { user?: any }) => {
   const pathname = usePathname()
+  const { viewMode } = useAudioPlayer()
+
+  if (viewMode === 'fullscreen') return null
 
   const navLinks = [
     { name: 'Fiyatlandırma', href: '/pricing' },
