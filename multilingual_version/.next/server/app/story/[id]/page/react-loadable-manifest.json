@@ -1,0 +1,9 @@
+{
+  "[project]/multilingual_version/node_modules/@react-pdf/renderer/lib/react-pdf.browser.js [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/multilingual_version/node_modules/@react-pdf/renderer/lib/react-pdf.browser.js [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/f7fbe_@react-pdf_renderer_lib_react-pdf_browser_9031fa77.js",
+      "static/chunks/f7fbe_@react-pdf_renderer_lib_react-pdf_browser_6f0031b4.js"
+    ]
+  }
+}

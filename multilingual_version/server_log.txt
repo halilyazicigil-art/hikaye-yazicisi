@@ -1,0 +1,55 @@
+
+> hikaye-yazicisi@0.1.0 dev
+> next dev -p 6161 --turbopack
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/nan/Desktop/yeni proje- hikaye yazıcısı /package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/package-lock.json
+
+   ▲ Next.js 15.5.15 (Turbopack)
+   - Local:        http://localhost:6161
+   - Network:      http://127.65.177.83:6161
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Compiled middleware in 149ms
+ ✓ Ready in 940ms
+ ○ Compiling /parent ...
+ ✓ Compiled /parent in 1943ms
+ HEAD /parent 307 in 2293ms
+ GET /parent 307 in 82ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/server/app/parent/page/app-build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/server/app/parent/page/app-build-manifest.json'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 608ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/static/development/_buildManifest.js.tmp.hkc3h04xmkw'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/static/development/_buildManifest.js.tmp.hkc3h04xmkw'
+}
+[Error: ENOENT: no such file or directory, open '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/server/app/parent/page/app-build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/server/app/parent/page/app-build-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/static/development/_buildManifest.js.tmp.wh6iswqsvgs'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/static/development/_buildManifest.js.tmp.wh6iswqsvgs'
+}
+[Error: ENOENT: no such file or directory, open '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/static/development/_buildManifest.js.tmp.tu9tfx8qyun'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/nan/Desktop/yeni proje- hikaye yazıcısı /multilingual_version/.next/static/development/_buildManifest.js.tmp.tu9tfx8qyun'
+}

@@ -1,0 +1,110 @@
+{
+  "node": {
+    "003e5b7c2009b8b248a8835c58aeb41c00eb11b3ad": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/adminCacheActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/multilingual_version/app/actions/adminActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/multilingual_version/app/actions/backgroundStoryAction.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/multilingual_version/app/actions/migrationActions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getScenariosCacheStatus",
+          "filename": "multilingual_version/app/actions/adminCacheActions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "rsc"
+      },
+      "exportedName": "getScenariosCacheStatus",
+      "filename": "multilingual_version/app/actions/adminCacheActions.ts"
+    },
+    "40688fce6005dfa0ff3f69640e85feb649eda3c15b": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/adminCacheActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/multilingual_version/app/actions/adminActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/multilingual_version/app/actions/backgroundStoryAction.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/multilingual_version/app/actions/migrationActions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "checkJobStatus",
+          "filename": "multilingual_version/app/actions/adminCacheActions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "checkJobStatus",
+      "filename": "multilingual_version/app/actions/adminCacheActions.ts"
+    },
+    "60bc3fb31c85a6b9820a1e7b3c58f1550aa45c3cb6": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/adminCacheActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/multilingual_version/app/actions/adminActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/multilingual_version/app/actions/backgroundStoryAction.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/multilingual_version/app/actions/migrationActions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addBonusQuotaAction",
+          "filename": "multilingual_version/app/actions/adminActions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "addBonusQuotaAction",
+      "filename": "multilingual_version/app/actions/adminActions.ts"
+    },
+    "60abec23a8196e2d35244ae39f5b38614da74c3721": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/adminCacheActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/multilingual_version/app/actions/adminActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/multilingual_version/app/actions/backgroundStoryAction.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/multilingual_version/app/actions/migrationActions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "toggleUserSuspensionAction",
+          "filename": "multilingual_version/app/actions/adminActions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "toggleUserSuspensionAction",
+      "filename": "multilingual_version/app/actions/adminActions.ts"
+    },
+    "609ac788c79ff94f27ad792f337b584d44250d8b68": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/adminCacheActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/multilingual_version/app/actions/adminActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/multilingual_version/app/actions/backgroundStoryAction.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/multilingual_version/app/actions/migrationActions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "toggleSystemSettingAction",
+          "filename": "multilingual_version/app/actions/adminActions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "toggleSystemSettingAction",
+      "filename": "multilingual_version/app/actions/adminActions.ts"
+    },
+    "40674eb668f02ebef7ad96023aee6f5f83f55e6cd8": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/adminCacheActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/multilingual_version/app/actions/adminActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/multilingual_version/app/actions/backgroundStoryAction.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/multilingual_version/app/actions/migrationActions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "backgroundStoryAction",
+          "filename": "multilingual_version/app/actions/backgroundStoryAction.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "backgroundStoryAction",
+      "filename": "multilingual_version/app/actions/backgroundStoryAction.ts"
+    },
+    "000dca46ce9750bd6f7c7ac28c36360758e4139c17": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/admin/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/adminCacheActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/multilingual_version/app/actions/adminActions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/multilingual_version/app/actions/backgroundStoryAction.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/multilingual_version/app/actions/migrationActions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "migrateLegacyCacheKeys",
+          "filename": "multilingual_version/app/actions/migrationActions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/page": "action-browser"
+      },
+      "exportedName": "migrateLegacyCacheKeys",
+      "filename": "multilingual_version/app/actions/migrationActions.ts"
+    }
+  },
+  "edge": {}
+}

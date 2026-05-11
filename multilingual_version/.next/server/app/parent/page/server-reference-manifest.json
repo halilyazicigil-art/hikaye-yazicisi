@@ -1,0 +1,20 @@
+{
+  "node": {
+    "40d8c9e8a5a07748e4a875cbca27593561de8cfada": {
+      "workers": {
+        "app/parent/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/parent/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/pinAction.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "togglePinAction",
+          "filename": "multilingual_version/app/actions/pinAction.ts"
+        }
+      },
+      "layer": {
+        "app/parent/page": "action-browser"
+      },
+      "exportedName": "togglePinAction",
+      "filename": "multilingual_version/app/actions/pinAction.ts"
+    }
+  },
+  "edge": {}
+}

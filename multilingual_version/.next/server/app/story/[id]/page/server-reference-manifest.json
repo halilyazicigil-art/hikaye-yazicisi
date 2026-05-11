@@ -1,0 +1,20 @@
+{
+  "node": {
+    "40e0688680cfaf61275bb278647e3bfcc7e32c6976": {
+      "workers": {
+        "app/story/[id]/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/story/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/downloadAction.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "incrementDownloadAction",
+          "filename": "multilingual_version/app/actions/downloadAction.ts"
+        }
+      },
+      "layer": {
+        "app/story/[id]/page": "action-browser"
+      },
+      "exportedName": "incrementDownloadAction",
+      "filename": "multilingual_version/app/actions/downloadAction.ts"
+    }
+  },
+  "edge": {}
+}

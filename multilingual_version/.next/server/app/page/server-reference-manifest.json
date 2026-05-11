@@ -1,0 +1,35 @@
+{
+  "node": {
+    "40674eb668f02ebef7ad96023aee6f5f83f55e6cd8": {
+      "workers": {
+        "app/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/backgroundStoryAction.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/multilingual_version/app/actions/metadata.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "backgroundStoryAction",
+          "filename": "multilingual_version/app/actions/backgroundStoryAction.ts"
+        }
+      },
+      "layer": {
+        "app/page": "action-browser"
+      },
+      "exportedName": "backgroundStoryAction",
+      "filename": "multilingual_version/app/actions/backgroundStoryAction.ts"
+    },
+    "6045902ae308baefcf394c284996b5e76c1c8a7d56": {
+      "workers": {
+        "app/page": {
+          "moduleId": "[project]/multilingual_version/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/multilingual_version/app/actions/backgroundStoryAction.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/multilingual_version/app/actions/metadata.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveStoryMetadata",
+          "filename": "multilingual_version/app/actions/metadata.ts"
+        }
+      },
+      "layer": {
+        "app/page": "action-browser"
+      },
+      "exportedName": "saveStoryMetadata",
+      "filename": "multilingual_version/app/actions/metadata.ts"
+    }
+  },
+  "edge": {}
+}
