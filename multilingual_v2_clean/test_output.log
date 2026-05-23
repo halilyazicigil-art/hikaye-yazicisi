@@ -1,0 +1,94 @@
+
+> hikaye-yazicisi@0.1.0 test
+> vitest run app/actions/backgroundStoryAction.test.ts
+
+
+ RUN  v4.1.5 /Users/nan/Desktop/yeni proje- hikaye yazıcısı/multilingual_v2_8181
+
+stdout | app/actions/backgroundStoryAction.test.ts > backgroundStoryAction Integration Tests > should return jobId when quota is available (Success Case)
+TEST RESULT ERROR: undefined
+
+ ❯ app/actions/backgroundStoryAction.test.ts (3 tests | 2 failed) 11ms
+     × should throw error when total quota is reached (Quota Guard) 8ms
+     × should prevent manual stories for free users (Plan Authorization) 1ms
+     ✓ should return jobId when quota is available (Success Case) 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/actions/backgroundStoryAction.test.ts > backgroundStoryAction Integration Tests > should throw error when total quota is reached (Quota Guard)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ app/actions/backgroundStoryAction.test.ts:81:28
+     79|     const result = await backgroundStoryAction(mockFormData)
+     80|
+     81|     expect(result.success).toBe(false)
+       |                            ^
+     82|     expect(result.error).toContain('limitinize ulaştınız')
+     83|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/actions/backgroundStoryAction.test.ts > backgroundStoryAction Integration Tests > should prevent manual stories for free users (Plan Authorization)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ app/actions/backgroundStoryAction.test.ts:99:28
+     97|     const result = await backgroundStoryAction({ ...mockFormData, isSh…
+     98|
+     99|     expect(result.success).toBe(false)
+       |                            ^
+    100|     expect(result.error).toContain('Pamuk Bulut paketi ile sadece sihi…
+    101|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 2 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+TypeError: supabase.from(...).update is not a function
+ ❯ ../app/actions/backgroundStoryAction.ts:157:52
+    155|             const errMsg = `Worker'a ulaşılamadı: ${err.message}`;
+    156|             // Hatayı veritabanına yazalım ki UI'da radar görebilsin
+    157|             await supabase.from('generation_jobs').update({
+       |                                                    ^
+    158|                 status: 'failed',
+    159|                 error_message: errMsg
+ ❯ processTicksAndRejections node:internal/process/task_queues:105:5
+
+This error originated in "app/actions/backgroundStoryAction.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+TypeError: supabase.from(...).update is not a function
+ ❯ ../app/actions/backgroundStoryAction.ts:157:52
+    155|             const errMsg = `Worker'a ulaşılamadı: ${err.message}`;
+    156|             // Hatayı veritabanına yazalım ki UI'da radar görebilsin
+    157|             await supabase.from('generation_jobs').update({
+       |                                                    ^
+    158|                 status: 'failed',
+    159|                 error_message: errMsg
+ ❯ processTicksAndRejections node:internal/process/task_queues:105:5
+
+This error originated in "app/actions/backgroundStoryAction.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+     Errors  2 errors
+   Start at  20:13:20
+   Duration  825ms (transform 42ms, setup 67ms, import 37ms, tests 11ms, environment 587ms)
+

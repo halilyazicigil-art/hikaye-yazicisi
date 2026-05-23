@@ -1,0 +1,724 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+
+interface CompanionProps {
+  stage: string
+  isSleeping?: boolean
+  isTickled?: boolean
+  isHappy?: boolean
+  eyeOffset?: { x: number; y: number }
+}
+
+const sizeClasses: Record<string, string> = {
+  egg: 'w-28 h-28',
+  baby: 'w-32 h-32',
+  child: 'w-36 h-36',
+  teen: 'w-40 h-40',
+  adult: 'w-48 h-48',
+}
+
+export default function PegasusCompanion({ 
+  stage, 
+  isSleeping = false, 
+  isTickled = false, 
+  isHappy = false,
+  eyeOffset = { x: 0, y: 0 }
+}: CompanionProps) {
+  const [blink, setBlink] = useState(false)
+  const [isFlapping, setIsFlapping] = useState(false)
+  const [isSpinning, setIsSpinning] = useState(false)
+
+  // Random blink interval for eyes (blinking lasts 250ms for high visibility)
+  useEffect(() => {
+    if (isSleeping) return
+    const interval = setInterval(() => {
+      setBlink(true)
+      setTimeout(() => setBlink(false), 250)
+    }, 3500 + Math.random() * 3000)
+    return () => clearInterval(interval)
+  }, [isSleeping])
+
+  // Random flap interval for baby stage
+  useEffect(() => {
+    if (stage !== 'baby' || isSleeping) return
+    const interval = setInterval(() => {
+      setIsFlapping(true)
+      setTimeout(() => setIsFlapping(false), 1600)
+    }, 6000 + Math.random() * 5000)
+    return () => clearInterval(interval)
+  }, [stage, isSleeping])
+
+  // Random spin interval for teen & adult stages
+  useEffect(() => {
+    if ((stage !== 'teen' && stage !== 'adult') || isSleeping) return
+    const interval = setInterval(() => {
+      setIsSpinning(true)
+      setTimeout(() => setIsSpinning(false), 1000)
+    }, 12000 + Math.random() * 8000)
+    return () => clearInterval(interval)
+  }, [stage, isSleeping])
+
+  const getAnimationProps = () => {
+    if (stage === 'egg') {
+      return {
+        animate: {
+          y: isHappy ? [0, -40, 0] : [0, -6, 0],
+          rotate: isTickled ? [0, -15, 15, -15, 15, -8, 8, 0] : 0,
+          scale: isTickled ? [1, 1.08, 0.92, 1.08, 0.95, 1.02, 1] : 1,
+        },
+        transition: {
+          y: { duration: isHappy ? 0.6 : 2.4, repeat: isHappy ? 0 : Infinity, ease: 'easeInOut' },
+          rotate: { duration: 0.6, ease: 'easeInOut' },
+          scale: { duration: 0.6, ease: 'easeInOut' },
+        }
+      }
+    }
+    if (stage === 'baby') {
+      return {
+        animate: {
+          y: isHappy ? [0, -45, 0] : [0, -8, 0],
+          rotate: isTickled ? [0, -20, 20, -20, 20, -15, 15, 0] : 0,
+          scale: isTickled ? [1, 1.12, 0.88, 1.12, 0.92, 1.05, 1] : 1,
+        },
+        transition: {
+          y: { duration: isHappy ? 0.6 : 2.2, repeat: isHappy ? 0 : Infinity, ease: 'easeInOut' },
+          rotate: { duration: 0.6, ease: 'easeInOut' },
+          scale: { duration: 0.6, ease: 'easeInOut' },
+        }
+      }
+    }
+    if (stage === 'child') {
+      return {
+        animate: {
+          y: isHappy ? [0, -50, 0] : [0, -24, 0, 0],
+          scaleY: isHappy ? [1, 0.75, 1.25, 1] : isTickled ? [1, 1.15, 0.85, 1.15, 0.9, 1.05, 1] : [1, 1.15, 0.9, 1],
+          scaleX: isHappy ? [1, 1.25, 0.75, 1] : isTickled ? [1, 0.85, 1.15, 0.85, 1.1, 0.95, 1] : [1, 0.9, 1.1, 1],
+          rotate: isTickled ? [0, -15, 15, -15, 15, -10, 10, 0] : 0,
+        },
+        transition: {
+          y: {
+            duration: isHappy ? 0.6 : 1.6,
+            repeat: isHappy ? 0 : Infinity,
+            times: isHappy ? undefined : [0, 0.45, 0.9, 1],
+            ease: isHappy ? 'easeOut' : ['easeOut', 'easeIn', 'easeInOut', 'easeInOut']
+          },
+          scaleY: {
+            duration: (isHappy || isTickled) ? 0.6 : 1.6,
+            repeat: (isHappy || isTickled) ? 0 : Infinity,
+            times: (isHappy || isTickled) ? undefined : [0, 0.45, 0.9, 1],
+            ease: 'easeInOut'
+          },
+          scaleX: {
+            duration: (isHappy || isTickled) ? 0.6 : 1.6,
+            repeat: (isHappy || isTickled) ? 0 : Infinity,
+            times: (isHappy || isTickled) ? undefined : [0, 0.45, 0.9, 1],
+            ease: 'easeInOut'
+          },
+          rotate: { duration: 0.6, ease: 'easeInOut' }
+        }
+      }
+    }
+    const floatY = stage === 'teen' ? [0, -16, 0] : [0, -22, 0]
+    const floatDur = stage === 'teen' ? 1.8 : 1.5
+
+    // Adult isHappy → görkemli spell-cast uçuşu sekansı
+    if (stage === 'adult' && isHappy) {
+      return {
+        animate: {
+          y: [0, -20, -70, -40, -80, -30, -60, 0],
+          rotate: [0, -10, 10, -6, 6, -4, 4, 0],
+          scale: [1, 1.12, 1.38, 1.18, 1.42, 1.18, 1.28, 1],
+        },
+        transition: {
+          y: { duration: 3.2, repeat: 0, ease: 'easeInOut' },
+          rotate: { duration: 3.2, repeat: 0, ease: 'easeInOut' },
+          scale: { duration: 3.2, repeat: 0, ease: 'easeInOut' },
+        }
+      }
+    }
+
+    return {
+      animate: {
+        y: floatY,
+        rotate: isSpinning ? [0, 360] : isTickled ? [0, -20, 20, -20, 20, -15, 15, 0] : 0,
+        scale: isTickled ? [1, 1.15, 0.85, 1.15, 0.9, 1.05, 1] : 1,
+      },
+      transition: {
+        y: { duration: floatDur, repeat: Infinity, ease: 'easeInOut' },
+        rotate: {
+          duration: isSpinning ? 1.0 : 0.6,
+          repeat: 0,
+          ease: isSpinning ? 'linear' : 'easeInOut'
+        },
+        scale: { duration: 0.6, ease: 'easeInOut' }
+      }
+    }
+  }
+
+  const motionProps = getAnimationProps()
+
+  switch (stage) {
+    case 'egg':
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.egg} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+            <defs>
+              <radialGradient id="pegEggGrad" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stopColor="#a1c4fd" />
+                <stop offset="60%" stopColor="#c2e9fb" />
+                <stop offset="100%" stopColor="#84fab0" />
+              </radialGradient>
+            </defs>
+            {/* Starry Egg Base */}
+            <path
+              d="M50,15 C28,15 25,60 25,75 C25,87 36,90 50,90 C64,90 75,87 75,75 C75,60 72,15 50,15 Z"
+              fill="url(#pegEggGrad)"
+              stroke="#60a5fa"
+              strokeWidth="2"
+            />
+            {/* Star decorations */}
+            <path d="M50,30 L52,35 L57,35 L53,39 L55,44 L50,40 L45,44 L47,39 L43,35 L48,35 Z" fill="#fff" opacity="0.9" />
+            <path d="M35,60 L37,63 L41,63 L38,65 L39,69 L35,66 L31,69 L32,65 L29,63 L33,63 Z" fill="#fff" opacity="0.7" />
+            <path d="M65,52 L66.5,54 L69.5,54 L67,56 L68,59 L65,57 L62,59 L63,56 L60.5,54 L63.5,54 Z" fill="#fff" opacity="0.7" />
+            <path d="M52,70 L53,72 L55,72 L53.5,73 L54,75 L52,74 L50,75 L50.5,73 L49,72 L51,72 Z" fill="#fff" opacity="0.8" />
+          </svg>
+        </motion.div>
+      )
+
+    case 'baby':
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.baby} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+            <defs>
+              <linearGradient id="pegGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fbc2eb" />
+                <stop offset="100%" stopColor="#a6c1ee" />
+              </linearGradient>
+              <linearGradient id="babyShellGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fff" />
+                <stop offset="100%" stopColor="#c2e9fb" />
+              </linearGradient>
+            </defs>
+
+            {/* Back Shell Piece */}
+            <path d="M22,70 C22,85 32,88 50,88 C68,88 78,85 78,70 L72,60 L60,65 L50,55 L38,65 L28,60 Z" fill="url(#babyShellGrad)" stroke="#93c5fd" strokeWidth="1.5" />
+
+            {/* Tiny Fluffy Wings - Flaps only when excited/flapping, otherwise gentle breathing/resting */}
+            <motion.path
+              d="M26,45 C20,38 15,50 24,52 Z"
+              fill="#fff"
+              stroke="#cbd5e1"
+              strokeWidth="1"
+              animate={{ 
+                rotate: (isFlapping || isTickled || isHappy) ? [-30, 40, -30] : [-5, 5, -5] 
+              }}
+              transition={{ 
+                repeat: Infinity, 
+                duration: (isFlapping || isTickled || isHappy) ? 0.35 : 2.2, 
+                ease: 'easeInOut' 
+              }}
+              style={{ originX: '24px', originY: '48px' }}
+            />
+            <motion.path
+              d="M74,45 C80,38 85,50 76,52 Z"
+              fill="#fff"
+              stroke="#cbd5e1"
+              strokeWidth="1"
+              animate={{ 
+                rotate: (isFlapping || isTickled || isHappy) ? [30, -40, 30] : [5, -5, 5] 
+              }}
+              transition={{ 
+                repeat: Infinity, 
+                duration: (isFlapping || isTickled || isHappy) ? 0.35 : 2.2, 
+                ease: 'easeInOut' 
+              }}
+              style={{ originX: '76px', originY: '48px' }}
+            />
+
+            {/* Baby Pegasus Body */}
+            <path
+              d="M32,58 C32,32 68,32 68,58 C68,66 62,70 50,70 C38,70 32,66 32,58 Z"
+              fill="url(#pegGrad)"
+            />
+
+            {/* Tiny Golden Horn */}
+            <polygon points="50,22 47,32 53,32" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+
+            {/* Ears (twitch animation) */}
+            <motion.polygon
+              points="35,32 30,22 39,26"
+              fill="#fbc2eb"
+              animate={{ rotate: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 3, repeatDelay: 2 }}
+              style={{ originX: '35px', originY: '30px' }}
+            />
+            <motion.polygon
+              points="65,32 70,22 61,26"
+              fill="#fbc2eb"
+              animate={{ rotate: [0, 10, 0] }}
+              transition={{ repeat: Infinity, duration: 3, repeatDelay: 2.2 }}
+              style={{ originX: '65px', originY: '30px' }}
+            />
+
+            {/* Cheek blush */}
+            <circle cx="39" cy="58" r="3" fill="#ff789c" opacity="0.5" />
+            <circle cx="61" cy="58" r="3" fill="#ff789c" opacity="0.5" />
+
+            {/* Eyes - Thicker strokes when blinking/squeezed */}
+            {isSleeping ? (
+              <>
+                <path d="M37,50 Q41,54 45,50" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M55,50 Q59,54 63,50" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" />
+              </>
+            ) : blink || isTickled ? (
+              <>
+                <line x1="37" y1="51" x2="45" y2="51" stroke="#475569" strokeWidth="4" strokeLinecap="round" />
+                <line x1="55" y1="51" x2="63" y2="51" stroke="#475569" strokeWidth="4" strokeLinecap="round" />
+              </>
+            ) : (
+              <>
+                <circle cx="41" cy="50" r="4.5" fill="#475569" />
+                <circle cx="42" cy="48" r="1.5" fill="#fff" />
+                <circle cx="59" cy="50" r="4.5" fill="#475569" />
+                <circle cx="60" cy="48" r="1.5" fill="#fff" />
+              </>
+            )}
+
+            {/* Shell Hat */}
+            <path d="M38,36 C42,24 58,24 62,36 L68,42 L58,38 L50,44 L42,38 L32,42 Z" fill="url(#babyShellGrad)" stroke="#93c5fd" strokeWidth="1.5" />
+
+            {/* Cute Smile */}
+            <path d="M47,62 Q50,65 53,62" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+        </motion.div>
+      )
+
+    case 'child':
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.child} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+            <defs>
+              <linearGradient id="pegChildGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f5d0fe" />
+                <stop offset="100%" stopColor="#ddd6fe" />
+              </linearGradient>
+            </defs>
+
+            {/* Tail - faster & wider wag */}
+            <motion.path
+              d="M32,68 C20,78 12,72 14,60 C16,55 22,60 28,64"
+              fill="#d946ef"
+              stroke="#c084fc"
+              strokeWidth="0.8"
+              animate={{ rotate: [-18, 22, -18] }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+              style={{ originX: '28px', originY: '64px' }}
+            />
+
+            {/* Wings - faster & wider flap */}
+            <motion.path
+              d="M30,52 C12,42 8,62 26,62 Z"
+              fill="#fff"
+              stroke="#c084fc"
+              strokeWidth="1"
+              animate={{ rotate: [-22, 28, -22] }}
+              transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
+              style={{ originX: '26px', originY: '60px' }}
+            />
+            <motion.path
+              d="M70,52 C88,42 92,62 74,62 Z"
+              fill="#fff"
+              stroke="#c084fc"
+              strokeWidth="1"
+              animate={{ rotate: [22, -28, 22] }}
+              transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
+              style={{ originX: '74px', originY: '60px' }}
+            />
+
+            {/* Legs */}
+            <ellipse cx="41" cy="83" rx="5" ry="3" fill="#c084fc" />
+            <ellipse cx="59" cy="83" rx="5" ry="3" fill="#c084fc" />
+
+            {/* Body */}
+            <path
+              d="M36,55 C36,78 64,78 64,55 C64,48 60,40 50,40 C40,40 36,48 36,55 Z"
+              fill="url(#pegChildGrad)"
+              stroke="#c084fc"
+              strokeWidth="1"
+            />
+
+            {/* Ears (twitch animation) */}
+            <motion.polygon
+              points="33,26 27,16 37,20"
+              fill="#ddd6fe"
+              animate={{ rotate: [0, -12, 0] }}
+              transition={{ repeat: Infinity, duration: 3.5, repeatDelay: 1.5 }}
+              style={{ originX: '33px', originY: '24px' }}
+            />
+            <motion.polygon
+              points="67,26 73,16 63,20"
+              fill="#ddd6fe"
+              animate={{ rotate: [0, 12, 0] }}
+              transition={{ repeat: Infinity, duration: 3.5, repeatDelay: 1.8 }}
+              style={{ originX: '67px', originY: '24px' }}
+            />
+
+            {/* Mane (Hair) */}
+            <path d="M42,22 C45,12 55,12 58,22" fill="#d946ef" />
+
+            {/* Horn */}
+            <polygon points="50,12 46,22 54,22" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+
+            {/* Head */}
+            <path
+              d="M28,34 C28,14 72,14 72,34 C72,44 64,46 50,46 C36,46 28,44 28,34 Z"
+              fill="url(#pegChildGrad)"
+              stroke="#c084fc"
+              strokeWidth="1"
+            />
+
+            {/* Eyes */}
+            {isSleeping ? (
+              <>
+                <path d="M37,30 Q41,34 45,30" fill="none" stroke="#4c1d95" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M55,30 Q59,34 63,30" fill="none" stroke="#4c1d95" strokeWidth="2.5" strokeLinecap="round" />
+              </>
+            ) : blink || isTickled ? (
+              <>
+                <line x1="36" y1="31" x2="44" y2="31" stroke="#4c1d95" strokeWidth="4" strokeLinecap="round" />
+                <line x1="56" y1="31" x2="64" y2="31" stroke="#4c1d95" strokeWidth="4" strokeLinecap="round" />
+              </>
+            ) : (
+              <>
+                <circle cx="40" cy="29" r="4.5" fill="#4c1d95" />
+                <circle cx="41.5" cy="27.5" r="1.5" fill="#fff" />
+                <circle cx="60" cy="29" r="4.5" fill="#4c1d95" />
+                <circle cx="61.5" cy="27.5" r="1.5" fill="#fff" />
+              </>
+            )}
+
+            {/* Cheek blush */}
+            <circle cx="35" cy="36" r="3" fill="#ec4899" opacity="0.4" />
+            <circle cx="65" cy="36" r="3" fill="#ec4899" opacity="0.4" />
+
+            {/* Mouth */}
+            {isTickled ? (
+              <path d="M45,39 Q50,44 55,39 Z" fill="#be185d" stroke="#4c1d95" strokeWidth="1" />
+            ) : (
+              <path d="M47,39 Q50,42 53,39" fill="none" stroke="#4c1d95" strokeWidth="2.5" strokeLinecap="round" />
+            )}
+          </svg>
+        </motion.div>
+      )
+
+    case 'teen':
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.teen} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+            <defs>
+              <linearGradient id="pegTeenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fae8ff" />
+                <stop offset="100%" stopColor="#f3e8ff" />
+              </linearGradient>
+              <linearGradient id="maneTeenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ec4899" />
+                <stop offset="100%" stopColor="#8b5cf6" />
+              </linearGradient>
+            </defs>
+
+            {/* Tail - faster/wider wag */}
+            <motion.path
+              d="M32,65 C15,78 5,68 8,52 C10,48 16,52 24,58"
+              fill="url(#maneTeenGrad)"
+              stroke="#d8b4fe"
+              strokeWidth="0.8"
+              animate={{ rotate: [-20, 25, -20] }}
+              transition={{ repeat: Infinity, duration: 1.0, ease: 'easeInOut' }}
+              style={{ originX: '24px', originY: '58px' }}
+            />
+
+            {/* Wings (Bigger and flapping) */}
+            <motion.path
+              d="M28,48 C8,30 2,58 24,56 Z"
+              fill="#fff"
+              stroke="#d8b4fe"
+              strokeWidth="1"
+              animate={{ rotate: [-28, 32, -28] }}
+              transition={{ repeat: Infinity, duration: 0.6, ease: 'easeInOut' }}
+              style={{ originX: '24px', originY: '54px' }}
+            />
+            <motion.path
+              d="M72,48 C92,30 98,58 76,56 Z"
+              fill="#fff"
+              stroke="#d8b4fe"
+              strokeWidth="1"
+              animate={{ rotate: [28, -32, 28] }}
+              transition={{ repeat: Infinity, duration: 0.6, ease: 'easeInOut' }}
+              style={{ originX: '76px', originY: '54px' }}
+            />
+
+            {/* Legs */}
+            <ellipse cx="40" cy="84" rx="6" ry="3.5" fill="#d8b4fe" />
+            <ellipse cx="60" cy="84" rx="6" ry="3.5" fill="#d8b4fe" />
+
+            {/* Body */}
+            <path
+              d="M34,48 C34,74 66,74 66,48 C66,40 62,32 50,32 C38,32 34,40 34,48 Z"
+              fill="url(#pegTeenGrad)"
+              stroke="#d8b4fe"
+              strokeWidth="1"
+            />
+
+            {/* Ears */}
+            <motion.polygon
+              points="30,22 24,12 34,16"
+              fill="#f3e8ff"
+              animate={{ rotate: [0, -12, 0] }}
+              transition={{ repeat: Infinity, duration: 3.2, repeatDelay: 1.2 }}
+              style={{ originX: '30px', originY: '20px' }}
+            />
+            <motion.polygon
+              points="70,22 76,12 66,16"
+              fill="#f3e8ff"
+              animate={{ rotate: [0, 12, 0] }}
+              transition={{ repeat: Infinity, duration: 3.2, repeatDelay: 1.4 }}
+              style={{ originX: '70px', originY: '20px' }}
+            />
+
+            {/* Mane (Blowing slightly - more skew visibility) */}
+            <motion.path
+              d="M44,18 C48,6 52,6 56,18 C64,12 60,30 50,26"
+              fill="url(#maneTeenGrad)"
+              animate={{ skewX: [-6, 6, -6] }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+            />
+
+            {/* Golden Horn */}
+            <polygon points="50,8 46,20 54,20" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+
+            {/* Head */}
+            <path
+              d="M26,30 C26,10 74,10 74,30 C74,42 66,44 50,44 C34,44 26,42 26,30 Z"
+              fill="url(#pegTeenGrad)"
+              stroke="#d8b4fe"
+              strokeWidth="1"
+            />
+
+            {/* Eyes */}
+            {isSleeping ? (
+              <>
+                <path d="M37,26 Q41,30 45,26" fill="none" stroke="#581c87" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M55,26 Q59,30 63,26" fill="none" stroke="#581c87" strokeWidth="2.5" strokeLinecap="round" />
+              </>
+            ) : blink || isTickled ? (
+              <>
+                <line x1="36" y1="27" x2="44" y2="27" stroke="#581c87" strokeWidth="4" strokeLinecap="round" />
+                <line x1="56" y1="27" x2="64" y2="27" stroke="#581c87" strokeWidth="4" strokeLinecap="round" />
+              </>
+            ) : (
+              <>
+                <g style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}>
+                  <circle cx="40" cy="25" r="4.5" fill="#581c87" />
+                  <circle cx="41.5" cy="23.5" r="1.5" fill="#fff" />
+                </g>
+                <g style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}>
+                  <circle cx="60" cy="25" r="4.5" fill="#581c87" />
+                  <circle cx="61.5" cy="23.5" r="1.5" fill="#fff" />
+                </g>
+              </>
+            )}
+
+            {/* Mouth */}
+            {isTickled ? (
+              <path d="M44,36 Q50,42 56,36 Z" fill="#be185d" stroke="#581c87" strokeWidth="1" />
+            ) : (
+              <path d="M46,36 Q50,39 54,36" fill="none" stroke="#581c87" strokeWidth="2.5" strokeLinecap="round" />
+            )}
+          </svg>
+        </motion.div>
+      )
+
+    case 'adult':
+    default:
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.adult} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-xl">
+            <defs>
+              <linearGradient id="pegAdultGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="60%" stopColor="#fdf4ff" />
+                <stop offset="100%" stopColor="#f5f3ff" />
+              </linearGradient>
+              <linearGradient id="maneAdultGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ec4899" />
+                <stop offset="50%" stopColor="#a855f7" />
+                <stop offset="100%" stopColor="#3b82f6" />
+              </linearGradient>
+            </defs>
+
+            {/* Majestic Wing (Back) - isHappy'de çok daha hızlı */}
+            <motion.path
+              d="M26,45 C2,-6 0,55 24,52 Z"
+              fill="#fff"
+              stroke="#c084fc"
+              strokeWidth="1.2"
+              animate={{ rotate: isHappy ? [-50, 55, -50] : [-35, 38, -35] }}
+              transition={{ repeat: Infinity, duration: isHappy ? 0.28 : 0.5, ease: 'easeInOut' }}
+              style={{ originX: '24px', originY: '48px' }}
+            />
+
+            {/* Majestic Tail - isHappy'de daha hızlı */}
+            <motion.path
+              d="M32,62 C10,70 1,48 5,30 C7,24 14,35 25,52"
+              fill="url(#maneAdultGrad)"
+              stroke="#c084fc"
+              strokeWidth="1"
+              animate={{ rotate: isHappy ? [-32, 38, -32] : [-22, 28, -22] }}
+              transition={{ repeat: Infinity, duration: isHappy ? 0.4 : 0.8, ease: 'easeInOut' }}
+              style={{ originX: '25px', originY: '52px' }}
+            />
+
+            {/* Legs (tucked/standing elegant) */}
+            <ellipse cx="38" cy="80" rx="7" ry="4" fill="#ddd6fe" transform="rotate(-10 38 80)" />
+            <ellipse cx="62" cy="80" rx="7" ry="4" fill="#ddd6fe" transform="rotate(10 62 80)" />
+
+            {/* Body */}
+            <path
+              d="M32,44 C32,70 68,70 68,44 C68,34 62,26 50,26 C38,26 32,34 32,44 Z"
+              fill="url(#pegAdultGrad)"
+              stroke="#ddd6fe"
+              strokeWidth="1"
+            />
+
+            {/* Ears */}
+            <motion.polygon
+              points="28,20 20,8 32,13"
+              fill="#fdf4ff"
+              animate={{ rotate: [0, -12, 0] }}
+              transition={{ repeat: Infinity, duration: 3.5, repeatDelay: 1.0 }}
+              style={{ originX: '28px', originY: '18px' }}
+            />
+            <motion.polygon
+              points="72,20 80,8 68,13"
+              fill="#fdf4ff"
+              animate={{ rotate: [0, 12, 0] }}
+              transition={{ repeat: Infinity, duration: 3.5, repeatDelay: 1.2 }}
+              style={{ originX: '72px', originY: '18px' }}
+            />
+
+            {/* Majestic Mane (Blowing) - isHappy'de daha geniş skew */}
+            <motion.path
+              d="M44,16 C48,4 52,4 56,16 C66,10 62,34 50,28"
+              fill="url(#maneAdultGrad)"
+              animate={{ skewX: isHappy ? [-14, 14, -14] : [-8, 8, -8] }}
+              transition={{ repeat: Infinity, duration: isHappy ? 0.5 : 1.0, ease: 'easeInOut' }}
+            />
+
+            {/* Golden Horn with Sparkle Aura */}
+            <polygon points="50,4 45,18 55,18" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+
+            {/* Head */}
+            <path
+              d="M24,26 C24,6 76,6 76,26 C76,38 66,40 50,40 C34,40 24,38 24,26 Z"
+              fill="url(#pegAdultGrad)"
+              stroke="#ddd6fe"
+              strokeWidth="1.2"
+            />
+
+            {/* Eyes */}
+            {isSleeping ? (
+              <>
+                <path d="M37,22 Q41,26 45,22" fill="none" stroke="#4c1d95" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M55,22 Q59,26 63,22" fill="none" stroke="#4c1d95" strokeWidth="2.5" strokeLinecap="round" />
+              </>
+            ) : blink || isTickled ? (
+              <>
+                <line x1="36" y1="23" x2="44" y2="23" stroke="#4c1d95" strokeWidth="4" strokeLinecap="round" />
+                <line x1="56" y1="23" x2="64" y2="23" stroke="#4c1d95" strokeWidth="4" strokeLinecap="round" />
+              </>
+            ) : (
+              <>
+                <g style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}>
+                  <circle cx="40" cy="21" r="5" fill="#4c1d95" />
+                  <circle cx="42" cy="19" r="1.5" fill="#fff" />
+                </g>
+                <g style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}>
+                  <circle cx="60" cy="21" r="5" fill="#4c1d95" />
+                  <circle cx="62" cy="19" r="1.5" fill="#fff" />
+                </g>
+              </>
+            )}
+
+            {/* Mouth — isHappy'de sevinç gülümsemesi (açık) */}
+            {isHappy ? (
+              <path d="M43,29 Q50,38 57,29 Z" fill="#ec4899" stroke="#4c1d95" strokeWidth="1.2" />
+            ) : isTickled ? (
+              <path d="M43,30 Q50,38 57,30 Z" fill="#be185d" stroke="#4c1d95" strokeWidth="1.2" />
+            ) : (
+              <path d="M45,31 Q50,34 55,31" fill="none" stroke="#4c1d95" strokeWidth="2.5" strokeLinecap="round" />
+            )}
+
+            {/* Majestic Wing (Front) - isHappy'de çok daha hızlı */}
+            <motion.path
+              d="M74,45 C98,-6 100,55 76,52 Z"
+              fill="#fff"
+              stroke="#c084fc"
+              strokeWidth="1.2"
+              animate={{ rotate: isHappy ? [50, -55, 50] : [35, -38, 35] }}
+              transition={{ repeat: Infinity, duration: isHappy ? 0.28 : 0.9, ease: 'easeInOut' }}
+              style={{ originX: '76px', originY: '48px' }}
+            />
+
+            {/* isHappy: 3 büyük yıldız — normal: tek yapı */}
+            {!isSleeping && isHappy && (
+              <>
+                <motion.path
+                  d="M46,5 L47,8 L50,8 L47.5,9.5 L48.5,12 L46,10.5 L43.5,12 L44.5,9.5 L42,8 L45,8 Z"
+                  fill="#fbbf24"
+                  animate={{ y: [-3, -38], x: [-8, -16], scale: [1, 4], opacity: [1, 0], rotate: [0, 180] }}
+                  transition={{ repeat: Infinity, duration: 1.0, ease: 'easeOut', delay: 0 }}
+                />
+                <motion.path
+                  d="M50,2 L51,4 L53,4 L51.5,5 L52,7 L50,6 L48,7 L48.5,5 L47,4 L49,4 Z"
+                  fill="#c084fc"
+                  animate={{ y: [-5, -52], x: [0, 4, -4, 0], scale: [1, 5], opacity: [1, 0], rotate: [0, 360] }}
+                  transition={{ repeat: Infinity, duration: 1.1, ease: 'easeOut', delay: 0.15 }}
+                />
+                <motion.path
+                  d="M54,5 L55,8 L58,8 L55.5,9.5 L56.5,12 L54,10.5 L51.5,12 L52.5,9.5 L50,8 L53,8 Z"
+                  fill="#38bdf8"
+                  animate={{ y: [-3, -38], x: [8, 16], scale: [1, 4], opacity: [1, 0], rotate: [0, -180] }}
+                  transition={{ repeat: Infinity, duration: 1.0, ease: 'easeOut', delay: 0.3 }}
+                />
+              </>
+            )}
+            {!isSleeping && !isHappy && (
+              <motion.path
+                d="M50,2 L51,4 L53,4 L51.5,5 L52,7 L50,6 L48,7 L48.5,5 L47,4 L49,4 Z"
+                fill="#fbbf24"
+                animate={{ y: [-5, -40], x: [0, 8, -8, 0], scale: [1, 3], opacity: [1, 0] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: 'easeOut' }}
+              />
+            )}
+          </svg>
+        </motion.div>
+      )
+  }
+}

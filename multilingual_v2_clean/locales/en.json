@@ -1,0 +1,576 @@
+{
+  "navbar": {
+    "pricing": "Pricing",
+    "how_it_works": "How It Works",
+    "library": "Magic Library",
+    "parent_panel": "Parent Panel",
+    "logout": "Logout",
+    "login": "Login",
+    "return_home": "Return Home",
+    "admin": "Admin",
+    "lang_tr": "Türkçe",
+    "lang_en": "English"
+  },
+  "hero": {
+    "title": "Write the Tales of Your Dreams Together",
+    "description": "Choose your child's name, favorite character, and theme. Let AI handle the rest. Create illustrated, narrated bedtime adventures just for them.",
+    "cta_primary": "Start Creating Tales",
+    "cta_secondary": "Subscription Plans"
+  },
+  "features": {
+    "safe": "Safe and Ad-Free",
+    "pedagogical": "Pedagogical Filters",
+    "happy_families": "Hundreds of Happy Families"
+  },
+  "landing": {
+    "form_subtitle": "✨ Take the First Step Together",
+    "form_title": "You Define the Adventure",
+    "form_description": "Guide your hero with just a few words, leave the rest to us.",
+    "features_badge": "LumiBook Privileges",
+    "features_title": "Wake Up to a New World Every Night",
+    "features_subtitle": "The most reliable toolkit that feeds your child's imagination with advanced technologies.",
+    "feat1_title": "Visual Feast and Narration",
+    "feat1_desc": "High-quality images created specifically for each page and studio-quality narrations.",
+    "feat1_bullet1": "Different drawing styles",
+    "feat1_bullet2": "Professional narrator",
+    "feat2_title": "From Your Voice to Dreams",
+    "feat2_desc": "Introduce your own voice to the system and let all stories be read in your voice.",
+    "feat2_bullet1": "Premium: Voice Cloning",
+    "feat2_bullet2": "Always make them feel you're there",
+    "feat3_title": "Infinite Adventure, Same Hero",
+    "feat3_desc": "Save your own characters to your library and let them play in different tales.",
+    "feat3_bullet1": "Character library",
+    "feat3_bullet2": "Visual consistency",
+    "feat4_title": "Values Education and Safety",
+    "feat4_desc": "Make lessons like friendship, honesty, or sharing the main idea of the tale.",
+    "feat4_bullet1": "Educational Mode option",
+    "feat4_bullet2": "Age-appropriate content",
+    "footer": "© 2026 LumiBook. A world of tales that brightens your child's dreams."
+  },
+  "voices": {
+    "select": "Select Voice",
+    "silent": "Silent",
+    "achird": { "name": "Wise Grandpa", "desc": "Deep, wise, and reassuring" },
+    "algenib": { "name": "Traveler Rabbit", "desc": "Cheerful and energetic" },
+    "algieba": { "name": "Brave Knight", "desc": "Strong and heroic" },
+    "alnilam": { "name": "Grand King", "desc": "Authoritative and honorable" },
+    "charon": { "name": "Excited Dad", "desc": "Loves surprises and playful" },
+    "iapetus": { "name": "Forest Guardian", "desc": "A deep and protective voice" },
+    "aoede": { "name": "Wise Mother", "desc": "Most compassionate and peaceful" },
+    "callirrhoe": { "name": "Storyteller Woman", "desc": "Fluent and intriguing" },
+    "despina": { "name": "Serenity Fairy", "desc": "Soft and calming" },
+    "fenrir": { "name": "Magic Fairy", "desc": "Young, fresh, and magical" },
+    "gacrux": { "name": "Mysterious Princess", "desc": "Elegant, mystic, and noble" },
+    "kore": { "name": "Rainbow Girl", "desc": "Vibrant, cheerful, and colorful" }
+  },
+  "pricing": {
+    "hero_title": "Subscribe and Save",
+    "hero_subtitle": "An overview of LumiBook AI subscription plans. Help your children create magic stories with AI.",
+    "monthly": "/ Month",
+    "most_popular": "Most Popular",
+    "secure_payment": "Secure payment via Stripe",
+    "cards_accepted": "Cards, digital wallets are accepted.",
+    "cancel_anytime": "You can cancel anytime. No hidden fees.",
+    "trust_text": "Join over 11,030 happy parents and educators.",
+    "stripe_powered": "Powered by Stripe.",
+    "encryption": "256-bit SSL encryption",
+    "instant_cancel": "Instant Cancel Option",
+    "features": {
+      "request_limit": "Request Limit",
+      "chapter_count": "Chapter Count",
+      "story_length": "Story Length",
+      "magic_shuffles": "Magic Drafts",
+      "continue_adventure": "Continue Adventure",
+      "listening_list": "Magic Listening List",
+      "character_memory": "Hero Memory",
+      "smart_transitions": "Smart Adventure Transition",
+      "magic_library": "Magic Library",
+      "write_own": "Write Your Own Story",
+      "story_limit": "Story Limit",
+      "genre_selection": "Genre Selection",
+      "archive": "Story Archive",
+      "library_access": "Library Access",
+      "parent_panel": "Parent Panel",
+      "audio_stories": "Audio Stories",
+      "voice_cloning": "Voice Cloning",
+      "voice_models": "Voice Models",
+      "narration": "Story Narration",
+      "license": "Publishing License",
+      "podcast_output": "Podcast Output",
+      "ebook_creation": "E-Book Creation"
+    },
+    "values": {
+      "off": "Off",
+      "on": "Included",
+      "none": "None",
+      "standard": "Standard",
+      "advanced": "Advanced",
+      "full": "Full Access",
+      "text_only": "Text Only",
+      "audio_text": "Audio + Text",
+      "unlocked": "Unlocked"
+    },
+    "plans": {
+      "free": {
+        "name": "Cotton Cloud",
+        "desc": "For little dreamers just starting out.",
+        "button": "Start Now"
+      },
+      "pro": {
+        "name": "Silver Sky",
+        "desc": "For those who want more adventure and voice cloning.",
+        "button": "Subscribe and Save"
+      },
+      "premium": {
+        "name": "Golden Sun",
+        "desc": "Infinite imagination and the highest quality.",
+        "button": "Subscribe Now"
+      }
+    }
+  },
+  "library": {
+    "title": "Magic Library",
+    "subtitle": "Your special collection of unique adventures created with your imagination.",
+    "no_stories": "No tales in this category yet.",
+    "create_now": "Create a new one now!",
+    "read_now": "Read Now →",
+    "default_preview": "A magical adventure awaits you...",
+    "footer_slogan": "A world growing with your imagination",
+    "age_suffix": "Years",
+    "categories": {
+      "all": "All",
+      "adventures": "Adventures"
+    },
+    "genres": {
+      "all": "All",
+      "tale": "Tale",
+      "sci_fi": "Sci-Fi",
+      "adventure": "Adventure",
+      "fantasy": "Fantasy",
+      "fable": "Fable"
+    },
+    "sort": {
+      "label": "Sort By",
+      "newest": "✨ Newest First",
+      "top_rated": "⭐ Top Rated"
+    }
+  },
+  "form": {
+    "tabs": {
+      "normal": "Normal Stories",
+      "educational": "Educational Tales",
+      "continue": "Continue Adventure"
+    },
+    "placeholders": {
+      "subscribe_to_write": "Subscribe to write your own tale. For now, you can press the dice icon to produce a surprise story.",
+      "manual_limit_reached": "Your unique story limit reached! Please try drafts.",
+      "audio_limit_reached": "Your audio story limit reached! You can only produce 'Silent' tales.",
+      "prompt_normal": "Write me a story about...",
+      "prompt_educational": "What would you like to teach your child? E.g.: Ayşe learning to brush her teeth...",
+      "continue_story_search": "Which Heroes Do You Want to Continue With?"
+    },
+    "sections": {
+      "voice": "Voice",
+      "genre": "Genre",
+      "style": "Art Style",
+      "age": "Age Group",
+      "characters": "Characters",
+      "educational_value": "Value to Teach",
+      "heroes_connected": "Heroes Connected",
+      "select_value": "Select Value",
+      "select_genre": "Select Genre",
+      "select_style": "Select Style",
+      "select_age": "Select Age",
+      "educational_values": {
+        "honesty": "Honesty",
+        "sharing": "Sharing",
+        "courage": "Courage",
+        "patience": "Patience",
+        "responsibility": "Responsibility",
+        "nature_love": "Love of Nature"
+      }
+    },
+    "buttons": {
+      "select_voice": "Select Voice",
+      "generate": "Create Tale ✨",
+      "randomize": "Make a Surprise Choice",
+      "edit": "Edit",
+      "add_character": "Add Character",
+      "cloning_voice": "Cloning Voice...",
+      "clone_save": "Clone Voice and Save"
+    },
+    "messages": {
+      "educational_error": "You must have a Silver Sky or Golden Sun plan for Educational mode.",
+      "shuffle_limit": "Draft limit reached",
+      "shuffle_audio_limit": "Audio limit for drafts reached",
+      "try_shuffles": "Try the drafts! ✨",
+      "empty_prompt": "Please do not leave the story topic empty.",
+      "no_voice": "Please select a voice to narrate the story.",
+      "no_genre": "Please select a tale genre.",
+      "no_style": "Please select an art style.",
+      "no_age": "Please select an age group.",
+      "no_educational": "Please select a value to teach.",
+      "no_characters": "Please add at least one character.",
+      "max_characters_error": "You can add a maximum of 3 characters.",
+      "error_generic": "An unknown error occurred.",
+      "voice_limit": "You must have a Golden Sun plan to clone your own voice.",
+      "voice_clone_success": "Voice added successfully! We can now read tales in your voice.",
+      "file_too_large": "File size too large (Max 10MB)",
+      "cloning_error": "Voice cloning error"
+    },
+    "prompt_template": {
+      "in_style": "in style",
+      "topic": "Topic",
+      "style": "Art Style",
+      "voice": "Voice Selection",
+      "characters": "Characters",
+      "educational_value": "Educational Value",
+      "continuation": "THIS IS A CONTINUATION STORY. Write a new adventure based on the characters and plot of the previous story."
+    }
+  },
+  "parent": {
+    "title": "Parent Control Panel",
+    "subtitle": "Manage your children's world of tales from here.",
+    "stats_title": "Monthly Statistics",
+    "archived_stories": "Archived Tales",
+    "magic_shuffles": "Magic Drafts",
+    "custom_stories": "Custom Stories",
+    "custom_audio": "Custom Audio Tales",
+    "continue_adventure": "Continue Adventure",
+    "quick_create_title": "Create New Tale!",
+    "quick_create_desc": "Start now to create a new AI-powered adventure.",
+    "library_title": "Old Tales Library",
+    "no_stories": "You haven't created any tales yet.",
+    "total_remaining": "Total Remaining",
+    "library_link": "You can select older stories from the library →",
+    "upgrade_banner": {
+      "title_pro": "Upgrade to Golden Sun! 👑",
+      "title_free": "Go Premium!",
+      "desc": "Narrate stories yourself by cloning your own voice.",
+      "button": "Upgrade"
+    },
+    "collection_room": "Collection Room"
+  },
+  "story": {
+    "not_found": "Tale not found",
+    "back_to_library": "Back to Library",
+    "back_to_parent": "Back to Dashboard",
+    "start_new_adventure": "Start New Adventure",
+    "created_for_you": "🌟 This tale was created especially for you · LumiBook",
+    "audio_banner": {
+      "title": "Magical Audio Recording Available!",
+      "desc": "Listen to this tale now with smooth narration.",
+      "add_to_queue": "Add to Queue",
+      "added": "Added to Queue",
+      "in_queue": "In Queue",
+      "play_now": "Listen Now",
+      "playing": "Now Playing..."
+    },
+    "download_pdf": {
+      "button": "Download Book",
+      "preparing": "Preparing PDF...",
+      "ready": "Preparing...",
+      "filename_suffix": "Book"
+    },
+    "podcast": {
+      "download": "Download Podcast",
+      "remaining": "Remaining",
+      "limit_reached": "Download Limit Reached",
+      "upgrade_required": "Premium Feature",
+      "upgrade_desc": "Upgrade your plan to download podcasts."
+    }
+  },
+  "how_it_works": {
+    "title": "How Does the Magic Happen?",
+    "subtitle": "In just three steps, let's build together that unique bedtime world where your child is the star.",
+    "step1_title": "Scatter the Seeds of Imagination",
+    "step1_desc": "Choose your child's name, favorite characters, and where the adventure will take place. Describe your dream world in just a few words.",
+    "step2_title": "Touch the Magic Wand",
+    "step2_desc": "Our AI magic transforms your choices into a unique, pedagogical, and immersive tale adventure in seconds.",
+    "step3_title": "Wake Up to the World of Tales",
+    "step3_desc": "Your illustrated and narrated tale is ready! Read it together or let them listen in your own voice. A new discovery awaits you every night.",
+    "badge_safe": "✨ Magical and Safe",
+    "badge_custom": "🎨 Customizable",
+    "cta_title": "Ready for a Magical Adventure?",
+    "cta_desc": "Let's explore your child's imagination together. Creating your first tale will only take a few seconds.",
+    "badge_safe_text": "Safe and Ad-Free",
+    "badge_custom_text": "Pedagogical Filters",
+    "cta_button": "Create Tale Now",
+    "footer_copy": "© 2026 LumiBook. All rights reserved."
+  },
+  "admin": {
+    "title": "Command & Control Center",
+    "subtitle": "Track all system-wide activities from here.",
+    "return_site": "Return to Site",
+    "stats": {
+      "gross_revenue": "Gross Revenue",
+      "net_revenue": "Excl. Commission",
+      "total_stories": "Total Tales",
+      "active_subscriptions": "Active Subscriptions",
+      "total_users": "Total Users",
+      "cache_total": "Total Drafts",
+      "cache_full": "Full (Cache)",
+      "cache_empty": "Missing (Empty)",
+      "vertex_cost": "Vertex AI Cost"
+    },
+    "tables": {
+      "recent_stories": "Recent Stories",
+      "user": "User",
+      "story_title": "Story Title",
+      "date": "Date",
+      "action": "Action",
+      "unknown": "Unknown",
+      "page": "Page",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "logs": {
+      "title": "System Error Logs (Live)",
+      "location": "Location",
+      "message": "Error Message",
+      "anonymous": "Anonymous",
+      "empty": "No error records yet. System clean! ✨"
+    },
+    "cache": {
+      "title": "Magic Drafts (Cache) Status",
+      "desc": "Fill the missing ones sequentially with automatic queue.",
+      "optimize": "Optimize System",
+      "fixing": "Fixing...",
+      "fill_missing": "Auto Fill Missing",
+      "search_placeholder": "Search in drafts...",
+      "filter_all": "ALL",
+      "filter_tr": "TR",
+      "filter_en": "EN",
+      "status_all": "ALL",
+      "status_full": "FULL",
+      "status_missing": "EMPTY",
+      "table_theme": "Scenario Topic",
+      "table_genre": "Genre",
+      "table_lang": "Lang",
+      "table_status": "Status",
+      "status_ready": "READY",
+      "status_generating": "GENERATING...",
+      "status_missing_label": "MISSING"
+    },
+    "crm": {
+      "title": "User Management (CRM)",
+      "search_placeholder": "Search user by email...",
+      "bonus_quota": "Bonus Quota",
+      "status": "Status",
+      "actions": "Actions",
+      "magic_draft": "Magic Draft",
+      "suspended": "Suspended",
+      "active": "Active",
+      "add_5": "+5 Drafts",
+      "add_10": "+10 Drafts",
+      "activate": "Activate",
+      "suspend": "Suspend",
+      "not_found": "User not found."
+    },
+    "switches": {
+      "title": "System Switches (Feature Flags)",
+      "maintenance_mode": "Maintenance Mode",
+      "maintenance_desc": "When activated, all users except admins are redirected to the 'Maintenance' page.",
+      "system_locked": "System Currently Locked",
+      "voice_cloning": "Voice Cloning Feature",
+      "voice_cloning_desc": "Enables or disables the feature for users to upload their own voices and have stories read.",
+      "feature_disabled": "Feature Disabled"
+    },
+    "messages": {
+      "cache_full": "All drafts are already full! ✨",
+      "error": "Error:",
+      "queue_started": "Queue started. Please do not close this page until operations are finished.",
+      "queue_completed": "All productions completed successfully! 🚀",
+      "migration_confirm": "Stories produced in old format will be made compatible with the new system. Do you confirm?",
+      "migration_success": "old records successfully updated!",
+      "confirm_title": "Confirmation Required",
+      "confirm_desc": "Total {count} missing drafts found. These drafts will be produced sequentially via Google Vertex AI. It is recommended not to close the page during the process.",
+      "confirm_start": "Yes, Start Queue",
+      "confirm_cancel": "Cancel",
+      "quota_success": "Great! +{amount} new 'Magic Draft' ✨ credits successfully assigned to user.",
+      "suspend_success": "User account suspended. 🚫",
+      "activate_success": "User account reactivated. ✅"
+    }
+  },
+  "settings": {
+    "title": "Account Settings",
+    "back_to_library": "Back to Library",
+    "subscription_details": "Subscription Details",
+    "current_plan": "Current Plan",
+    "status": "Subscription Status",
+    "status_active": "● Active",
+    "status_passive": "○ Passive",
+    "start_date": "Start Date",
+    "next_renewal": "Next Renewal",
+    "end_date": "End Date",
+    "auto_pay_active": "Auto-Pay Active",
+    "auto_pay_desc": "Your subscription will be automatically charged from your card on the renewal date.",
+    "manage_payment": "Manage Payment Method",
+    "loading": "Loading...",
+    "upgrade_title": "Upgrade Your Package",
+    "support_title": "Need Support?",
+    "support_desc": "Contact us for any questions regarding subscriptions or payments.",
+    "plans": {
+      "premium": "Golden Sun 👑",
+      "pro": "Silver Sky ☁️",
+      "free": "Cotton Cloud (Free) ☁️"
+    },
+    "messages": {
+      "checkout_error": "Could not redirect to payment page.",
+      "portal_error": "Could not open portal.",
+      "portal_unavailable": "Subscription management page currently unavailable."
+    }
+  },
+  "auth": {
+    "login": {
+      "welcome": "Welcome",
+      "subtitle": "Log in to continue.",
+      "google_button": "Continue with Google",
+      "or": "OR",
+      "email_label": "Email Address",
+      "email_placeholder": "example@mail.com",
+      "password_label": "Password",
+      "forgot_password": "Forgot Password?",
+      "button_loading": "Logging in...",
+      "button": "Log In",
+      "no_account": "Don't have an account?",
+      "register_now": "Register Now"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Start creating magical tales for your child.",
+      "google_button": "Continue with Google",
+      "or": "OR",
+      "success_title": "Registration Successful!",
+      "success_desc": "Please click the verification link sent to your email address to activate your account.",
+      "success_button": "Log In",
+      "email_label": "Email Address",
+      "email_placeholder": "example@mail.com",
+      "password_label": "Password",
+      "password_placeholder": "At least 6 characters",
+      "lang_label": "App Language",
+      "button_loading": "Registering...",
+      "button": "Register",
+      "has_account": "Already have an account?",
+      "login_now": "Log In"
+    }
+  },
+  "checkout": {
+    "checking_status": "Checking Session",
+    "checking_desc": "Please wait, we're bringing you to wonderful tales...",
+    "redirecting_status": "Preparing Payment",
+    "redirecting_desc": "You are being redirected to the secure payment page. Please do not close the page.",
+    "error_title": "An Error Occurred",
+    "error_desc": "Payment session could not be started. Please check your internet connection and try again.",
+    "retry": "Retry"
+  },
+  "player": {
+    "queue_title": "Story Queue",
+    "empty_queue": "Your queue is empty. You can ensure continuity by adding tales from the library.",
+    "next_track": "Next",
+    "return_to_player": "Return to Player",
+    "live_listen": "Live Listening",
+    "queue_count": "{count} TALES IN QUEUE",
+    "show_queue": "Show Queue",
+    "now_playing": "NOW PLAYING",
+    "status_playing": "The story continues at full speed...",
+    "status_paused": "Play to continue the tale.",
+    "page_label": "page",
+    "back": "Back",
+    "forward": "Forward",
+    "fullscreen": "Fullscreen",
+    "exit_fullscreen": "Exit Fullscreen",
+    "loading_image": "Loading image...",
+    "loading_story": "Loading tale...",
+    "locked_message": "You must have a Silver Sky or Golden Sun plan to listen to audio tales in the Magic Library. Please upgrade your package from the settings page."
+  },
+  "components": {
+    "add_to_queue": {
+      "added": "Added!",
+      "in_queue": "In Queue",
+      "add": "Add to Queue",
+      "add_to": "Add to Queue"
+    },
+    "download_book": {
+      "preparing": "Preparing...",
+      "pdf_preparing": "Preparing PDF...",
+      "download": "Download Book"
+    },
+    "pin": {
+      "unpin": "Unpin Heroes",
+      "pin": "Pin Heroes to Home",
+      "error": "AN ERROR OCCURRED:"
+    }
+  },
+  "styles": {
+    "watercolor": "Watercolor",
+    "pixar": "3D Pixar Style",
+    "pastel": "Pastel Dreams",
+    "anime": "Anime",
+    "oil": "Oil Painting",
+    "pop_art": "Pop Art",
+    "cartoon": "Cartoon",
+    "retro": "Vintage Retro"
+  },
+  "checkout": {
+    "error_title": "Connection Error",
+    "error_desc": "A problem occurred while connecting to the payment infrastructure (Stripe). The system administrator may not have configured the payment API keys yet.",
+    "retry": "Return to Pricing",
+    "checking_status": "Checking Status",
+    "checking_desc": "Checking your account eligibility...",
+    "redirecting_status": "Redirecting to Secure Checkout",
+    "redirecting_desc": "Please wait, you are being redirected to Stripe's secure checkout page..."
+  },
+  "gamification": {
+    "collection_room": "Collection Room",
+    "companion_room": "Reading Companion & Badges",
+    "pet_status": "Reading Companion Status",
+    "level": "Level",
+    "xp": "XP",
+    "stage": "Evolution Stage",
+    "next_level": "Next Level",
+    "badges": "Hero Badges",
+    "locked": "Locked",
+    "earned_at": "Earned at:",
+    "locked_desc": "Listen to {count} more stories to unlock.",
+    "play_to_earn": "Grow your reading companion by listening to stories from the Magic Library, and earn badges by listening to stories from your own library!",
+    "pet_egg": "Magic Egg",
+    "pet_baby": "Baby Dragon",
+    "pet_child": "Little Dinosaur",
+    "pet_teen": "Teen Dragon",
+    "pet_adult": "Ancient Dragon",
+    "pet_egg_desc": "A sleeping magical egg. Listen to more stories to hatch it!",
+    "pet_baby_desc": "A cute baby dragon newly hatched from its egg!",
+    "pet_child_desc": "A curious and energetic companion who loves running around.",
+    "pet_teen_desc": "A brave teen dragon exploring its magical powers.",
+    "pet_adult_desc": "A majestic and wise dragon, protector of the fairy tale lands.",
+    "companion_tickle": "Haha! That tickles! Please stop, let's focus on reading! 😄",
+    "companion_messages": {
+      "egg": [
+        "Zzz... I'm still sleeping. Listen to more stories to wake me up! 🥚",
+        "Magical powers are gathering inside the egg... ✨",
+        "Shhh... I wonder if my shell will crack when the story ends? 🥚"
+      ],
+      "baby": [
+        "Peek-a-boo! 🐣 We are listening to a lovely story! Let's keep going to level up.",
+        "I can't wait to grow up! Stories are so delicious! 🍼",
+        "You can drag me to any corner of the screen! 🎈"
+      ],
+      "child": [
+        "We're doing great! 🐥 I'm so curious about the end of this story!",
+        "Listening to stories with you is my absolute favorite thing! 🌟",
+        "Don't forget to listen to the parent archive to earn more badges! 🏆"
+      ],
+      "teen": [
+        "Ready to explore the realms? 🦖 The more stories we listen to, the stronger I get!",
+        "Testing my magical powers! Raaarr! 🦖",
+        "Reading books makes my imagination fly! ✨"
+      ],
+      "adult": [
+        "Wisdom grows with stories. 🐉 I'm here to protect the land of fairy tales!",
+        "You are a true reading champion! I'm proud of you! 👑",
+        "This wise dragon is always ready to listen to stories with you! 🐉"
+      ]
+    }
+  }
+}

@@ -1,0 +1,658 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+
+interface CompanionProps {
+  stage: string
+  isSleeping?: boolean
+  isTickled?: boolean
+  isHappy?: boolean
+  eyeOffset?: { x: number; y: number }
+}
+
+const sizeClasses: Record<string, string> = {
+  egg: 'w-28 h-28',
+  baby: 'w-32 h-32',
+  child: 'w-36 h-36',
+  teen: 'w-40 h-40',
+  adult: 'w-48 h-48',
+}
+
+export default function DragonCompanion({ 
+  stage, 
+  isSleeping = false, 
+  isTickled = false, 
+  isHappy = false,
+  eyeOffset = { x: 0, y: 0 }
+}: CompanionProps) {
+  const [blink, setBlink] = useState(false)
+  const [isFlapping, setIsFlapping] = useState(false)
+  const [isSpinning, setIsSpinning] = useState(false)
+
+  // Random blink interval for eyes (blinking lasts 250ms for high visibility)
+  useEffect(() => {
+    if (isSleeping) return
+    const interval = setInterval(() => {
+      setBlink(true)
+      setTimeout(() => setBlink(false), 250)
+    }, 3000 + Math.random() * 4000)
+    return () => clearInterval(interval)
+  }, [isSleeping])
+
+  // Random flap interval for baby stage
+  useEffect(() => {
+    if (stage !== 'baby' || isSleeping) return
+    const interval = setInterval(() => {
+      setIsFlapping(true)
+      setTimeout(() => setIsFlapping(false), 1600)
+    }, 6000 + Math.random() * 5000)
+    return () => clearInterval(interval)
+  }, [stage, isSleeping])
+
+  // Random spin interval for teen & adult stages
+  useEffect(() => {
+    if ((stage !== 'teen' && stage !== 'adult') || isSleeping) return
+    const interval = setInterval(() => {
+      setIsSpinning(true)
+      setTimeout(() => setIsSpinning(false), 1000)
+    }, 12000 + Math.random() * 8000)
+    return () => clearInterval(interval)
+  }, [stage, isSleeping])
+
+  const getAnimationProps = () => {
+    if (stage === 'egg') {
+      return {
+        animate: {
+          y: isHappy ? [0, -40, 0] : [0, -6, 0],
+          rotate: isTickled ? [0, -15, 15, -15, 15, -8, 8, 0] : 0,
+          scale: isTickled ? [1, 1.08, 0.92, 1.08, 0.95, 1.02, 1] : 1,
+        },
+        transition: {
+          y: { duration: isHappy ? 0.6 : 2.4, repeat: isHappy ? 0 : Infinity, ease: 'easeInOut' },
+          rotate: { duration: 0.6, ease: 'easeInOut' },
+          scale: { duration: 0.6, ease: 'easeInOut' },
+        }
+      }
+    }
+    if (stage === 'baby') {
+      return {
+        animate: {
+          y: isHappy ? [0, -45, 0] : [0, -8, 0],
+          rotate: isTickled ? [0, -20, 20, -20, 20, -15, 15, 0] : 0,
+          scale: isTickled ? [1, 1.12, 0.88, 1.12, 0.92, 1.05, 1] : 1,
+        },
+        transition: {
+          y: { duration: isHappy ? 0.6 : 2.2, repeat: isHappy ? 0 : Infinity, ease: 'easeInOut' },
+          rotate: { duration: 0.6, ease: 'easeInOut' },
+          scale: { duration: 0.6, ease: 'easeInOut' },
+        }
+      }
+    }
+    if (stage === 'child') {
+      return {
+        animate: {
+          y: isHappy ? [0, -50, 0] : [0, -24, 0, 0],
+          scaleY: isHappy ? [1, 0.75, 1.25, 1] : isTickled ? [1, 1.15, 0.85, 1.15, 0.9, 1.05, 1] : [1, 1.15, 0.9, 1],
+          scaleX: isHappy ? [1, 1.25, 0.75, 1] : isTickled ? [1, 0.85, 1.15, 0.85, 1.1, 0.95, 1] : [1, 0.9, 1.1, 1],
+          rotate: isTickled ? [0, -15, 15, -15, 15, -10, 10, 0] : 0,
+        },
+        transition: {
+          y: {
+            duration: isHappy ? 0.6 : 1.6,
+            repeat: isHappy ? 0 : Infinity,
+            times: isHappy ? undefined : [0, 0.45, 0.9, 1],
+            ease: isHappy ? 'easeOut' : ['easeOut', 'easeIn', 'easeInOut', 'easeInOut']
+          },
+          scaleY: {
+            duration: (isHappy || isTickled) ? 0.6 : 1.6,
+            repeat: (isHappy || isTickled) ? 0 : Infinity,
+            times: (isHappy || isTickled) ? undefined : [0, 0.45, 0.9, 1],
+            ease: 'easeInOut'
+          },
+          scaleX: {
+            duration: (isHappy || isTickled) ? 0.6 : 1.6,
+            repeat: (isHappy || isTickled) ? 0 : Infinity,
+            times: (isHappy || isTickled) ? undefined : [0, 0.45, 0.9, 1],
+            ease: 'easeInOut'
+          },
+          rotate: { duration: 0.6, ease: 'easeInOut' }
+        }
+      }
+    }
+    const floatY = stage === 'teen' ? [0, -16, 0] : [0, -22, 0]
+    const floatDur = stage === 'teen' ? 1.8 : 1.5
+
+    // Adult isHappy → görkemli sevinç uçuşu sekansı
+    if (stage === 'adult' && isHappy) {
+      return {
+        animate: {
+          y: [0, -20, -70, -40, -80, -30, -60, 0],
+          rotate: [0, -12, 12, -8, 8, -5, 5, 0],
+          scale: [1, 1.15, 1.4, 1.2, 1.45, 1.2, 1.3, 1],
+        },
+        transition: {
+          y: { duration: 3.2, repeat: 0, ease: 'easeInOut' },
+          rotate: { duration: 3.2, repeat: 0, ease: 'easeInOut' },
+          scale: { duration: 3.2, repeat: 0, ease: 'easeInOut' },
+        }
+      }
+    }
+
+    return {
+      animate: {
+        y: floatY,
+        rotate: isSpinning ? [0, 360] : isTickled ? [0, -20, 20, -20, 20, -15, 15, 0] : 0,
+        scale: isTickled ? [1, 1.15, 0.85, 1.15, 0.9, 1.05, 1] : 1,
+      },
+      transition: {
+        y: { duration: floatDur, repeat: Infinity, ease: 'easeInOut' },
+        rotate: {
+          duration: isSpinning ? 1.0 : 0.6,
+          repeat: 0,
+          ease: isSpinning ? 'linear' : 'easeInOut'
+        },
+        scale: { duration: 0.6, ease: 'easeInOut' }
+      }
+    }
+  }
+
+  const motionProps = getAnimationProps()
+
+  // Render SVG based on stage
+  switch (stage) {
+    case 'egg':
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.egg} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" style={{ overflow: 'visible' }}>
+            <defs>
+              <radialGradient id="eggGrad" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stopColor="#ff9a9e" />
+                <stop offset="70%" stopColor="#fecfef" />
+
+                <stop offset="100%" stopColor="#ff758c" />
+              </radialGradient>
+              <filter id="eggGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+            {/* Egg base */}
+            <path
+              d="M50,15 C28,15 25,60 25,75 C25,87 36,90 50,90 C64,90 75,87 75,75 C75,60 72,15 50,15 Z"
+              fill="url(#eggGrad)"
+              stroke="#e0536c"
+              strokeWidth="2"
+            />
+            {/* Volcanic spots / Cracks */}
+            <motion.path
+              d="M45,40 L55,48 L48,58 L58,68 L50,80"
+              fill="none"
+              stroke="#ff4e50"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            />
+            <circle cx="35" cy="55" r="4" fill="#d93b58" opacity="0.6" />
+            <circle cx="65" cy="65" r="5" fill="#d93b58" opacity="0.6" />
+            <circle cx="42" cy="75" r="3" fill="#d93b58" opacity="0.6" />
+            <circle cx="60" cy="45" r="4.5" fill="#d93b58" opacity="0.6" />
+          </svg>
+        </motion.div>
+      )
+
+    case 'baby':
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.baby} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" style={{ overflow: 'visible' }}>
+            <defs>
+              <linearGradient id="dinoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#43e97b" />
+                <stop offset="100%" stopColor="#38f9d7" />
+              </linearGradient>
+              <linearGradient id="shellGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fff" />
+                <stop offset="100%" stopColor="#e2ebf0" />
+              </linearGradient>
+            </defs>
+
+            {/* Back Shell Piece */}
+            <path d="M22,70 C22,85 32,88 50,88 C68,88 78,85 78,70 L72,60 L60,65 L50,55 L38,65 L28,60 Z" fill="url(#shellGrad)" stroke="#cbd5e1" strokeWidth="1.5" />
+
+            {/* Tiny Wings - Flaps only when excited/flapping, otherwise gentle breathing/resting */}
+            <motion.path
+              d="M28,45 C20,40 18,50 25,52 Z"
+              fill="#2ed573"
+              animate={{ 
+                rotate: (isFlapping || isTickled || isHappy) ? [-30, 40, -30] : [-5, 5, -5] 
+              }}
+              transition={{ 
+                repeat: Infinity, 
+                duration: (isFlapping || isTickled || isHappy) ? 0.35 : 2.2, 
+                ease: 'easeInOut' 
+              }}
+              style={{ originX: '28px', originY: '48px' }}
+            />
+            <motion.path
+              d="M72,45 C80,40 82,50 75,52 Z"
+              fill="#2ed573"
+              animate={{ 
+                rotate: (isFlapping || isTickled || isHappy) ? [30, -40, 30] : [5, -5, 5] 
+              }}
+              transition={{ 
+                repeat: Infinity, 
+                duration: (isFlapping || isTickled || isHappy) ? 0.35 : 2.2, 
+                ease: 'easeInOut' 
+              }}
+              style={{ originX: '72px', originY: '48px' }}
+            />
+
+            {/* Baby Dino Head/Body */}
+            <path
+              d="M32,58 C32,32 68,32 68,58 C68,66 62,70 50,70 C38,70 32,66 32,58 Z"
+              fill="url(#dinoGrad)"
+            />
+
+            {/* Cheek glow */}
+            <circle cx="39" cy="58" r="3" fill="#ff4757" opacity="0.4" />
+            <circle cx="61" cy="58" r="3" fill="#ff4757" opacity="0.4" />
+
+            {/* Eyes - Thicker strokes when blinking/squeezed */}
+            {isSleeping ? (
+              // Closed sleeping eyes
+              <>
+                <path d="M37,50 Q41,54 45,50" fill="none" stroke="#2c3e50" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M55,50 Q59,54 63,50" fill="none" stroke="#2c3e50" strokeWidth="2.5" strokeLinecap="round" />
+              </>
+            ) : blink || isTickled ? (
+              // Squeezed/Blinking eyes
+              <>
+                <line x1="37" y1="51" x2="45" y2="51" stroke="#2c3e50" strokeWidth="4" strokeLinecap="round" />
+                <line x1="55" y1="51" x2="63" y2="51" stroke="#2c3e50" strokeWidth="4" strokeLinecap="round" />
+              </>
+            ) : (
+              // Open eyes
+              <>
+                <circle cx="41" cy="50" r="4.5" fill="#2c3e50" />
+                <circle cx="42" cy="48" r="1.5" fill="#fff" />
+                <circle cx="59" cy="50" r="4.5" fill="#2c3e50" />
+                <circle cx="60" cy="48" r="1.5" fill="#fff" />
+              </>
+            )}
+
+            {/* Shell Hat */}
+            <path d="M38,36 C42,24 58,24 62,36 L68,42 L58,38 L50,44 L42,38 L32,42 Z" fill="url(#shellGrad)" stroke="#cbd5e1" strokeWidth="1.5" />
+
+            {/* Cute Smile */}
+            <path d="M46,62 Q50,65 54,62" fill="none" stroke="#2c3e50" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+        </motion.div>
+      )
+
+    case 'child':
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.child} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" style={{ overflow: 'visible' }}>
+            <defs>
+              <linearGradient id="dinoChildGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#059669" />
+              </linearGradient>
+            </defs>
+
+            {/* Tail - faster & wider wag */}
+            <motion.path
+              d="M32,70 C15,75 10,65 12,55 C14,50 20,55 28,65"
+              fill="#10b981"
+              stroke="#047857"
+              strokeWidth="1"
+              animate={{ rotate: [-20, 25, -20] }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+              style={{ originX: '28px', originY: '65px' }}
+            />
+
+            {/* Wings - faster & wider flap */}
+            <motion.path
+              d="M30,52 C15,42 10,60 26,62 Z"
+              fill="#059669"
+              stroke="#047857"
+              strokeWidth="1"
+              animate={{ rotate: [-25, 30, -25] }}
+              transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
+              style={{ originX: '26px', originY: '60px' }}
+            />
+            <motion.path
+              d="M70,52 C85,42 90,60 74,62 Z"
+              fill="#059669"
+              stroke="#047857"
+              strokeWidth="1"
+              animate={{ rotate: [25, -30, 25] }}
+              transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
+              style={{ originX: '74px', originY: '60px' }}
+            />
+
+            {/* Feet */}
+            <ellipse cx="40" cy="84" rx="6" ry="4" fill="#047857" />
+            <ellipse cx="60" cy="84" rx="6" ry="4" fill="#047857" />
+
+            {/* Body */}
+            <path
+              d="M36,55 C36,78 64,78 64,55 C64,48 60,40 50,40 C40,40 36,48 36,55 Z"
+              fill="url(#dinoChildGrad)"
+              stroke="#047857"
+              strokeWidth="1"
+            />
+
+            {/* Head (sitting on body) */}
+            <path
+              d="M30,38 C30,16 70,16 70,38 C70,48 62,50 50,50 C38,50 30,48 30,38 Z"
+              fill="url(#dinoChildGrad)"
+              stroke="#047857"
+              strokeWidth="1"
+            />
+
+            {/* Cute Spine plates on back */}
+            <polygon points="50,15 54,22 46,22" fill="#f59e0b" />
+            <polygon points="62,20 65,27 58,26" fill="#f59e0b" />
+
+            {/* Eyes */}
+            {isSleeping ? (
+              <>
+                <path d="M37,33 Q41,37 45,33" fill="none" stroke="#064e3b" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M55,33 Q59,37 63,33" fill="none" stroke="#064e3b" strokeWidth="2.5" strokeLinecap="round" />
+              </>
+            ) : blink || isTickled ? (
+              <>
+                <line x1="36" y1="34" x2="44" y2="34" stroke="#064e3b" strokeWidth="4" strokeLinecap="round" />
+                <line x1="56" y1="34" x2="64" y2="34" stroke="#064e3b" strokeWidth="4" strokeLinecap="round" />
+              </>
+            ) : (
+              <>
+                <circle cx="40" cy="32" r="5" fill="#064e3b" />
+                <circle cx="41.5" cy="30" r="1.5" fill="#fff" />
+                <circle cx="60" cy="32" r="5" fill="#064e3b" />
+                <circle cx="61.5" cy="30" r="1.5" fill="#fff" />
+              </>
+            )}
+
+            {/* Cheek blush */}
+            <circle cx="36" cy="39" r="3" fill="#ec4899" opacity="0.4" />
+            <circle cx="64" cy="39" r="3" fill="#ec4899" opacity="0.4" />
+
+            {/* Mouth */}
+            {isTickled ? (
+              <path d="M45,43 Q50,48 55,43 Z" fill="#b91c1c" stroke="#064e3b" strokeWidth="1" />
+            ) : (
+              <path d="M46,43 Q50,46 54,43" fill="none" stroke="#064e3b" strokeWidth="2.5" strokeLinecap="round" />
+            )}
+          </svg>
+        </motion.div>
+      )
+
+    case 'teen':
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.teen} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" style={{ overflow: 'visible' }}>
+            <defs>
+              <linearGradient id="dinoTeenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0d9488" />
+                <stop offset="100%" stopColor="#0f766e" />
+              </linearGradient>
+            </defs>
+
+            {/* Long Tail - faster/wider wag */}
+            <motion.path
+              d="M30,68 C10,75 5,55 8,45 C10,40 16,50 25,62"
+              fill="#0d9488"
+              stroke="#115e59"
+              strokeWidth="1"
+              animate={{ rotate: [-22, 28, -22] }}
+              transition={{ repeat: Infinity, duration: 1.0, ease: 'easeInOut' }}
+              style={{ originX: '25px', originY: '62px' }}
+            />
+
+            {/* Wings (Bigger and flapping) */}
+            <motion.path
+              d="M28,48 C10,30 5,60 24,58 Z"
+              fill="#0f766e"
+              stroke="#115e59"
+              strokeWidth="1"
+              animate={{ rotate: [-30, 35, -30] }}
+              transition={{ repeat: Infinity, duration: 0.6, ease: 'easeInOut' }}
+              style={{ originX: '24px', originY: '56px' }}
+            />
+            <motion.path
+              d="M72,48 C90,30 95,60 76,58 Z"
+              fill="#0f766e"
+              stroke="#115e59"
+              strokeWidth="1"
+              animate={{ rotate: [30, -35, 30] }}
+              transition={{ repeat: Infinity, duration: 0.6, ease: 'easeInOut' }}
+              style={{ originX: '76px', originY: '56px' }}
+            />
+
+            {/* Feet */}
+            <ellipse cx="40" cy="86" rx="7" ry="3.5" fill="#115e59" />
+            <ellipse cx="60" cy="86" rx="7" ry="3.5" fill="#115e59" />
+
+            {/* Body */}
+            <path
+              d="M34,50 C34,75 66,75 66,50 C66,42 62,34 50,34 C38,34 34,42 34,50 Z"
+              fill="url(#dinoTeenGrad)"
+              stroke="#115e59"
+              strokeWidth="1"
+            />
+
+            {/* Horns */}
+            <polygon points="42,16 38,8 46,14" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+            <polygon points="58,16 62,8 54,14" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+
+            {/* Head */}
+            <path
+              d="M28,32 C28,12 72,12 72,32 C72,44 64,46 50,46 C36,46 28,44 28,32 Z"
+              fill="url(#dinoTeenGrad)"
+              stroke="#115e59"
+              strokeWidth="1"
+            />
+
+            {/* Eyes */}
+            {isSleeping ? (
+              <>
+                <path d="M37,27 Q41,31 45,27" fill="none" stroke="#134e4a" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M55,27 Q59,31 63,27" fill="none" stroke="#134e4a" strokeWidth="2.5" strokeLinecap="round" />
+              </>
+            ) : blink || isTickled ? (
+              <>
+                <line x1="36" y1="28" x2="44" y2="28" stroke="#134e4a" strokeWidth="4" strokeLinecap="round" />
+                <line x1="56" y1="28" x2="64" y2="28" stroke="#134e4a" strokeWidth="4" strokeLinecap="round" />
+              </>
+            ) : (
+              <>
+                <g style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}>
+                  <circle cx="40" cy="26" r="5" fill="#134e4a" />
+                  <circle cx="42" cy="24" r="1.5" fill="#fff" />
+                </g>
+                <g style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}>
+                  <circle cx="60" cy="26" r="5" fill="#134e4a" />
+                  <circle cx="62" cy="24" r="1.5" fill="#fff" />
+                </g>
+              </>
+            )}
+
+            {/* Mouth */}
+            {isTickled ? (
+              <path d="M44,38 Q50,44 56,38 Z" fill="#dc2626" stroke="#134e4a" strokeWidth="1" />
+            ) : (
+              <path d="M45,37 Q50,40 55,37" fill="none" stroke="#134e4a" strokeWidth="2.5" strokeLinecap="round" />
+            )}
+
+            {/* Smoke puff (More dramatic height & spread) */}
+            {!isSleeping && (
+              <motion.circle
+                cx="50"
+                cy="38"
+                r="1.5"
+                fill="#cbd5e1"
+                opacity="0.7"
+                animate={{ y: [-5, -25], x: [0, -5, 5, 0], scale: [1, 3.5], opacity: [0.7, 0] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: 'easeOut' }}
+              />
+            )}
+          </svg>
+        </motion.div>
+      )
+
+    case 'adult':
+    default:
+      return (
+        <motion.div
+          {...motionProps as any}
+          className={`${sizeClasses.adult} flex items-center justify-center relative select-none`}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-xl" style={{ overflow: 'visible' }}>
+            <defs>
+              <linearGradient id="dinoAdultGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#4f46e5" />
+                <stop offset="50%" stopColor="#4338ca" />
+                <stop offset="100%" stopColor="#312e81" />
+              </linearGradient>
+              <linearGradient id="wingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#b91c1c" />
+              </linearGradient>
+            </defs>
+
+            {/* Majestic Tail - isHappy'de daha hızlı ve geniş */}
+            <motion.path
+              d="M32,65 C10,72 2,45 6,32 C8,26 15,38 25,56"
+              fill="#4338ca"
+              stroke="#1e1b4b"
+              strokeWidth="1"
+              animate={{ rotate: isHappy ? [-35, 42, -35] : [-25, 30, -25] }}
+              transition={{ repeat: Infinity, duration: isHappy ? 0.4 : 0.8, ease: 'easeInOut' }}
+              style={{ originX: '25px', originY: '56px' }}
+            />
+
+            {/* Huge Majestic Wings - isHappy'de çok daha hızlı ve geniş */}
+            <motion.path
+              d="M26,45 C2,-2 0,55 24,52 Z"
+              fill="url(#wingGrad)"
+              stroke="#1e1b4b"
+              strokeWidth="1.2"
+              animate={{ rotate: isHappy ? [-50, 55, -50] : [-35, 40, -35] }}
+              transition={{ repeat: Infinity, duration: isHappy ? 0.28 : 0.5, ease: 'easeInOut' }}
+              style={{ originX: '24px', originY: '48px' }}
+            />
+            <motion.path
+              d="M74,45 C98,-2 100,55 76,52 Z"
+              fill="url(#wingGrad)"
+              stroke="#1e1b4b"
+              strokeWidth="1.2"
+              animate={{ rotate: isHappy ? [50, -55, 50] : [35, -40, 35] }}
+              transition={{ repeat: Infinity, duration: isHappy ? 0.28 : 0.5, ease: 'easeInOut' }}
+              style={{ originX: '76px', originY: '48px' }}
+            />
+
+            {/* Hover Feet (Tucked in flight) */}
+            <ellipse cx="38" cy="82" rx="7" ry="4" fill="#312e81" transform="rotate(-15 38 82)" />
+            <ellipse cx="62" cy="82" rx="7" ry="4" fill="#312e81" transform="rotate(15 62 82)" />
+
+            {/* Body */}
+            <path
+              d="M32,46 C32,72 68,72 68,46 C68,36 62,28 50,28 C38,28 32,36 32,46 Z"
+              fill="url(#dinoAdultGrad)"
+              stroke="#1e1b4b"
+              strokeWidth="1.2"
+            />
+
+            {/* Crown Boy boynuzlar */}
+            <polygon points="38,12 30,2 42,10" fill="#f59e0b" stroke="#1e1b4b" strokeWidth="1" />
+            <polygon points="62,12 70,2 58,10" fill="#f59e0b" stroke="#1e1b4b" strokeWidth="1" />
+            <polygon points="50,10 50,0 52,8" fill="#fbbf24" stroke="#1e1b4b" strokeWidth="1" />
+
+            {/* Head */}
+            <path
+              d="M26,28 C26,8 74,8 74,28 C74,40 66,42 50,42 C34,42 26,40 26,28 Z"
+              fill="url(#dinoAdultGrad)"
+              stroke="#1e1b4b"
+              strokeWidth="1.2"
+            />
+
+            {/* Eyes */}
+            {isSleeping ? (
+              <>
+                <path d="M37,23 Q41,27 45,23" fill="none" stroke="#1e1b4b" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M55,23 Q59,27 63,23" fill="none" stroke="#1e1b4b" strokeWidth="2.5" strokeLinecap="round" />
+              </>
+            ) : blink || isTickled ? (
+              <>
+                <line x1="36" y1="24" x2="44" y2="24" stroke="#1e1b4b" strokeWidth="4" strokeLinecap="round" />
+                <line x1="56" y1="24" x2="64" y2="24" stroke="#1e1b4b" strokeWidth="4" strokeLinecap="round" />
+              </>
+            ) : (
+              <>
+                <g style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}>
+                  <circle cx="40" cy="22" r="5.5" fill="#1e1b4b" />
+                  <circle cx="42" cy="20" r="1.5" fill="#fff" />
+                </g>
+                <g style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}>
+                  <circle cx="60" cy="22" r="5.5" fill="#1e1b4b" />
+                  <circle cx="62" cy="20" r="1.5" fill="#fff" />
+                </g>
+              </>
+            )}
+
+            {/* Roar / Mouth — isHappy'de tam açık ROAR */}
+            {isHappy ? (
+              <path d="M42,30 Q50,42 58,30 Z" fill="#dc2626" stroke="#1e1b4b" strokeWidth="1.5" />
+            ) : isTickled ? (
+              <path d="M43,32 Q50,41 57,32 Z" fill="#b91c1c" stroke="#1e1b4b" strokeWidth="1.2" />
+            ) : (
+              <path d="M45,33 Q50,36 55,33" fill="none" stroke="#1e1b4b" strokeWidth="2.5" strokeLinecap="round" />
+            )}
+
+            {/* isHappy: 3 dramatik ateş topu — normal: tek alev */}
+            {!isSleeping && isHappy && (
+              <>
+                <motion.circle cx="46" cy="32" r="2.5" fill="#f97316"
+                  animate={{ y: [-4, -38], x: [-6, -14], scale: [1, 5], opacity: [1, 0] }}
+                  transition={{ repeat: Infinity, duration: 0.9, ease: 'easeOut', delay: 0 }}
+                />
+                <motion.circle cx="50" cy="30" r="3" fill="#ef4444"
+                  animate={{ y: [-6, -50], x: [0, 4, -4, 0], scale: [1, 6], opacity: [1, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.0, ease: 'easeOut', delay: 0.15 }}
+                />
+                <motion.circle cx="54" cy="32" r="2.5" fill="#f59e0b"
+                  animate={{ y: [-4, -38], x: [6, 14], scale: [1, 5], opacity: [1, 0] }}
+                  transition={{ repeat: Infinity, duration: 0.9, ease: 'easeOut', delay: 0.3 }}
+                />
+              </>
+            )}
+            {!isSleeping && !isHappy && (
+              <motion.circle
+                cx="50" cy="34" r="2"
+                fill="#f97316"
+                animate={{ y: [-5, -35], x: [0, -8, 8, 0], scale: [1, 4.5], opacity: [1, 0] }}
+                transition={{ repeat: Infinity, duration: 1.2, ease: 'easeOut' }}
+              />
+            )}
+          </svg>
+        </motion.div>
+      )
+  }
+}
+
